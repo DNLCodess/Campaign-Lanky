@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
+/* ============================================================
+   LANKY — Brand-Pure Dark Theme
+   Palette extracted from the campaign logo (logo-4.png):
+     Deep Navy #0D334A · Steel Blue #679CBC · Vivid Red #C21720
+   All combinations targeted at WCAG AA on dark backgrounds.
+   ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand source colors */
+  --brand-navy: #0d334a;
+  --brand-steel: #679cbc;
+  --brand-red: #c21720;
+  --brand-white: #ffffff;
+
+  /* Surfaces (deep navy world) */
+  --bg: #071a26;
+  --surface: #0d334a;
+  --surface-2: #12425e;
+  --border: #1e4d69;
+
+  /* Actions & accents */
+  --primary: #e0212b; /* red, brightened for dark-bg contrast (CTAs) */
+  --primary-hover: #f23b44;
+  --accent: #7fb0d0; /* steel blue, lifted for AA (links, highlights) */
+  --accent-hover: #a3c8e0;
+
+  /* Text */
+  --text: #f4f8fb;
+  --text-muted: #9fb6c4;
+
+  /* Radii & motion */
+  --radius: 0.75rem;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-navy: var(--brand-navy);
+  --color-steel: var(--brand-steel);
+  --color-red: var(--brand-red);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  --font-heading: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+
+  --radius-brand: var(--radius);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+::selection {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Respect reduced-motion globally as a safety net (JS also guards GSAP). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

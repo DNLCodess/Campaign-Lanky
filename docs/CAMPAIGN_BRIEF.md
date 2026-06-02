@@ -23,6 +23,11 @@
 - **Mood:** Innovative + Trustworthy — clean modern layouts, generous whitespace, sharp photography, subtle motion; balances tech credibility with civic trust
 - **Typography — FINAL:** **Fraunces** (headings — echoes the logo's high-contrast editorial serif) + **Inter** (body — crisp, legible on mobile). Both free Google Fonts.
 
+### Iconography Guideline
+- **Avoid generic "AI-coded" / tech-cliché icons** — no lightning bolts (`zap`), flashes, sparkles, "magic wand", robots, brains, or rocket clichés. They cheapen a civic/political brand.
+- Prefer **restrained, civic line icons** (people, ballot, megaphone, handshake, location, calendar, document) or **the brand's own window-pane motif** and **numerals** (e.g. 01–05) as visual anchors.
+- When in doubt, use **no icon** + strong typography rather than a cliché icon.
+
 ### Brand Assets (in `docs/assets/`)
 - **Logo (full, navy):** `logo-3.png` — window-pane mark + "Lanky" serif wordmark
 - **Logo (full, white/reversed):** `logo-1.png` — for dark backgrounds

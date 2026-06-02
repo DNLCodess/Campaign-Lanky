@@ -1,65 +1,142 @@
-import Image from "next/image";
+import { Hero } from "@/components/home/hero";
+import { Journey } from "@/components/home/journey";
+import { Bridge } from "@/components/home/bridge";
+import { Commitments } from "@/components/home/commitments";
+import { PromiseQuote } from "@/components/home/promise";
+import { GetInvolvedTeaser } from "@/components/home/get-involved-teaser";
+import { Reveal } from "@/components/motion/reveal";
+import { CtaButton } from "@/components/ui/cta-button";
+import { site } from "@/lib/site";
+
+const pillars = [
+  {
+    n: "01",
+    title: "Digital Town Hall",
+    body: "A Constituency Town Hall App connecting every resident directly with their representative — feedback, polls, project monitoring, and online meetings.",
+  },
+  {
+    n: "02",
+    title: "Technology & Innovation Hub",
+    body: "Training youths in software, AI, design, and digital skills — then connecting graduates to remote work and global income. A pipeline from learning to earning.",
+  },
+  {
+    n: "03",
+    title: "Robotics in Public Schools",
+    body: "Coding clubs, computer labs, and a digital-literacy curriculum in government schools — closing the gap between public and private education.",
+  },
+  {
+    n: "04",
+    title: "Grooming Hub Initiative",
+    body: "Professionals mentoring students in leadership, character, financial literacy, and civic responsibility — preparing children for life, not just exams.",
+  },
+  {
+    n: "05",
+    title: "Accountable Representation",
+    body: "Transparent, people-first governance where constituents engage their representative and see the direct impact of constituency projects.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <Hero />
+
+      {/* Meet Lanky — Portrait Journey */}
+      <Journey />
+
+      {/* The Vision — pillars */}
+      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8" id="pillars">
+        <Reveal>
+          <p className="text-sm font-medium uppercase tracking-widest text-accent">
+            The Vision
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <h2 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-text sm:text-5xl">
+            Five pillars for a digitally empowered constituency
+          </h2>
+        </Reveal>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {pillars.map((p, i) => (
+            <Reveal
+              key={p.n}
+              delay={i * 0.05}
+              className="group rounded-brand border border-border bg-surface/40 p-7 transition-colors hover:border-accent/60 hover:bg-surface/70"
+            >
+              <span className="font-heading text-3xl text-accent/70">{p.n}</span>
+              <h3 className="mt-4 font-heading text-2xl text-text">{p.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-text-muted">{p.body}</p>
+            </Reveal>
+          ))}
+
+          <Reveal
+            delay={pillars.length * 0.05}
+            className="flex flex-col justify-center rounded-brand border border-border bg-linear-to-br from-surface to-navy p-7"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <p className="font-heading text-xl leading-snug text-text">
+              &ldquo;{site.guidingPrinciple}&rdquo;
+            </p>
+            <span className="mt-4 text-sm text-accent">— {site.shortName}</span>
+          </Reveal>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* The Bridge-Builder — signature scroll-draw */}
+      <Bridge />
+
+      {/* Stats + commitment checklist */}
+      <Commitments />
+
+      {/* The Promise — pull quote */}
+      <PromiseQuote />
+
+      {/* Get Involved teaser */}
+      <GetInvolvedTeaser />
+
+      {/* Join the Movement — email/phone capture */}
+      <section className="border-y border-border/60 bg-surface/30">
+        <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8">
+          <Reveal>
+            <h2 className="font-heading text-4xl text-text sm:text-5xl">
+              Join the Movement
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-text-muted">
+              Real change starts with a single vote and a shared vision. Add your
+              voice — we&apos;ll keep you updated on town halls, tours, and how to help.
+            </p>
+            {/* TODO: wire to Supabase + SMS provider (see Notion task). */}
+            <form className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
+              <input
+                type="email"
+                required
+                placeholder="Email address"
+                className="flex-1 rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text placeholder:text-text-muted/60 focus:border-accent focus:outline-none"
+              />
+              <input
+                type="tel"
+                placeholder="Phone (SMS)"
+                className="flex-1 rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text placeholder:text-text-muted/60 focus:border-accent focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+              >
+                Count Me In
+              </button>
+            </form>
+          </Reveal>
+
+          <Reveal delay={0.1} className="mt-12">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <CtaButton href={site.cta.donate.href} variant="primary" size="lg">
+                {site.cta.donate.label}
+              </CtaButton>
+              <CtaButton href="/manifesto" variant="outline" size="lg">
+                Read the Manifesto
+              </CtaButton>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    </>
   );
 }
