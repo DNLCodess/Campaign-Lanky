@@ -82,33 +82,18 @@ export function SiteHeader() {
           </CtaButton>
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile open trigger (the overlay has its own close button) */}
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="relative z-60 flex h-10 w-10 items-center justify-center rounded-brand border border-border lg:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
+          onClick={() => setOpen(true)}
+          className="flex h-10 w-10 items-center justify-center rounded-brand border border-border lg:hidden"
+          aria-label="Open menu"
           aria-expanded={open}
         >
           <div className="space-y-1.5">
-            <span
-              className={cn(
-                "block h-0.5 w-5 bg-text transition-transform duration-300",
-                open && "translate-y-2 rotate-45",
-              )}
-            />
-            <span
-              className={cn(
-                "block h-0.5 w-5 bg-text transition-opacity duration-300",
-                open && "opacity-0",
-              )}
-            />
-            <span
-              className={cn(
-                "block h-0.5 w-5 bg-text transition-transform duration-300",
-                open && "-translate-y-2 -rotate-45",
-              )}
-            />
+            <span className="block h-0.5 w-5 bg-text" />
+            <span className="block h-0.5 w-5 bg-text" />
+            <span className="block h-0.5 w-5 bg-text" />
           </div>
         </button>
         </div>
@@ -135,7 +120,33 @@ export function SiteHeader() {
           }}
         />
 
-        <div className="relative z-10 flex h-full flex-col px-6 pb-8 pt-24">
+        <div className="relative z-10 flex h-full flex-col px-6 pb-8 pt-5">
+          {/* Top row: logo + close */}
+          <div className="flex h-16 items-center justify-between">
+            <Image
+              src="/brand/logo-white.png"
+              alt="Lanky"
+              width={132}
+              height={36}
+              className="h-7 w-auto"
+            />
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+              className="flex h-11 w-11 items-center justify-center rounded-brand border border-border text-text transition-colors hover:border-accent hover:text-accent"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+
           {/* Links */}
           <nav className="flex flex-1 flex-col justify-center gap-1">
             {site.nav.map((item, i) => (
