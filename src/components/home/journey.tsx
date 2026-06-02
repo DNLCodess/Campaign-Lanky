@@ -75,24 +75,27 @@ export function Journey() {
               key={i}
               className="flex flex-col justify-center py-16 lg:min-h-screen lg:py-0"
             >
-              {/* Mobile inline image */}
-              <div className="relative mb-7 aspect-[4/5] w-full overflow-hidden rounded-brand border border-border lg:hidden">
-                <Image
-                  src={c.img}
-                  alt=""
-                  fill
-                  sizes="90vw"
-                  className="object-cover object-top"
-                />
-                <div
-                  aria-hidden
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(7,26,38,0.7), rgba(7,26,38,0) 55%)",
-                  }}
-                />
-              </div>
+              {/* Mobile inline image — skip the first chapter (the hero
+                  already shows that portrait, so it would duplicate). */}
+              {i !== 0 && (
+                <div className="relative mb-7 aspect-4/5 w-full overflow-hidden rounded-brand border border-border lg:hidden">
+                  <Image
+                    src={c.img}
+                    alt=""
+                    fill
+                    sizes="90vw"
+                    className="object-cover object-top"
+                  />
+                  <div
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(to top, rgba(7,26,38,0.7), rgba(7,26,38,0) 55%)",
+                    }}
+                  />
+                </div>
+              )}
 
               <p className="text-sm font-medium uppercase tracking-widest text-accent">
                 {c.eyebrow}
@@ -110,7 +113,7 @@ export function Journey() {
         {/* Pinned portrait stage (desktop) */}
         <div className="hidden lg:block">
           <div className="sticky top-0 flex h-screen items-center">
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-brand border border-border bg-surface">
+            <div className="relative aspect-4/5 w-full overflow-hidden rounded-brand border border-border bg-surface">
               {[layer0, layer1, layer2].map((ref, i) => (
                 <div key={i} ref={ref} className="absolute inset-0">
                   <Image

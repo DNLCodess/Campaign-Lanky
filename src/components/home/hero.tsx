@@ -96,7 +96,7 @@ export function Hero() {
 
         {/* Portrait — placeholder framing until transparent cut-out arrives */}
         <div className="hero-portrait relative mx-auto w-full max-w-md">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-brand border border-border bg-surface">
+          <div className="relative aspect-4/5 overflow-hidden rounded-brand border border-border bg-surface">
             <Image
               src="/brand/candidate-1.jpeg"
               alt={`${site.candidate}, ${site.tagline}`}
