@@ -6,6 +6,7 @@ import { PromiseQuote } from "@/components/home/promise";
 import { GetInvolvedTeaser } from "@/components/home/get-involved-teaser";
 import { Reveal } from "@/components/motion/reveal";
 import { CtaButton } from "@/components/ui/cta-button";
+import { JoinForm } from "@/components/forms/join-form";
 import { site } from "@/lib/site";
 
 const pillars = [
@@ -103,26 +104,7 @@ export default function Home() {
               Real change starts with a single vote and a shared vision. Add your
               voice — we&apos;ll keep you updated on town halls, tours, and how to help.
             </p>
-            {/* TODO: wire to Supabase + SMS provider (see Notion task). */}
-            <form className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
-              <input
-                type="email"
-                required
-                placeholder="Email address"
-                className="flex-1 rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text placeholder:text-text-muted/60 focus:border-accent focus:outline-none"
-              />
-              <input
-                type="tel"
-                placeholder="Phone (SMS)"
-                className="flex-1 rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text placeholder:text-text-muted/60 focus:border-accent focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-              >
-                Count Me In
-              </button>
-            </form>
+            <JoinForm />
           </Reveal>
 
           <Reveal delay={0.1} className="mt-12">

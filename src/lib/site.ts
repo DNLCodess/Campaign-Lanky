@@ -27,6 +27,10 @@ export const site = {
     volunteer: { label: "Volunteer", href: "/get-involved" },
   },
 
+  // Public WhatsApp community group (shown after a successful form submission).
+  whatsappGroup:
+    "https://chat.whatsapp.com/DiXF4xgwlMEHXSfP3skN6M?s=cl&p=a&mlu=4",
+
   // TODO(client): confirm office address, email, WhatsApp number, social handles.
   contact: {
     email: "", // TODO

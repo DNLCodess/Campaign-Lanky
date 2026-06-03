@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
 import { Reveal } from "@/components/motion/reveal";
+import { ContactForm } from "@/components/forms/contact-form";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -80,47 +81,7 @@ export default function ContactPage() {
 
           {/* Message form */}
           <Reveal delay={0.1}>
-            <div className="rounded-brand border border-border bg-surface/40 p-8">
-              <h2 className="font-heading text-3xl text-text">Send a message</h2>
-              {/* TODO: wire to Supabase (messages table). */}
-              <form className="mt-6 space-y-5">
-                <label className="block">
-                  <span className="text-sm font-medium text-text">Name</span>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    className="mt-2 w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-text">
-                    Email or phone
-                  </span>
-                  <input
-                    type="text"
-                    name="contact"
-                    required
-                    className="mt-2 w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-text">Message</span>
-                  <textarea
-                    name="message"
-                    rows={5}
-                    required
-                    className="mt-2 w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  className="w-full rounded-brand bg-primary px-6 py-3.5 text-base font-medium text-white transition-colors hover:bg-primary-hover"
-                >
-                  Send Message
-                </button>
-              </form>
-            </div>
+            <ContactForm />
           </Reveal>
         </div>
       </section>
