@@ -39,13 +39,20 @@ export default function AboutPage() {
       <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal className="lg:sticky lg:top-24 lg:self-start">
-            <div className="relative aspect-4/5 w-full overflow-hidden rounded-brand border border-border">
+            <div
+              className="relative aspect-4/5 w-full overflow-hidden rounded-brand border border-border"
+              style={{
+                backgroundColor: "#0b2a3d",
+                backgroundImage:
+                  "radial-gradient(110% 75% at 50% 12%, rgba(103,156,188,0.28), transparent 62%)",
+              }}
+            >
               <Image
-                src="/brand/candidate-2.jpeg"
+                src="/brand/candidate-5.png"
                 alt={site.candidate}
                 fill
                 sizes="(max-width: 1024px) 90vw, 45vw"
-                className="object-cover object-top"
+                className="object-contain object-bottom"
               />
             </div>
           </Reveal>

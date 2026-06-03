@@ -8,32 +8,37 @@ import { gsap, prefersReducedMotion, isDesktop } from "@/lib/gsap";
 /**
  * The Portrait Journey — a signature scroll piece.
  * Desktop: the portrait is pinned (CSS sticky) and crossfades through three
- *   photos as the narrative chapters scroll past — present through the emotional
- *   opening, then it hands off to the rest of the page.
+ *   transparent cut-outs as the narrative chapters scroll past.
  * Mobile: chapters stack, each with its own inline image (mobile-light).
- * NOTE: photos are the original studio shots (with backgrounds) for now — they
- *   will be swapped for transparent cut-outs when the client provides them.
  */
 const chapters = [
   {
-    img: "/brand/candidate-1.jpeg",
+    img: "/brand/candidate-4.png",
     eyebrow: "Why I'm Running",
     title: "The voice our constituency deserves",
     body: "For too long, our potential has been sidelined. Lanky is stepping into the arena so the youth, the elders, and the hardworking entrepreneurs of Ibadan are heard loud and clear in the Green Chamber — on a simple philosophy: People First.",
   },
   {
-    img: "/brand/candidate-2.jpeg",
+    img: "/brand/candidate-5.png",
     eyebrow: "Who He Is",
     title: "A practitioner, not just a politician",
     body: "Someone who has built businesses, mentored students, and served the community in the trenches. As CEO of Lanky First Ideal Creativity, he turns ideas into working solutions — and he intends to govern the same way.",
   },
   {
-    img: "/brand/candidate-3.jpeg",
+    img: "/brand/candidate-6.png",
     eyebrow: "The Bridge-Builder",
     title: "Rooted in our streets",
     body: "From the vibrant markets of the Northwest to the residential hubs of the Southwest, he is a neighbour and a listener. He is not running to fill a seat — but to bridge the gap between the government and the governed.",
   },
 ];
+
+// Branded backdrop for the transparent cut-outs (steel glow over deep navy)
+// plus a faint window-pane grid.
+const backdrop: React.CSSProperties = {
+  backgroundColor: "#0b2a3d",
+  backgroundImage:
+    "radial-gradient(110% 75% at 50% 12%, rgba(103,156,188,0.28), transparent 62%), radial-gradient(80% 60% at 50% 100%, rgba(194,23,32,0.12), transparent 70%)",
+};
 
 export function Journey() {
   const section = useRef<HTMLDivElement>(null);
@@ -45,7 +50,6 @@ export function Journey() {
     () => {
       if (prefersReducedMotion() || !isDesktop()) return;
 
-      // Stacked layers: top layers start hidden, fade in to crossfade 1→2→3.
       gsap.set([layer1.current, layer2.current], { opacity: 0 });
       gsap.set(layer1.current, { scale: 1.04 });
       gsap.set(layer2.current, { scale: 1.04 });
@@ -79,24 +83,18 @@ export function Journey() {
               key={i}
               className="flex flex-col justify-center py-16 lg:min-h-screen lg:py-0"
             >
-              {/* Mobile inline image — skip the first chapter (the hero
-                  already shows that portrait, so it would duplicate). */}
+              {/* Mobile inline image — skip the first chapter (the hero leads). */}
               {i !== 0 && (
-                <div className="relative mb-7 aspect-4/5 w-full overflow-hidden rounded-brand border border-border lg:hidden">
+                <div
+                  className="relative mb-7 aspect-4/5 w-full overflow-hidden rounded-brand border border-border lg:hidden"
+                  style={backdrop}
+                >
                   <Image
                     src={c.img}
                     alt=""
                     fill
                     sizes="90vw"
-                    className="object-cover object-top"
-                  />
-                  <div
-                    aria-hidden
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(7,26,38,0.7), rgba(7,26,38,0) 55%)",
-                    }}
+                    className="object-contain object-bottom"
                   />
                 </div>
               )}
@@ -117,7 +115,20 @@ export function Journey() {
         {/* Pinned portrait stage (desktop) */}
         <div className="hidden lg:block">
           <div className="sticky top-0 flex h-screen items-center">
-            <div className="relative aspect-4/5 w-full overflow-hidden rounded-brand border border-border bg-surface">
+            <div
+              className="relative aspect-4/5 w-full overflow-hidden rounded-brand border border-border"
+              style={backdrop}
+            >
+              {/* faint window-pane texture */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.05]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+                  backgroundSize: "56px 56px",
+                }}
+              />
               {[layer0, layer1, layer2].map((ref, i) => (
                 <div key={i} ref={ref} className="absolute inset-0">
                   <Image
@@ -125,22 +136,24 @@ export function Journey() {
                     alt={i === 0 ? "Olanrewaju Okesooto" : ""}
                     fill
                     sizes="45vw"
-                    className="object-cover object-top"
+                    className="object-contain object-bottom"
                   />
                 </div>
               ))}
-              {/* Consistent navy scrim across all layers */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(to top, rgba(7,26,38,0.8) 0%, rgba(7,26,38,0.1) 45%, rgba(7,26,38,0) 70%)",
-                }}
-              />
-              <div className="absolute bottom-6 left-6">
-                <p className="font-heading text-2xl text-white">Lanky</p>
-                <p className="text-sm text-white/70">The Bridge-Builder</p>
+              {/* nameplate */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(6,18,26,0.6), transparent)",
+                  }}
+                />
+                <div className="relative">
+                  <p className="font-heading text-2xl text-white">Lanky</p>
+                  <p className="text-sm text-white/70">The Bridge-Builder</p>
+                </div>
               </div>
             </div>
           </div>

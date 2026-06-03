@@ -10,8 +10,8 @@ export const site = {
   constituency: "Ibadan Southwest / Northwest Federal Constituency",
   state: "Oyo State",
   party: "Labour Party",
-  // Labour Party placeholder mark — swap for the official logo when provided.
-  partyLogo: "/brand/labour-party.svg",
+  // Official Labour Party logo (transparent PNG).
+  partyLogo: "/brand/labour-party-logo.png",
   slogan: "Innovation for Ibadan: Securing Our Future, Together.",
   guidingPrinciple:
     "Representation Through Collaboration, Progress Through Innovation, and Development Through Collective Action.",

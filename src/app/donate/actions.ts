@@ -80,7 +80,7 @@ export async function initiateDonation(
       currency: "NGN",
       customer: { email, name, phone: phone || undefined },
       redirectUrl: `${origin}/donate/callback`,
-      logo: `${origin}/brand/labour-party.svg`,
+      logo: `${origin}/brand/labour-party-logo.png`,
       meta: { source: "website" },
     });
 
