@@ -23,9 +23,11 @@ export function Hero() {
   const root = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
-  // Auto-advance the slider (disabled for reduced-motion users).
+  // Auto-advance the slider. Always on — reduced-motion users still get the
+  // slide change, but globals.css neutralises the crossfade + Ken-Burns zoom
+  // for them via the prefers-reduced-motion rule.
   useEffect(() => {
-    if (prefersReducedMotion() || slides.length < 2) return;
+    if (slides.length < 2) return;
     const id = setInterval(
       () => setActive((i) => (i + 1) % slides.length),
       5500,
