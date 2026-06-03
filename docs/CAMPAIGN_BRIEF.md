@@ -41,6 +41,15 @@ Do **not** flatten the whole site to one navy. Use the **section tone utilities*
 ### Hero Constituency Slider (client feedback)
 Hero uses an auto-crossfading, Ken-Burns **constituency image slider** (text content retained over a legibility scrim). Real photos pending — currently branded gradient placeholders; set `src` in `site.constituencySlides` when images arrive.
 
+### Admin Dashboard (`/admin`)
+- **Auth:** Supabase Auth (email/password). Disable public sign-ups in Supabase. Leave `ADMIN_EMAILS` blank so every team account created in-app counts as an admin.
+- **Creating admins:** bootstrap the **first** account once in Supabase → Authentication → Users (or set `ADMIN_EMAILS` to your email and sign up). After that, manage admins entirely in-app at **`/admin/team`** — add (email + temp password, auto-confirmed) or remove accounts (can't remove yourself). Uses the Supabase Admin API via the service-role key.
+- **Dashboard:** stat cards (total raised, supporters, volunteers, messages) + tabbed tables (donations, volunteers, supporters, messages) with **search**, **pagination**, and **CSV export** per table. Reads via the service-role client; tables stay RLS server-only.
+- **Env:** `SUPABASE_SERVICE_ROLE_KEY` (required), optional `ADMIN_EMAILS`.
+
+### Imagery
+Constituency photos in `public/consituency/` are used as the **hero slider** and as **page-header backgrounds** across inner pages (with scrims). Candidate transparent cut-outs (`public/brand/candidate-4/5/6.png`) appear in the Portrait Journey, About, and the Promise quote.
+
 ### Iconography Guideline
 - **Avoid generic "AI-coded" / tech-cliché icons** — no lightning bolts (`zap`), flashes, sparkles, "magic wand", robots, brains, or rocket clichés. They cheapen a civic/political brand.
 - Prefer **restrained, civic line icons** (people, ballot, megaphone, handshake, location, calendar, document) or **the brand's own window-pane motif** and **numerals** (e.g. 01–05) as visual anchors.
