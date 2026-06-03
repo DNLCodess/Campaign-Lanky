@@ -66,7 +66,11 @@ export function Journey() {
   );
 
   return (
-    <section ref={section} className="tone-deep relative" aria-label="Meet Lanky">
+    <section
+      ref={section}
+      className="tone-navy relative border-t border-border/60"
+      aria-label="Meet Lanky"
+    >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:grid lg:grid-cols-2 lg:gap-16">
         {/* Narrative chapters */}
         <div>

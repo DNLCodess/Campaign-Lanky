@@ -86,46 +86,46 @@ h1, h2, h3, h4, h5 {
    All stay within the navy/steel/red family on a dark base.
    ============================================================ */
 @layer components {
-  /* Deepest base (near-black navy) */
+  /* Darkest band — near-black navy */
   .tone-deep {
-    background-color: #06141d;
+    background-color: #050f17;
   }
-  /* Brand-navy elevated band */
+  /* Mid navy — a clear step lighter than deep */
   .tone-navy {
-    background-color: var(--bg-elevated);
+    background-color: #123a54;
   }
-  /* Vertical navy gradient (subtle lift) */
+  /* Lightest band — bright brand navy panel */
+  .tone-panel {
+    background-color: #11405d;
+  }
+  /* Vertical gradient (visible dark→light shift) */
   .tone-gradient {
-    background-image: linear-gradient(180deg, #071a26 0%, #0c3149 100%);
+    background-image: linear-gradient(180deg, #050f17 0%, #11405d 100%);
   }
-  /* Steel-blue ambient glow on navy (cool / innovation) */
+  /* Steel-blue band (cool / innovation) — visible tint + glow */
   .tone-steel {
-    background-color: #071a26;
+    background-color: #0a2a3c;
     background-image: radial-gradient(
-      60% 65% at 82% 8%,
-      rgba(103, 156, 188, 0.16),
+      75% 80% at 80% 4%,
+      rgba(103, 156, 188, 0.3),
+      transparent 68%
+    );
+  }
+  /* Warm red band (energy / call to action) — visible warm tint + glow */
+  .tone-red {
+    background-color: #1b1014;
+    background-image: radial-gradient(
+      80% 85% at 15% 100%,
+      rgba(194, 23, 32, 0.28),
       transparent 70%
     );
   }
-  /* Warm red ambient glow on navy (energy / call to action) */
-  .tone-red {
-    background-color: #0a1b25;
-    background-image: radial-gradient(
-      58% 70% at 12% 100%,
-      rgba(194, 23, 32, 0.14),
-      transparent 72%
-    );
-  }
-  /* Solid brand-navy panel */
-  .tone-panel {
-    background-color: var(--surface);
-  }
-  /* Dual glow (hero / feature moments) */
+  /* Dual-glow aurora (feature moments) */
   .tone-aurora {
-    background-color: #06151f;
+    background-color: #06141d;
     background-image:
-      radial-gradient(50% 55% at 78% 12%, rgba(103, 156, 188, 0.18), transparent 70%),
-      radial-gradient(48% 60% at 8% 95%, rgba(194, 23, 32, 0.13), transparent 72%);
+      radial-gradient(55% 60% at 80% 8%, rgba(103, 156, 188, 0.26), transparent 68%),
+      radial-gradient(52% 65% at 6% 96%, rgba(194, 23, 32, 0.2), transparent 70%);
   }
 }
 

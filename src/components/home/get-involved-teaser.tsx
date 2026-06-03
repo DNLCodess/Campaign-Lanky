@@ -56,7 +56,7 @@ const ways = [
 
 export function GetInvolvedTeaser() {
   return (
-    <section className="tone-navy px-5 py-20">
+    <section className="tone-deep border-t border-border/60 px-5 py-20">
       <div className="mx-auto max-w-7xl sm:px-8">
       <Reveal className="max-w-2xl">
         <p className="text-sm font-medium uppercase tracking-widest text-accent">

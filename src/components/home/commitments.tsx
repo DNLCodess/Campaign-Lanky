@@ -40,7 +40,7 @@ function Check() {
 
 export function Commitments() {
   return (
-    <section className="tone-deep px-5 py-20">
+    <section className="tone-navy border-t border-border/60 px-5 py-20">
       <div className="mx-auto max-w-7xl sm:px-8">
       {/* Stat band */}
       <div className="grid grid-cols-2 gap-6 border-y border-border/60 py-10 lg:grid-cols-4">

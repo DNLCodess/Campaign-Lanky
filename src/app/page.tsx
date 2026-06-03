@@ -46,7 +46,7 @@ export default function Home() {
       <Journey />
 
       {/* The Vision — pillars */}
-      <section className="tone-navy px-5 py-20" id="pillars">
+      <section className="tone-deep border-t border-border/60 px-5 py-20" id="pillars">
         <div className="mx-auto max-w-7xl sm:px-8">
         <Reveal>
           <p className="text-sm font-medium uppercase tracking-widest text-accent">
