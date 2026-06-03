@@ -17,7 +17,15 @@
 - **Framework:** Next.js (App Router) + TypeScript
 - **Styling:** Tailwind CSS
 - **Backend:** **Supabase** — Postgres (leads, volunteers, endorsements, blog/media, donations), Auth, Storage (images/video)
-- **Payments:** Flutterwave or Paystack — *TBD with client*
+- **Payments:** **Flutterwave** (Standard hosted checkout) — built end-to-end
+
+#### Donations / Payments (Flutterwave) — how it works
+- **Flow:** donate form → server action `initiateDonation` creates a **pending** `donations` row (unique `tx_ref` = idempotency key) → Flutterwave hosted checkout (card, **bank transfer**, USSD) → redirect to `/donate/callback` → **server-side verify** → idempotent finalize. A **webhook** (`/api/flutterwave/webhook`) is the source of truth and finalizes even if the donor never returns (e.g. paid in their bank app and closed the tab).
+- **Robustness:** bounded retries + timeouts on all Flutterwave calls (retry only on network/5xx/429); amount/currency re-checked server-side (never trust client); `verif-hash` webhook signature verified with a timing-safe compare; finalize guarded by `status != 'successful'` so callback + webhook can't double-apply.
+- **Data:** `donations` table is **server-only** (RLS on, no public policies); the server uses the **service-role** key.
+- **Required env (see `.env.local.example`):** `SUPABASE_SERVICE_ROLE_KEY`, `FLW_SECRET_KEY`, `FLW_SECRET_HASH`, `NEXT_PUBLIC_SITE_URL`.
+- **Flutterwave dashboard setup:** add webhook URL `<site>/api/flutterwave/webhook` and set the **Secret hash** to match `FLW_SECRET_HASH`.
+- Until keys are set the donate form shows a friendly "not available yet" message (no crash).
 
 ### Design Direction
 - **Theme:** Dark-background, premium feel

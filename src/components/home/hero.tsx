@@ -10,8 +10,8 @@ import { PartyState } from "@/components/party-state";
 
 const slides = site.constituencySlides;
 
-// Distinct brand gradients so the placeholder slides read as designed,
-// textured backgrounds until real constituency photography arrives.
+// Distinct brand gradients so any placeholder slides (no `src`) still read as
+// designed, textured backgrounds.
 const placeholderGradients = [
   "linear-gradient(135deg,#0d334a 0%,#06141d 75%)",
   "linear-gradient(135deg,#103a52 0%,#0a1b25 70%)",
@@ -21,20 +21,73 @@ const placeholderGradients = [
 
 export function Hero() {
   const root = useRef<HTMLDivElement>(null);
+  const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [active, setActive] = useState(0);
 
-  // Auto-advance the slider. Always on — reduced-motion users still get the
-  // slide change, but globals.css neutralises the crossfade + Ken-Burns zoom
-  // for them via the prefers-reduced-motion rule.
+  // Auto-advance the slider (always on).
   useEffect(() => {
     if (slides.length < 2) return;
     const id = setInterval(
       () => setActive((i) => (i + 1) % slides.length),
-      5500,
+      6000,
     );
     return () => clearInterval(id);
   }, []);
 
+  // Buttery crossfade + slow cinematic zoom, GSAP-driven for full control.
+  useGSAP(
+    () => {
+      const layers = layerRefs.current;
+      const reduce = prefersReducedMotion();
+
+      layers.forEach((layer, i) => {
+        if (!layer) return;
+        const img = layer.querySelector<HTMLElement>("[data-img]");
+        const isActive = i === active;
+
+        if (reduce) {
+          gsap.set(layer, { autoAlpha: isActive ? 1 : 0 });
+          if (img) gsap.set(img, { scale: 1, xPercent: 0 });
+          return;
+        }
+
+        gsap.killTweensOf(layer);
+        if (isActive) {
+          gsap.to(layer, {
+            autoAlpha: 1,
+            duration: 1.6,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          });
+          if (img) {
+            gsap.killTweensOf(img);
+            // Settle the incoming image, then keep a slow drift for the whole slide.
+            gsap.fromTo(
+              img,
+              { scale: 1.16, xPercent: 1.5 },
+              { scale: 1.04, xPercent: 0, duration: 2.2, ease: "power3.out" },
+            );
+            gsap.to(img, {
+              scale: 1.1,
+              duration: 6,
+              ease: "sine.inOut",
+              delay: 2.2,
+            });
+          }
+        } else {
+          gsap.to(layer, {
+            autoAlpha: 0,
+            duration: 1.6,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          });
+        }
+      });
+    },
+    { dependencies: [active], scope: root },
+  );
+
+  // Text intro
   useGSAP(
     () => {
       if (prefersReducedMotion()) return;
@@ -65,46 +118,45 @@ export function Hero() {
       aria-label="Introduction"
     >
       {/* Constituency slider */}
-      <div aria-hidden className="absolute inset-0 -z-20">
+      <div aria-hidden className="absolute inset-0 -z-20 bg-bg">
         {slides.map((slide, i) => (
           <div
             key={slide.name}
-            className="absolute inset-0 transition-opacity duration-1000 ease-out"
-            style={{ opacity: i === active ? 1 : 0 }}
+            ref={(el) => {
+              layerRefs.current[i] = el;
+            }}
+            className="absolute inset-0 will-change-[opacity]"
+            style={{ opacity: i === 0 ? 1 : 0 }}
           >
-            {slide.src ? (
-              <Image
-                src={slide.src}
-                alt=""
-                fill
-                priority={i === 0}
-                sizes="100vw"
-                className="object-cover"
-                style={{
-                  animation: i === active ? "lanky-kenburns 7s ease-out forwards" : undefined,
-                }}
-              />
-            ) : (
-              <div
-                className="h-full w-full"
-                style={{
-                  backgroundImage:
-                    placeholderGradients[i % placeholderGradients.length],
-                  animation:
-                    i === active ? "lanky-kenburns 7s ease-out forwards" : undefined,
-                }}
-              >
-                {/* faint window-pane texture */}
+            <div data-img className="absolute inset-0 will-change-transform">
+              {slide.src ? (
+                <Image
+                  src={slide.src}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  sizes="100vw"
+                  className="object-cover"
+                />
+              ) : (
                 <div
-                  className="h-full w-full opacity-[0.06]"
+                  className="h-full w-full"
                   style={{
                     backgroundImage:
-                      "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-                    backgroundSize: "64px 64px",
+                      placeholderGradients[i % placeholderGradients.length],
                   }}
-                />
-              </div>
-            )}
+                >
+                  <div
+                    className="h-full w-full opacity-[0.06]"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+                      backgroundSize: "64px 64px",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -175,7 +227,7 @@ export function Hero() {
                 type="button"
                 onClick={() => setActive(i)}
                 aria-label={`Show ${slide.name}`}
-                className="h-1.5 rounded-full transition-all duration-300"
+                className="h-1.5 rounded-full transition-all duration-500"
                 style={{
                   width: i === active ? 28 : 10,
                   backgroundColor:

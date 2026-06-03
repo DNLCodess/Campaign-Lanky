@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/hero";
 import { Journey } from "@/components/home/journey";
+import { PartyBanner } from "@/components/home/party-banner";
 import { Bridge } from "@/components/home/bridge";
 import { Commitments } from "@/components/home/commitments";
 import { PromiseQuote } from "@/components/home/promise";
@@ -44,6 +45,9 @@ export default function Home() {
 
       {/* Meet Lanky — Portrait Journey */}
       <Journey />
+
+      {/* Bold Labour Party + Oyo State statement */}
+      <PartyBanner />
 
       {/* The Vision — pillars */}
       <section className="tone-deep border-t border-border/60 px-5 py-20" id="pillars">
