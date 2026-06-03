@@ -16,13 +16,31 @@ export const site = {
   guidingPrinciple:
     "Representation Through Collaboration, Progress Through Innovation, and Development Through Collective Action.",
 
-  // Constituency hubs featured in the hero slider. `src` is null until the
-  // client provides real photography (placeholder gradients render meanwhile).
+  // Constituency hubs featured in the hero slider.
+  // NOTE: these are temporary Unsplash stock photos (Nigerian markets / streets)
+  // standing in until the client supplies real constituency photography — just
+  // swap each `src` for the real image URL or local /brand path.
   constituencySlides: [
-    { name: "Ring Road", note: "Ibadan South-West", src: null as string | null },
-    { name: "Dugbe Market", note: "Ibadan North-West", src: null as string | null },
-    { name: "Eleyele", note: "Ibadan South-West", src: null as string | null },
-    { name: "Beere", note: "Ibadan North-West", src: null as string | null },
+    {
+      name: "Ring Road",
+      note: "Ibadan South-West",
+      src: "https://images.unsplash.com/photo-1567622661088-6951d0f9eedd?auto=format&fit=crop&w=1920&q=70" as string | null,
+    },
+    {
+      name: "Dugbe Market",
+      note: "Ibadan North-West",
+      src: "https://images.unsplash.com/photo-1585540083814-ea6ee8af9e4f?auto=format&fit=crop&w=1920&q=70" as string | null,
+    },
+    {
+      name: "Eleyele",
+      note: "Ibadan South-West",
+      src: "https://images.unsplash.com/photo-1579998120708-682dd8a5624f?auto=format&fit=crop&w=1920&q=70" as string | null,
+    },
+    {
+      name: "Beere",
+      note: "Ibadan North-West",
+      src: "https://images.unsplash.com/photo-1722072391426-964abfef1924?auto=format&fit=crop&w=1920&q=70" as string | null,
+    },
   ],
 
   nav: [
