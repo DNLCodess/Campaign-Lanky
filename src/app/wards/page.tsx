@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Wards & Local Government Focus",
   description:
     "Our focus across Ibadan Southwest and Northwest Local Governments — and how to find and verify your polling unit through INEC.",
+  alternates: { canonical: "/wards" },
 };
 
 const lgas = [

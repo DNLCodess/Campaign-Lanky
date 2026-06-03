@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "News & Media",
   description:
     "Press releases, campaign updates, and media from Lanky's ward-to-ward consultations and community engagements.",
+  alternates: { canonical: "/news" },
 };
 
 const gallery = [

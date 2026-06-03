@@ -1,0 +1,39 @@
+# Lanky — Olanrewaju Okesooto for Ibadan Southwest / Northwest
+
+> Official campaign website of Olanrewaju Okesooto ("Lanky"), Labour Party
+> candidate for the Federal House of Representatives, Ibadan Southwest /
+> Northwest Federal Constituency, Oyo State, Nigeria. Campaign slogan:
+> "Innovation for Ibadan: Securing Our Future, Together."
+
+Lanky, known as "The Bridge-Builder," is a community leader and technology
+consultant running on a platform of digital empowerment, education, and
+accountable, project-driven representation. The agenda centers on five pillars:
+a Digital Town Hall app connecting residents to their representative, a
+Technology & Innovation Hub training youths for global remote work, robotics and
+coding in public schools, support for traders and small businesses, and a
+Grooming Hub Initiative.
+
+## Key pages
+
+- [Home](https://votelanky.com/): Overview, vision, and the five pillars.
+- [About](https://votelanky.com/about): Biography, values, and background of Olanrewaju Okesooto.
+- [Manifesto](https://votelanky.com/manifesto): Full campaign agenda and the five policy pillars.
+- [Wards & Local Government](https://votelanky.com/wards): Focus across Ibadan SW/NW LGAs and how to verify your INEC polling unit.
+- [News & Media](https://votelanky.com/news): Press releases, campaign updates, and ward-to-ward tour coverage.
+- [Get Involved](https://votelanky.com/get-involved): Volunteer roles — canvassing, advocacy, polling-unit agents, events.
+- [Donate](https://votelanky.com/donate): Secure contributions for supporters in Nigeria and the diaspora.
+- [Contact](https://votelanky.com/contact): WhatsApp, email, campaign office, and the campaign team.
+
+## Facts
+
+- Candidate: Olanrewaju Okesooto (Lanky)
+- Office sought: Federal House of Representatives
+- Constituency: Ibadan Southwest / Northwest Federal Constituency, Oyo State, Nigeria
+- Party: Labour Party
+- Guiding principle: Representation Through Collaboration, Progress Through Innovation, and Development Through Collective Action.
+
+## Notes
+
+- The canonical site is https://votelanky.com.
+- Sitemap: https://votelanky.com/sitemap.xml
+- Administrative and API routes (/admin, /api, /donate/callback) are not public content.

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Meet Olanrewaju Okesooto",
   description:
     "Meet Olanrewaju Okesooto — community leader, technology consultant, and Labour Party candidate for Ibadan Southwest / Northwest, Oyo State.",
+  alternates: { canonical: "/about" },
 };
 
 const values = [

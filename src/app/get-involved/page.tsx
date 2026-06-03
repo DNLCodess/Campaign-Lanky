@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Get Involved",
   description:
     "Volunteer with the Lanky campaign — door-to-door canvassing, social media advocacy, polling unit agents, and event planning.",
+  alternates: { canonical: "/get-involved" },
 };
 
 export default function GetInvolvedPage() {

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Contact",
   description:
     "Get in touch with the Lanky campaign — WhatsApp, email, campaign office, and the campaign team.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

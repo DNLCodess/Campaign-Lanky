@@ -3,6 +3,9 @@
  * Values marked TODO are pending from the client (see docs/CAMPAIGN_BRIEF.md §7).
  */
 export const site = {
+  // Canonical production origin (no trailing slash). Used for metadataBase,
+  // sitemap/robots, canonical URLs, and structured data.
+  url: "https://votelanky.com",
   candidate: "Olanrewaju Okesooto",
   shortName: "Lanky",
   tagline: "The Bridge-Builder",

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Campaign Agenda & Manifesto",
   description:
     "The vision for a digitally empowered, educated, and prosperous Ibadan Southwest / Northwest — five pillars from the Digital Town Hall to the Grooming Hub Initiative.",
+  alternates: { canonical: "/manifesto" },
 };
 
 /* ------------------------------------------------------------------ */

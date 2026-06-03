@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Donate",
   description:
     "Support the Lanky campaign. Secure giving for supporters within Nigeria and in the diaspora.",
+  alternates: { canonical: "/donate" },
 };
 
 export default function DonatePage() {
