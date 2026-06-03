@@ -76,12 +76,24 @@ export const site = {
     { label: "YouTube", href: "#" },
   ],
 
+  // Numbers use +234 international format so diaspora supporters can dial directly.
+  // More positions/names to be added as the client provides them.
   team: [
-    { role: "Campaign Manager", name: "Adeyemo Olayomade", phone: "0810 999 1271" },
     {
       role: "Strategic Team Lead / Advisory Board Chairman",
       name: "Apostle (Dr.) Philips Olaiya Oladipo",
-      phone: "0815 756 1814",
+      phone: "+234 815 756 1814",
+    },
+    {
+      role: "Religious Body Mobilizer",
+      name: "Pastor Oluseye A. Ayeni (FSP)",
+      phone: "+234 703 865 2796",
+    },
+    { role: "Youth Coordinators", name: "To be announced", phone: "" },
+    {
+      role: "Campaign Manager",
+      name: "Adeyemo Olayomade",
+      phone: "+234 810 999 1271",
     },
   ],
 } as const;

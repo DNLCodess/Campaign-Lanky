@@ -50,15 +50,21 @@ export default function ContactPage() {
               <h2 className="font-heading text-2xl text-text">Campaign team</h2>
               <ul className="mt-4 space-y-4">
                 {site.team.map((t) => (
-                  <li key={t.name}>
-                    <p className="font-medium text-text">{t.name}</p>
+                  <li key={t.role}>
                     <p className="text-sm text-text-muted">{t.role}</p>
-                    <a
-                      href={`tel:${t.phone.replace(/\s/g, "")}`}
-                      className="text-sm text-accent hover:text-accent-hover"
-                    >
-                      {t.phone}
-                    </a>
+                    <p className="font-medium text-text">{t.name}</p>
+                    {t.phone ? (
+                      <a
+                        href={`tel:${t.phone.replace(/\s/g, "")}`}
+                        className="text-sm text-accent hover:text-accent-hover"
+                      >
+                        {t.phone}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-text-muted/70">
+                        Contact details coming soon
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

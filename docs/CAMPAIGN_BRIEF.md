@@ -248,10 +248,14 @@ Built on the pillars of integrity, digital inclusion, and radical economic empow
 
 ## 6. Contacts
 
+Numbers use **+234** international format so diaspora supporters can dial directly. Order is fixed (Apostle → Daddy Ayeni → … → Yomade last). More positions/names to be added by the client.
+
 | Role | Name | Phone |
 |------|------|-------|
-| Campaign Manager | Adeyemo Olayomade | 0810 999 1271 |
-| Strategic Team Lead / Advisory Board Chairman | Apostle (Dr.) Philips Olaiya Oladipo | 0815 756 1814 |
+| Strategic Team Lead / Advisory Board Chairman | Apostle (Dr.) Philips Olaiya Oladipo | +234 815 756 1814 |
+| Religious Body Mobilizer | Pastor Oluseye A. Ayeni (FSP) | +234 703 865 2796 |
+| Youth Coordinators | *To be announced* | — |
+| Campaign Manager | Adeyemo Olayomade | +234 810 999 1271 |
 
 **Campaign Office Address:** *(TBD — to confirm with client)*
 **Campaign Email:** *(TBD)*
