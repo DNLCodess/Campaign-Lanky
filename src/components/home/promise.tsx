@@ -3,7 +3,7 @@ import { site } from "@/lib/site";
 
 export function PromiseQuote() {
   return (
-    <section className="relative overflow-hidden bg-linear-to-b from-bg to-surface/40 py-24">
+    <section className="tone-aurora relative overflow-hidden py-24">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"

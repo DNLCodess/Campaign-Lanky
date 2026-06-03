@@ -64,7 +64,7 @@ export default function NewsPage() {
       </section>
 
       {/* Blog — coming soon */}
-      <section className="border-y border-border/60 bg-surface/20">
+      <section className="tone-navy border-y border-border/60">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <Reveal>
             <h2 className="font-heading text-3xl text-text sm:text-4xl">

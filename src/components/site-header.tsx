@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { site } from "@/lib/site";
 import { CtaButton } from "@/components/ui/cta-button";
+import { PartyState } from "@/components/party-state";
 import { cn } from "@/lib/cn";
 
 export function SiteHeader() {
@@ -40,6 +41,16 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50">
+      {/* Top identity strip — Labour Party + Oyo State, site-wide */}
+      <div className="border-b border-border/60 bg-surface/70 backdrop-blur-md">
+        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-5 text-xs text-text-muted sm:px-8">
+          <PartyState />
+          <span className="hidden sm:block">
+            {site.office} · {site.constituency}
+          </span>
+        </div>
+      </div>
+
       {/* Bar (blur lives here, NOT on <header>, so the fixed overlay below
           escapes to the viewport instead of being clipped to the bar box). */}
       <div className="border-b border-border/60 bg-bg/80 backdrop-blur-md">

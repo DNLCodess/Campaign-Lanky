@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { site } from "@/lib/site";
 import { CtaButton } from "@/components/ui/cta-button";
+import { PartyState } from "@/components/party-state";
 
 export function SiteFooter() {
   return (
@@ -20,10 +21,13 @@ export function SiteFooter() {
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-text-muted">
               {site.slogan}
             </p>
+            <div className="mt-5 inline-flex items-center gap-3 rounded-brand border border-border bg-bg/40 px-4 py-3 text-sm text-text-muted">
+              <PartyState size="lg" />
+            </div>
             <p className="mt-4 text-xs text-text-muted/70">
-              {site.candidate} · {site.party}
+              {site.candidate} · {site.office}
               <br />
-              {site.constituency}
+              {site.constituency}, {site.state}
             </p>
           </div>
 

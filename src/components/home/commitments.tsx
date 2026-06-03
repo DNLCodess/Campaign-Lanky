@@ -40,7 +40,8 @@ function Check() {
 
 export function Commitments() {
   return (
-    <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+    <section className="tone-deep px-5 py-20">
+      <div className="mx-auto max-w-7xl sm:px-8">
       {/* Stat band */}
       <div className="grid grid-cols-2 gap-6 border-y border-border/60 py-10 lg:grid-cols-4">
         {stats.map((s) => (
@@ -48,7 +49,7 @@ export function Commitments() {
             <div className="font-heading text-5xl text-text sm:text-6xl">
               <CountUp value={s.value} suffix={s.suffix} />
             </div>
-            <p className="mx-auto mt-2 max-w-[12rem] text-sm text-text-muted">
+            <p className="mx-auto mt-2 max-w-48 text-sm text-text-muted">
               {s.label}
             </p>
           </Reveal>
@@ -80,6 +81,7 @@ export function Commitments() {
             ))}
           </ul>
         </Reveal>
+      </div>
       </div>
     </section>
   );

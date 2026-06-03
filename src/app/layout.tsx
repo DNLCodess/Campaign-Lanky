@@ -24,10 +24,10 @@ export const metadata: Metadata = {
     template: "%s | Lanky for Ibadan",
   },
   description:
-    "Okesooto Olanrewaju Moses — Labour Party candidate for the Federal House of Representatives, Ibadan Southwest / Northwest. Innovation for Ibadan: Securing Our Future, Together.",
+    "Olanrewaju Okesooto — Labour Party candidate for the Federal House of Representatives, Ibadan Southwest / Northwest. Innovation for Ibadan: Securing Our Future, Together.",
   keywords: [
     "Lanky",
-    "Okesooto Olanrewaju Moses",
+    "Olanrewaju Okesooto",
     "Ibadan Southwest Northwest",
     "Federal House of Representatives",
     "Labour Party",

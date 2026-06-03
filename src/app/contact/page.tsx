@@ -19,7 +19,8 @@ export default function ContactPage() {
         intro="Reach the campaign directly. We are listening — to your ideas, your concerns, and how we can serve the constituency better."
       />
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+      <section className="tone-navy px-5 py-20">
+        <div className="mx-auto max-w-7xl sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
           {/* Channels */}
           <div className="space-y-5">
@@ -83,6 +84,7 @@ export default function ContactPage() {
           <Reveal delay={0.1}>
             <ContactForm />
           </Reveal>
+        </div>
         </div>
       </section>
     </>

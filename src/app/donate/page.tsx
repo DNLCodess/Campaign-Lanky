@@ -19,7 +19,8 @@ export default function DonatePage() {
         intro="Your contribution funds ward-to-ward consultations, town halls, and the programs that will transform our constituency. Every naira moves us forward."
       />
 
-      <section className="mx-auto max-w-3xl px-5 py-20 sm:px-8">
+      <section className="tone-steel px-5 py-20">
+        <div className="mx-auto max-w-3xl sm:px-8">
         <Reveal className="rounded-brand border border-border bg-surface/40 p-8 sm:p-10">
           {/* TODO(client): integrate Paystack or Flutterwave (decision pending). */}
           <h2 className="font-heading text-2xl text-text">Choose an amount</h2>
@@ -80,6 +81,7 @@ export default function DonatePage() {
             guidelines will be published here.
           </p>
         </Reveal>
+        </div>
       </section>
     </>
   );

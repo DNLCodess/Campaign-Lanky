@@ -18,7 +18,8 @@ export default function GetInvolvedPage() {
         intro="Real change starts with a single vote and a shared vision. Choose how you want to help — every hand makes the movement stronger."
       />
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+      <section className="tone-steel px-5 py-20">
+        <div className="mx-auto max-w-7xl sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
           {/* Volunteer form */}
           <Reveal>
@@ -68,6 +69,7 @@ export default function GetInvolvedPage() {
               </p>
             </div>
           </Reveal>
+        </div>
         </div>
       </section>
     </>

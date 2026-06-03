@@ -56,7 +56,8 @@ const ways = [
 
 export function GetInvolvedTeaser() {
   return (
-    <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+    <section className="tone-navy px-5 py-20">
+      <div className="mx-auto max-w-7xl sm:px-8">
       <Reveal className="max-w-2xl">
         <p className="text-sm font-medium uppercase tracking-widest text-accent">
           Get Involved
@@ -93,6 +94,7 @@ export function GetInvolvedTeaser() {
           {site.cta.donate.label}
         </CtaButton>
       </Reveal>
+      </div>
     </section>
   );
 }

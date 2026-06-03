@@ -46,7 +46,8 @@ export default function Home() {
       <Journey />
 
       {/* The Vision — pillars */}
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8" id="pillars">
+      <section className="tone-navy px-5 py-20" id="pillars">
+        <div className="mx-auto max-w-7xl sm:px-8">
         <Reveal>
           <p className="text-sm font-medium uppercase tracking-widest text-accent">
             The Vision
@@ -79,6 +80,7 @@ export default function Home() {
             <span className="mt-4 text-sm text-accent">— {site.shortName}</span>
           </Reveal>
         </div>
+        </div>
       </section>
 
       {/* The Bridge-Builder — signature scroll-draw */}
@@ -94,7 +96,7 @@ export default function Home() {
       <GetInvolvedTeaser />
 
       {/* Join the Movement — email/phone capture */}
-      <section className="border-y border-border/60 bg-surface/30">
+      <section className="tone-red border-y border-border/60">
         <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8">
           <Reveal>
             <h2 className="font-heading text-4xl text-text sm:text-5xl">

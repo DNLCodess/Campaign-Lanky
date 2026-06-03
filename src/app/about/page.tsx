@@ -8,7 +8,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Meet Olanrewaju Okesooto",
   description:
-    "Meet Okesooto Olanrewaju Moses — community leader, technology consultant, and Labour Party candidate for Ibadan Southwest / Northwest.",
+    "Meet Olanrewaju Okesooto — community leader, technology consultant, and Labour Party candidate for Ibadan Southwest / Northwest, Oyo State.",
 };
 
 const values = [
@@ -31,7 +31,7 @@ export default function AboutPage() {
     <>
       <PageHeader
         eyebrow="Meet the Candidate"
-        title="Okesooto Olanrewaju Moses"
+        title="Olanrewaju Okesooto"
         intro="A neighbour, a listener, and a proactive leader who believes governance should be felt at the grassroots level — driven by a singular purpose: to give Ibadan Southwest / Northwest the representation it truly deserves."
       />
 
@@ -57,7 +57,7 @@ export default function AboutPage() {
               </h2>
               <div className="mt-6 space-y-4 text-lg leading-relaxed text-text-muted">
                 <p>
-                  Okesooto Olanrewaju Moses is the CEO and Creative Director of{" "}
+                  Olanrewaju Okesooto is the CEO and Creative Director of{" "}
                   <span className="text-text">Lanky First Ideal Creativity</span>, a
                   technology-driven company specialising in digital solutions,
                   branding, mobile application development, and advanced web
@@ -96,7 +96,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="border-y border-border/60 bg-surface/30">
+      <section className="tone-navy border-y border-border/60">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <Reveal>
             <p className="text-sm font-medium uppercase tracking-widest text-accent">
@@ -122,7 +122,8 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8">
+      <section className="tone-red px-5 py-20 text-center">
+        <div className="mx-auto max-w-3xl sm:px-8">
         <Reveal>
           <h2 className="font-heading text-4xl text-text sm:text-5xl">
             Stand with Lanky
@@ -140,6 +141,7 @@ export default function AboutPage() {
             </CtaButton>
           </div>
         </Reveal>
+        </div>
       </section>
     </>
   );

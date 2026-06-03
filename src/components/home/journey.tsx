@@ -66,7 +66,7 @@ export function Journey() {
   );
 
   return (
-    <section ref={section} className="relative" aria-label="Meet Lanky">
+    <section ref={section} className="tone-deep relative" aria-label="Meet Lanky">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:grid lg:grid-cols-2 lg:gap-16">
         {/* Narrative chapters */}
         <div>
@@ -118,7 +118,7 @@ export function Journey() {
                 <div key={i} ref={ref} className="absolute inset-0">
                   <Image
                     src={chapters[i].img}
-                    alt={i === 0 ? "Okesooto Olanrewaju Moses" : ""}
+                    alt={i === 0 ? "Olanrewaju Okesooto" : ""}
                     fill
                     sizes="45vw"
                     className="object-cover object-top"

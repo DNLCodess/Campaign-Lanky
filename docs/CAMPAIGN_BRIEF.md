@@ -1,7 +1,8 @@
 # Campaign Brief — Lanky, The Bridge-Builder
 
 > **Project:** `campaign-lanky` — Official campaign website
-> **Candidate:** Okesooto Olanrewaju Moses ("Lanky")
+> **Candidate:** Olanrewaju Okesooto ("Lanky") — *display name is "Olanrewaju Okesooto" only; do not use a longer full name anywhere on the site.*
+> **State:** Oyo State
 > **Office:** Federal House of Representatives — Ibadan Southwest / Northwest Federal Constituency
 > **Party:** Labour Party
 > **Slogan:** *Innovation for Ibadan: Securing Our Future, Together.*
@@ -22,6 +23,15 @@
 - **Theme:** Dark-background, premium feel
 - **Mood:** Innovative + Trustworthy — clean modern layouts, generous whitespace, sharp photography, subtle motion; balances tech credibility with civic trust
 - **Typography — FINAL:** **Fraunces** (headings — echoes the logo's high-contrast editorial serif) + **Inter** (body — crisp, legible on mobile). Both free Google Fonts.
+
+### Background Variety (client feedback)
+Do **not** flatten the whole site to one navy. Use the **section tone utilities** in `globals.css` (`.tone-deep`, `.tone-navy`, `.tone-steel`, `.tone-red`, `.tone-gradient`, `.tone-aurora`, `.tone-panel`) to alternate professional, brand-derived backgrounds between bands — on every page, built and future.
+
+### Party & State Emphasis (client feedback)
+**Labour Party** and **Oyo State** must be unmistakable without reading deeply: site-wide top strip, hero badge, and footer lockup via the `PartyState` component. Party logo is a **placeholder** (`public/brand/labour-party.svg`) until the official mark is supplied.
+
+### Hero Constituency Slider (client feedback)
+Hero uses an auto-crossfading, Ken-Burns **constituency image slider** (text content retained over a legibility scrim). Real photos pending — currently branded gradient placeholders; set `src` in `site.constituencySlides` when images arrive.
 
 ### Iconography Guideline
 - **Avoid generic "AI-coded" / tech-cliché icons** — no lightning bolts (`zap`), flashes, sparkles, "magic wand", robots, brains, or rocket clichés. They cheapen a civic/political brand.

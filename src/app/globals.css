@@ -13,10 +13,11 @@
   --brand-red: #c21720;
   --brand-white: #ffffff;
 
-  /* Surfaces (deep navy world) */
-  --bg: #071a26;
-  --surface: #0d334a;
-  --surface-2: #12425e;
+  /* Surfaces (deep navy world) — a graded family for section variety */
+  --bg: #071a26; /* deepest base */
+  --bg-elevated: #0b2a3d; /* lighter navy band */
+  --surface: #0d334a; /* brand navy (cards) */
+  --surface-2: #12425e; /* elevated */
   --border: #1e4d69;
 
   /* Actions & accents */
@@ -77,6 +78,65 @@ h1, h2, h3, h4, h5 {
 ::selection {
   background: var(--primary);
   color: #fff;
+}
+
+/* ============================================================
+   Section background tones — professional, brand-derived variety.
+   Drop one onto a <section> to vary the rhythm between bands.
+   All stay within the navy/steel/red family on a dark base.
+   ============================================================ */
+@layer components {
+  /* Deepest base (near-black navy) */
+  .tone-deep {
+    background-color: #06141d;
+  }
+  /* Brand-navy elevated band */
+  .tone-navy {
+    background-color: var(--bg-elevated);
+  }
+  /* Vertical navy gradient (subtle lift) */
+  .tone-gradient {
+    background-image: linear-gradient(180deg, #071a26 0%, #0c3149 100%);
+  }
+  /* Steel-blue ambient glow on navy (cool / innovation) */
+  .tone-steel {
+    background-color: #071a26;
+    background-image: radial-gradient(
+      60% 65% at 82% 8%,
+      rgba(103, 156, 188, 0.16),
+      transparent 70%
+    );
+  }
+  /* Warm red ambient glow on navy (energy / call to action) */
+  .tone-red {
+    background-color: #0a1b25;
+    background-image: radial-gradient(
+      58% 70% at 12% 100%,
+      rgba(194, 23, 32, 0.14),
+      transparent 72%
+    );
+  }
+  /* Solid brand-navy panel */
+  .tone-panel {
+    background-color: var(--surface);
+  }
+  /* Dual glow (hero / feature moments) */
+  .tone-aurora {
+    background-color: #06151f;
+    background-image:
+      radial-gradient(50% 55% at 78% 12%, rgba(103, 156, 188, 0.18), transparent 70%),
+      radial-gradient(48% 60% at 8% 95%, rgba(194, 23, 32, 0.13), transparent 72%);
+  }
+}
+
+/* Slow crossfade slider (hero constituency images) */
+@keyframes lanky-kenburns {
+  0% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1.14);
+  }
 }
 
 /* Respect reduced-motion globally as a safety net (JS also guards GSAP). */

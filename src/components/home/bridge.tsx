@@ -49,7 +49,7 @@ export function Bridge() {
   return (
     <section
       ref={root}
-      className="relative overflow-hidden border-y border-border/60 bg-surface/20 py-24"
+      className="tone-steel relative overflow-hidden border-y border-border/60 py-24"
     >
       <div className="mx-auto max-w-4xl px-5 text-center sm:px-8">
         <p className="text-sm font-medium uppercase tracking-widest text-accent">

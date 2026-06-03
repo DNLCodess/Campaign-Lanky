@@ -28,7 +28,8 @@ export default function WardsPage() {
         intro="From the markets of the Northwest to the residential hubs of the Southwest — a ward-to-ward commitment to consultation, presence, and measurable impact."
       />
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+      <section className="tone-navy px-5 py-20">
+        <div className="mx-auto max-w-7xl sm:px-8">
         <div className="grid gap-5 md:grid-cols-2">
           {lgas.map((lg, i) => (
             <Reveal
@@ -81,6 +82,7 @@ export default function WardsPage() {
             You will be redirected to the official INEC website in a new tab.
           </p>
         </Reveal>
+        </div>
       </section>
     </>
   );

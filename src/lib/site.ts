@@ -3,15 +3,27 @@
  * Values marked TODO are pending from the client (see docs/CAMPAIGN_BRIEF.md §7).
  */
 export const site = {
-  candidate: "Okesooto Olanrewaju Moses",
+  candidate: "Olanrewaju Okesooto",
   shortName: "Lanky",
   tagline: "The Bridge-Builder",
   office: "Federal House of Representatives",
   constituency: "Ibadan Southwest / Northwest Federal Constituency",
+  state: "Oyo State",
   party: "Labour Party",
+  // Labour Party placeholder mark — swap for the official logo when provided.
+  partyLogo: "/brand/labour-party.svg",
   slogan: "Innovation for Ibadan: Securing Our Future, Together.",
   guidingPrinciple:
     "Representation Through Collaboration, Progress Through Innovation, and Development Through Collective Action.",
+
+  // Constituency hubs featured in the hero slider. `src` is null until the
+  // client provides real photography (placeholder gradients render meanwhile).
+  constituencySlides: [
+    { name: "Ring Road", note: "Ibadan South-West", src: null as string | null },
+    { name: "Dugbe Market", note: "Ibadan North-West", src: null as string | null },
+    { name: "Eleyele", note: "Ibadan South-West", src: null as string | null },
+    { name: "Beere", note: "Ibadan North-West", src: null as string | null },
+  ],
 
   nav: [
     { label: "About", href: "/about" },
