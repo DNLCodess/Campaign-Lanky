@@ -14,6 +14,7 @@ export default function DonatePage() {
   return (
     <>
       <PageHeader
+        image="/consituency/9.jpeg"
         eyebrow="Support the Campaign"
         title="Power the movement"
         intro="Your contribution funds ward-to-ward consultations, town halls, and the programs that will transform our constituency. Every naira moves us forward."

@@ -24,6 +24,7 @@ export default function WardsPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/8.jpeg"
         eyebrow="Wards & Local Government"
         title="Where we focus, ward by ward"
         intro="From the markets of the Northwest to the residential hubs of the Southwest — a ward-to-ward commitment to consultation, presence, and measurable impact."

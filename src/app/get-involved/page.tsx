@@ -14,6 +14,7 @@ export default function GetInvolvedPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/10.jpeg"
         eyebrow="Get Involved"
         title="Join the movement"
         intro="Real change starts with a single vote and a shared vision. Choose how you want to help — every hand makes the movement stronger."

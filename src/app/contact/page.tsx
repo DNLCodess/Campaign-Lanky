@@ -15,6 +15,7 @@ export default function ContactPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/7.jpeg"
         eyebrow="Contact"
         title="Let's talk"
         intro="Reach the campaign directly. We are listening — to your ideas, your concerns, and how we can serve the constituency better."

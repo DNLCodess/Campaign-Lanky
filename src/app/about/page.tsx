@@ -31,6 +31,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/6.jpeg"
         eyebrow="Meet the Candidate"
         title="Olanrewaju Okesooto"
         intro="A neighbour, a listener, and a proactive leader who believes governance should be felt at the grassroots level — driven by a singular purpose: to give Ibadan Southwest / Northwest the representation it truly deserves."

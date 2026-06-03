@@ -1,100 +1,89 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logout } from "@/app/admin/actions";
+import {
+  ADMIN_TABLE_ORDER,
+  ADMIN_TABLES,
+  isAdminTable,
+  searchExpression,
+  type AdminTableKey,
+} from "@/lib/admin-tables";
 
 export const dynamic = "force-dynamic";
 
-type Lead = { id: string; email: string; phone: string | null; source: string | null; created_at: string };
-type Volunteer = {
-  id: string;
-  name: string;
-  phone: string;
-  email: string | null;
-  ward: string | null;
-  interests: string[] | null;
-  created_at: string;
-};
-type Message = { id: string; name: string; contact: string; message: string; created_at: string };
-type Donation = {
-  id: string;
-  amount: number;
-  currency: string;
-  donor_name: string;
-  donor_email: string;
-  status: string;
-  payment_type: string | null;
-  created_at: string;
-};
+const PAGE_SIZE = 20;
+const naira = (n: unknown) => `₦${Number(n).toLocaleString("en-NG")}`;
+const when = (iso: unknown) =>
+  new Date(String(iso)).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" });
 
-type DashboardData = {
-  configured: boolean;
-  counts: { leads: number; volunteers: number; messages: number; donations: number };
-  raised: number;
-  successfulCount: number;
-  leads: Lead[];
-  volunteers: Volunteer[];
-  messages: Message[];
-  donations: Donation[];
-};
+type Row = Record<string, unknown>;
 
-const naira = (n: number) => `₦${Number(n).toLocaleString("en-NG")}`;
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" });
+function buildUrl(view: AdminTableKey, page: number, q: string) {
+  const params = new URLSearchParams({ view });
+  if (page > 1) params.set("page", String(page));
+  if (q) params.set("q", q);
+  return `/admin?${params.toString()}`;
+}
 
-async function getData(): Promise<DashboardData> {
-  const empty: DashboardData = {
-    configured: false,
-    counts: { leads: 0, volunteers: 0, messages: 0, donations: 0 },
-    raised: 0,
-    successfulCount: 0,
-    leads: [],
-    volunteers: [],
-    messages: [],
-    donations: [],
-  };
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; page?: string; q?: string }>;
+}) {
+  const user = await requireAdmin();
+  const sp = await searchParams;
+
+  const view: AdminTableKey = isAdminTable(sp.view ?? "") ? (sp.view as AdminTableKey) : "donations";
+  const q = (sp.q ?? "").toString();
+  const page = Math.max(1, Number(sp.page) || 1);
+
+  let configured = true;
+  const counts: Record<AdminTableKey, number> = { donations: 0, volunteers: 0, leads: 0, messages: 0 };
+  let raised = 0;
+  let successfulCount = 0;
+  let rows: Row[] = [];
+  let total = 0;
 
   try {
     const supabase = createAdminSupabase();
-    const recent = <T,>(table: string) =>
-      supabase
-        .from(table)
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .limit(50) as unknown as Promise<{ data: T[] | null; count: number | null }>;
 
-    const [leads, volunteers, messages, donations, successful] = await Promise.all([
-      recent<Lead>("leads"),
-      recent<Volunteer>("volunteers"),
-      recent<Message>("messages"),
-      recent<Donation>("donations"),
-      supabase.from("donations").select("amount").eq("status", "successful").limit(5000),
-    ]);
-
-    const successRows = (successful.data ?? []) as { amount: number }[];
-    return {
-      configured: true,
-      counts: {
-        leads: leads.count ?? 0,
-        volunteers: volunteers.count ?? 0,
-        messages: messages.count ?? 0,
-        donations: donations.count ?? 0,
-      },
-      raised: successRows.reduce((s, r) => s + Number(r.amount), 0),
-      successfulCount: successRows.length,
-      leads: leads.data ?? [],
-      volunteers: volunteers.data ?? [],
-      messages: messages.data ?? [],
-      donations: donations.data ?? [],
+    const countOf = async (t: AdminTableKey) => {
+      const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
+      return count ?? 0;
     };
+    const [dc, vc, lc, mc, successful] = await Promise.all([
+      countOf("donations"),
+      countOf("volunteers"),
+      countOf("leads"),
+      countOf("messages"),
+      supabase.from("donations").select("amount").eq("status", "successful").limit(10000),
+    ]);
+    counts.donations = dc;
+    counts.volunteers = vc;
+    counts.leads = lc;
+    counts.messages = mc;
+    const sRows = (successful.data ?? []) as { amount: number }[];
+    successfulCount = sRows.length;
+    raised = sRows.reduce((s, r) => s + Number(r.amount), 0);
+
+    // Active table page (with optional search).
+    let query = supabase
+      .from(view)
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+    const expr = searchExpression(view, q);
+    if (expr) query = query.or(expr);
+    const { data, count } = await query;
+    rows = (data ?? []) as Row[];
+    total = count ?? 0;
   } catch (err) {
     console.error("[admin] data load failed", err);
-    return empty;
+    configured = false;
   }
-}
 
-export default async function AdminDashboard() {
-  const user = await requireAdmin();
-  const d = await getData();
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
@@ -104,99 +93,204 @@ export default async function AdminDashboard() {
           <h1 className="font-heading text-2xl text-text">Campaign Admin</h1>
           <p className="text-sm text-text-muted">{user.email}</p>
         </div>
-        <form action={logout}>
-          <button
-            type="submit"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/team"
             className="rounded-brand border border-border px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
           >
-            Sign out
-          </button>
-        </form>
+            Admin team
+          </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-brand border border-border px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
 
-      {!d.configured && (
+      {!configured && (
         <p className="mt-6 rounded-brand border border-primary/40 bg-primary/10 p-4 text-sm text-text">
-          Data source not configured. Set <code>SUPABASE_SERVICE_ROLE_KEY</code> in
-          the environment to load submissions.
+          Data source not configured. Set <code>SUPABASE_SERVICE_ROLE_KEY</code> to
+          load submissions.
         </p>
       )}
 
       {/* Stat cards */}
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Total raised" value={naira(d.raised)} sub={`${d.successfulCount} donations`} />
-        <Stat label="Supporters" value={String(d.counts.leads)} sub="email / phone signups" />
-        <Stat label="Volunteers" value={String(d.counts.volunteers)} sub="sign-ups" />
-        <Stat label="Messages" value={String(d.counts.messages)} sub="contact form" />
+        <Stat label="Total raised" value={naira(raised)} sub={`${successfulCount} donations`} />
+        <Stat label="Supporters" value={String(counts.leads)} sub="email / phone signups" />
+        <Stat label="Volunteers" value={String(counts.volunteers)} sub="sign-ups" />
+        <Stat label="Messages" value={String(counts.messages)} sub="contact form" />
       </div>
 
-      {/* Donations */}
-      <Section title="Donations" count={d.counts.donations}>
-        <Table head={["Date", "Donor", "Amount", "Status", "Method"]}>
-          {d.donations.map((r) => (
-            <tr key={r.id} className="border-t border-border/40">
-              <Td>{when(r.created_at)}</Td>
-              <Td>
-                <span className="text-text">{r.donor_name}</span>
-                <span className="block text-xs text-text-muted">{r.donor_email}</span>
-              </Td>
-              <Td>{naira(r.amount)}</Td>
-              <Td>
-                <StatusPill status={r.status} />
-              </Td>
-              <Td>{r.payment_type ?? "—"}</Td>
-            </tr>
-          ))}
-        </Table>
-      </Section>
+      {/* Tabs */}
+      <nav className="mt-10 flex flex-wrap gap-2 border-b border-border/60">
+        {ADMIN_TABLE_ORDER.map((t) => {
+          const active = t === view;
+          return (
+            <Link
+              key={t}
+              href={buildUrl(t, 1, "")}
+              className={`-mb-px rounded-t-brand border-b-2 px-4 py-2.5 text-sm transition-colors ${
+                active
+                  ? "border-primary text-text"
+                  : "border-transparent text-text-muted hover:text-text"
+              }`}
+            >
+              {ADMIN_TABLES[t].label}{" "}
+              <span className="text-text-muted">({counts[t]})</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* Volunteers */}
-      <Section title="Volunteers" count={d.counts.volunteers}>
-        <Table head={["Date", "Name", "Phone", "Ward", "Interests"]}>
-          {d.volunteers.map((r) => (
-            <tr key={r.id} className="border-t border-border/40">
-              <Td>{when(r.created_at)}</Td>
-              <Td>
-                <span className="text-text">{r.name}</span>
-                {r.email && <span className="block text-xs text-text-muted">{r.email}</span>}
-              </Td>
-              <Td>{r.phone}</Td>
-              <Td>{r.ward ?? "—"}</Td>
-              <Td>{r.interests?.length ? r.interests.join(", ") : "—"}</Td>
-            </tr>
-          ))}
-        </Table>
-      </Section>
+      {/* Search + export */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <form method="get" className="flex items-center gap-2">
+          <input type="hidden" name="view" value={view} />
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder={`Search ${ADMIN_TABLES[view].label.toLowerCase()}…`}
+            className="w-56 rounded-brand border border-border bg-bg px-4 py-2 text-sm text-text focus:border-accent focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-brand border border-border px-3 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+          >
+            Search
+          </button>
+          {q && (
+            <Link href={buildUrl(view, 1, "")} className="text-sm text-text-muted hover:text-text">
+              Clear
+            </Link>
+          )}
+        </form>
+        <a
+          href={`/admin/export/${view}${q ? `?q=${encodeURIComponent(q)}` : ""}`}
+          className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        >
+          Export CSV
+        </a>
+      </div>
 
-      {/* Supporters / leads */}
-      <Section title="Supporters" count={d.counts.leads}>
-        <Table head={["Date", "Email", "Phone", "Source"]}>
-          {d.leads.map((r) => (
-            <tr key={r.id} className="border-t border-border/40">
-              <Td>{when(r.created_at)}</Td>
-              <Td>{r.email}</Td>
-              <Td>{r.phone ?? "—"}</Td>
-              <Td>{r.source ?? "—"}</Td>
+      {/* Table */}
+      <div className="mt-4 overflow-x-auto rounded-brand border border-border">
+        <table className="w-full min-w-160 text-left text-sm">
+          <thead>
+            <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
+              {headsFor(view).map((h) => (
+                <th key={h} className="px-4 py-3 font-medium">
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </Table>
-      </Section>
+          </thead>
+          <tbody className="text-text-muted">
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={headsFor(view).length} className="px-4 py-10 text-center text-text-muted">
+                  {q ? "No matching records." : "No records yet."}
+                </td>
+              </tr>
+            ) : (
+              rows.map((r, i) => <RowView key={(r.id as string) ?? i} view={view} r={r} />)
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Messages */}
-      <Section title="Messages" count={d.counts.messages}>
-        <Table head={["Date", "From", "Message"]}>
-          {d.messages.map((r) => (
-            <tr key={r.id} className="border-t border-border/40">
-              <Td>{when(r.created_at)}</Td>
-              <Td>
-                <span className="text-text">{r.name}</span>
-                <span className="block text-xs text-text-muted">{r.contact}</span>
-              </Td>
-              <Td className="max-w-md whitespace-pre-wrap">{r.message}</Td>
-            </tr>
-          ))}
-        </Table>
-      </Section>
+      {/* Pagination */}
+      <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
+        <span>
+          {total === 0
+            ? "0 records"
+            : `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}`}
+        </span>
+        <div className="flex gap-2">
+          <PageLink disabled={page <= 1} href={buildUrl(view, page - 1, q)}>
+            ← Prev
+          </PageLink>
+          <span className="px-2 py-1.5">
+            {page} / {totalPages}
+          </span>
+          <PageLink disabled={page >= totalPages} href={buildUrl(view, page + 1, q)}>
+            Next →
+          </PageLink>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function headsFor(view: AdminTableKey): string[] {
+  switch (view) {
+    case "donations":
+      return ["Date", "Donor", "Amount", "Status", "Method"];
+    case "volunteers":
+      return ["Date", "Name", "Phone", "Ward", "Interests"];
+    case "leads":
+      return ["Date", "Email", "Phone", "Source"];
+    case "messages":
+      return ["Date", "From", "Message"];
+  }
+}
+
+function RowView({ view, r }: { view: AdminTableKey; r: Row }) {
+  if (view === "donations") {
+    return (
+      <tr className="border-t border-border/40">
+        <Td>{when(r.created_at)}</Td>
+        <Td>
+          <span className="text-text">{String(r.donor_name ?? "")}</span>
+          <span className="block text-xs text-text-muted">{String(r.donor_email ?? "")}</span>
+        </Td>
+        <Td>{naira(r.amount)}</Td>
+        <Td>
+          <StatusPill status={String(r.status ?? "")} />
+        </Td>
+        <Td>{String(r.payment_type ?? "—")}</Td>
+      </tr>
+    );
+  }
+  if (view === "volunteers") {
+    const interests = (r.interests as string[] | null) ?? [];
+    return (
+      <tr className="border-t border-border/40">
+        <Td>{when(r.created_at)}</Td>
+        <Td>
+          <span className="text-text">{String(r.name ?? "")}</span>
+          {r.email ? <span className="block text-xs text-text-muted">{String(r.email)}</span> : null}
+        </Td>
+        <Td>{String(r.phone ?? "")}</Td>
+        <Td>{String(r.ward ?? "—")}</Td>
+        <Td>{interests.length ? interests.join(", ") : "—"}</Td>
+      </tr>
+    );
+  }
+  if (view === "leads") {
+    return (
+      <tr className="border-t border-border/40">
+        <Td>{when(r.created_at)}</Td>
+        <Td>{String(r.email ?? "")}</Td>
+        <Td>{String(r.phone ?? "—")}</Td>
+        <Td>{String(r.source ?? "—")}</Td>
+      </tr>
+    );
+  }
+  return (
+    <tr className="border-t border-border/40">
+      <Td>{when(r.created_at)}</Td>
+      <Td>
+        <span className="text-text">{String(r.name ?? "")}</span>
+        <span className="block text-xs text-text-muted">{String(r.contact ?? "")}</span>
+      </Td>
+      <Td className="max-w-md whitespace-pre-wrap">{String(r.message ?? "")}</Td>
+    </tr>
   );
 }
 
@@ -210,46 +304,30 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
   );
 }
 
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mt-10">
-      <h2 className="font-heading text-xl text-text">
-        {title} <span className="text-base text-text-muted">({count})</span>
-      </h2>
-      <div className="mt-3 overflow-x-auto rounded-brand border border-border">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Table({ head, children }: { head: string[]; children: React.ReactNode }) {
-  return (
-    <table className="w-full min-w-[640px] text-left text-sm">
-      <thead>
-        <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
-          {head.map((h) => (
-            <th key={h} className="px-4 py-3 font-medium">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody className="text-text-muted">{children}</tbody>
-    </table>
-  );
-}
-
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <td className={`px-4 py-3 align-top ${className}`}>{children}</td>;
+}
+
+function PageLink({
+  href,
+  disabled,
+  children,
+}: {
+  href: string;
+  disabled: boolean;
+  children: React.ReactNode;
+}) {
+  if (disabled) {
+    return <span className="rounded-brand border border-border/40 px-3 py-1.5 opacity-40">{children}</span>;
+  }
+  return (
+    <Link
+      href={href}
+      className="rounded-brand border border-border px-3 py-1.5 transition-colors hover:border-accent hover:text-text"
+    >
+      {children}
+    </Link>
+  );
 }
 
 function StatusPill({ status }: { status: string }) {

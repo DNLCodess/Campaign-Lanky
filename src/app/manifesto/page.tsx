@@ -193,6 +193,7 @@ export default function ManifestoPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/3.jpeg"
         eyebrow="Campaign Agenda"
         title="The Vision"
         intro="A constituency where every citizen has a voice, every young person has an opportunity, and every child is equipped with the skills needed to compete globally. Technology, education, and human development as the foundations of sustainable progress."

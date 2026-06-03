@@ -20,6 +20,7 @@ export default function NewsPage() {
   return (
     <>
       <PageHeader
+        image="/consituency/1.jpeg"
         eyebrow="News & Media"
         title="Updates from the movement"
         intro="Ward-to-ward consultation tours, town hall meetings, community engagements, and official statements — straight from the campaign."
