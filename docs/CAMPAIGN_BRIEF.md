@@ -262,9 +262,12 @@ Numbers use **+234** international format so diaspora supporters can dial direct
 | Role | Name | Phone |
 |------|------|-------|
 | Strategic Team Lead / Advisory Board Chairman | Apostle (Dr.) Philips Olaiya Oladipo | +234 815 756 1814 |
-| Religious Body Mobilizer | Pastor Oluseye A. Ayeni (FSP) | +234 703 865 2796 |
-| Youth Coordinators | *To be announced* | — |
-| Campaign Manager | Adeyemo Olayomade | +234 810 999 1271 |
+| Religious Body Mobilizer | Pastor Oluseye A. Ayeni | +234 703 865 2796 |
+| Campaign Manager | Com. Adeyemo Olayomade | +234 810 999 1271 |
+| Youth Leader | *To be announced* | — |
+| Women Leader | *To be announced* | — |
+| Artisan Leader | *To be announced* | — |
+| PVC Registration Officer | Oluwatimileyin Ayeni | +234 814 400 7259 |
 
 **Campaign Office Address:** *(TBD — to confirm with client)*
 **Campaign Email:** *(TBD)*

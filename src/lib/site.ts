@@ -72,14 +72,21 @@ export const site = {
     },
     {
       role: "Religious Body Mobilizer",
-      name: "Pastor Oluseye A. Ayeni (FSP)",
+      name: "Pastor Oluseye A. Ayeni",
       phone: "+234 703 865 2796",
     },
-    { role: "Youth Coordinators", name: "To be announced", phone: "" },
     {
       role: "Campaign Manager",
-      name: "Adeyemo Olayomade",
+      name: "Com. Adeyemo Olayomade",
       phone: "+234 810 999 1271",
+    },
+    { role: "Youth Leader", name: "To be announced", phone: "" },
+    { role: "Women Leader", name: "To be announced", phone: "" },
+    { role: "Artisan Leader", name: "To be announced", phone: "" },
+    {
+      role: "PVC Registration Officer",
+      name: "Oluwatimileyin Ayeni",
+      phone: "+234 814 400 7259",
     },
   ],
 } as const;
