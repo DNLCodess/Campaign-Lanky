@@ -119,3 +119,71 @@ export async function submitContact(
     return { status: "error", message: GENERIC_ERROR };
   }
 }
+
+/** Voter card registration assistance. Stores sensitive PII (server-only reads). */
+export async function submitVoterRegistration(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const f = {
+    surname: str(formData, "surname"),
+    first_name: str(formData, "first_name"),
+    middle_name: str(formData, "middle_name"),
+    mobile: str(formData, "mobile"),
+    email: str(formData, "email"),
+    nin: str(formData, "nin"),
+    state_of_origin: str(formData, "state_of_origin"),
+    place_of_birth: str(formData, "place_of_birth"),
+    state_of_residence: str(formData, "state_of_residence"),
+    lga_of_residence: str(formData, "lga_of_residence"),
+    residential_address: str(formData, "residential_address"),
+    ward: str(formData, "ward"),
+    polling_unit: str(formData, "polling_unit"),
+  };
+
+  // Required fields (middle name + email are optional).
+  const required: [keyof typeof f, string][] = [
+    ["surname", "surname"],
+    ["first_name", "first name"],
+    ["mobile", "mobile number"],
+    ["nin", "NIN"],
+    ["state_of_origin", "state of origin"],
+    ["place_of_birth", "place of birth"],
+    ["state_of_residence", "state of residence"],
+    ["lga_of_residence", "local government of residence"],
+    ["residential_address", "residential address"],
+    ["ward", "ward"],
+    ["polling_unit", "polling unit"],
+  ];
+  for (const [key, label] of required) {
+    if (!f[key]) return { status: "error", message: `Please enter your ${label}.` };
+  }
+  if (!/^\d{11}$/.test(f.nin)) {
+    return { status: "error", message: "NIN must be exactly 11 digits." };
+  }
+  if (f.email && !f.email.includes("@")) {
+    return { status: "error", message: "Please enter a valid email address." };
+  }
+
+  try {
+    const supabase = createServerSupabase();
+    const { error } = await supabase.from("voter_registrations").insert({
+      ...f,
+      middle_name: f.middle_name || null,
+      email: f.email || null,
+    });
+    if (error) {
+      console.error("[submitVoterRegistration]", error);
+      return { status: "error", message: GENERIC_ERROR };
+    }
+    // Notify without the NIN (kept out of email for privacy; full data in admin).
+    await notifyCampaign(
+      "New voter registration",
+      `Name: ${f.surname} ${f.first_name}\nMobile: ${f.mobile}\nWard: ${f.ward}\nPolling unit: ${f.polling_unit}\nLGA: ${f.lga_of_residence}\n\nFull details (incl. NIN) are in the admin dashboard.`,
+    );
+    return { status: "success" };
+  } catch (err) {
+    console.error("[submitVoterRegistration]", err);
+    return { status: "error", message: GENERIC_ERROR };
+  }
+}

@@ -24,16 +24,19 @@ export function CtaButton({
   variant = "primary",
   size = "md",
   className,
+  onClick,
 }: {
   href: string;
   children: React.ReactNode;
   variant?: Variant;
   size?: Size;
   className?: string;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         "inline-flex items-center justify-center rounded-brand font-medium",
         "transition-all duration-200 ease-out will-change-transform hover:-translate-y-0.5",

@@ -2,12 +2,37 @@
  * Shared config for the admin submission tables — drives search columns,
  * CSV columns, and tab labels for both the dashboard and the CSV export route.
  */
-export type AdminTableKey = "donations" | "volunteers" | "leads" | "messages";
+export type AdminTableKey =
+  | "voter_registrations"
+  | "donations"
+  | "volunteers"
+  | "leads"
+  | "messages";
 
 export const ADMIN_TABLES: Record<
   AdminTableKey,
   { label: string; search: string[]; csv: string[] }
 > = {
+  voter_registrations: {
+    label: "Voter Cards",
+    search: ["surname", "first_name", "mobile", "ward", "polling_unit", "lga_of_residence"],
+    csv: [
+      "created_at",
+      "surname",
+      "first_name",
+      "middle_name",
+      "mobile",
+      "email",
+      "nin",
+      "state_of_origin",
+      "place_of_birth",
+      "state_of_residence",
+      "lga_of_residence",
+      "residential_address",
+      "ward",
+      "polling_unit",
+    ],
+  },
   donations: {
     label: "Donations",
     search: ["donor_name", "donor_email", "status", "tx_ref"],
@@ -42,6 +67,7 @@ export const ADMIN_TABLES: Record<
 };
 
 export const ADMIN_TABLE_ORDER: AdminTableKey[] = [
+  "voter_registrations",
   "donations",
   "volunteers",
   "leads",

@@ -39,7 +39,13 @@ export default async function AdminDashboard({
   const page = Math.max(1, Number(sp.page) || 1);
 
   let configured = true;
-  const counts: Record<AdminTableKey, number> = { donations: 0, volunteers: 0, leads: 0, messages: 0 };
+  const counts: Record<AdminTableKey, number> = {
+    voter_registrations: 0,
+    donations: 0,
+    volunteers: 0,
+    leads: 0,
+    messages: 0,
+  };
   let raised = 0;
   let successfulCount = 0;
   let rows: Row[] = [];
@@ -52,13 +58,15 @@ export default async function AdminDashboard({
       const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
-    const [dc, vc, lc, mc, successful] = await Promise.all([
+    const [vrc, dc, vc, lc, mc, successful] = await Promise.all([
+      countOf("voter_registrations"),
       countOf("donations"),
       countOf("volunteers"),
       countOf("leads"),
       countOf("messages"),
       supabase.from("donations").select("amount").eq("status", "successful").limit(10000),
     ]);
+    counts.voter_registrations = vrc;
     counts.donations = dc;
     counts.volunteers = vc;
     counts.leads = lc;
@@ -119,7 +127,8 @@ export default async function AdminDashboard({
       )}
 
       {/* Stat cards */}
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <Stat label="Voter cards" value={String(counts.voter_registrations)} sub="registrations" />
         <Stat label="Total raised" value={naira(raised)} sub={`${successfulCount} donations`} />
         <Stat label="Supporters" value={String(counts.leads)} sub="email / phone signups" />
         <Stat label="Volunteers" value={String(counts.volunteers)} sub="sign-ups" />
@@ -244,6 +253,8 @@ export default async function AdminDashboard({
 
 function headsFor(view: AdminTableKey): string[] {
   switch (view) {
+    case "voter_registrations":
+      return ["Date", "Name", "Mobile", "NIN", "Ward", "Polling unit", "LGA"];
     case "donations":
       return ["Date", "Donor", "Amount", "Status", "Method"];
     case "volunteers":
@@ -256,6 +267,22 @@ function headsFor(view: AdminTableKey): string[] {
 }
 
 function RowView({ view, r }: { view: AdminTableKey; r: Row }) {
+  if (view === "voter_registrations") {
+    const fullName = [r.surname, r.first_name, r.middle_name]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      <tr className="border-t border-border/40">
+        <Td>{when(r.created_at)}</Td>
+        <Td className="text-text">{fullName}</Td>
+        <Td>{String(r.mobile ?? "")}</Td>
+        <Td className="font-mono text-xs">{String(r.nin ?? "—")}</Td>
+        <Td>{String(r.ward ?? "—")}</Td>
+        <Td>{String(r.polling_unit ?? "—")}</Td>
+        <Td>{String(r.lga_of_residence ?? "—")}</Td>
+      </tr>
+    );
+  }
   if (view === "donations") {
     return (
       <tr className="border-t border-border/40">
@@ -320,6 +347,26 @@ function CardMeta({ label, value }: { label: string; value: React.ReactNode }) {
 
 function MobileCard({ view, r }: { view: AdminTableKey; r: Row }) {
   const base = "rounded-brand border border-border bg-surface/40 p-4";
+
+  if (view === "voter_registrations") {
+    const fullName = [r.surname, r.first_name, r.middle_name]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      <div className={base}>
+        <p className="font-medium text-text">{fullName}</p>
+        <p className="text-xs text-text-muted">{String(r.mobile ?? "")}</p>
+        <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
+          <CardMeta label="NIN" value={String(r.nin ?? "—")} />
+          <CardMeta label="Ward" value={String(r.ward ?? "—")} />
+          <CardMeta label="Polling unit" value={String(r.polling_unit ?? "—")} />
+          <CardMeta label="LGA" value={String(r.lga_of_residence ?? "—")} />
+          <CardMeta label="State of residence" value={String(r.state_of_residence ?? "—")} />
+          <CardMeta label="Date" value={when(r.created_at)} />
+        </div>
+      </div>
+    );
+  }
 
   if (view === "donations") {
     return (

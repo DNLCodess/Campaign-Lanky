@@ -43,11 +43,18 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50">
       {/* Top identity strip — Labour Party + Oyo State, site-wide */}
       <div className="border-b border-border/60 bg-surface/70 backdrop-blur-md">
-        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-5 text-xs text-text-muted sm:px-8">
+        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between gap-3 px-5 text-xs text-text-muted sm:px-8">
           <PartyState />
-          <span className="hidden sm:block">
-            {site.office} · {site.constituency}
-          </span>
+          <Link
+            href={site.cta.register.href}
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 font-medium text-white transition-colors hover:bg-primary-hover"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
+              <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {site.cta.register.label}
+          </Link>
         </div>
       </div>
 
@@ -179,20 +186,31 @@ export function SiteHeader() {
 
           {/* Footer: CTAs + connect */}
           <div className="space-y-6">
+            <CtaButton
+              href={site.cta.register.href}
+              variant="primary"
+              size="lg"
+              className="m-foot w-full"
+              onClick={() => setOpen(false)}
+            >
+              {site.cta.register.label}
+            </CtaButton>
             <div className="m-foot flex gap-3">
               <CtaButton
                 href={site.cta.volunteer.href}
                 variant="outline"
                 size="lg"
                 className="flex-1"
+                onClick={() => setOpen(false)}
               >
                 {site.cta.volunteer.label}
               </CtaButton>
               <CtaButton
                 href={site.cta.donate.href}
-                variant="primary"
+                variant="outline"
                 size="lg"
                 className="flex-1"
+                onClick={() => setOpen(false)}
               >
                 {site.cta.donate.label}
               </CtaButton>

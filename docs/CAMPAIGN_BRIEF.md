@@ -41,6 +41,9 @@ Do **not** flatten the whole site to one navy. Use the **section tone utilities*
 ### Hero Constituency Slider (client feedback)
 Hero uses an auto-crossfading, Ken-Burns **constituency image slider** (text content retained over a legibility scrim). Real photos pending — currently branded gradient placeholders; set `src` in `site.constituencySlides` when images arrive.
 
+### Voter Card Registration (`/register`)
+Prominent site-wide (red CTA in the top strip on every page, mobile menu, footer). Collects: surname, first name, middle, mobile, email, **NIN**, state of origin, place of birth, state of residence, LGA of residence, residential address, ward, polling unit. Stored in `voter_registrations` (RLS **server-only reads** — sensitive PII; NIN never emailed). Success screen shows the WhatsApp community invite. Admin has a **Voter Cards** tab with search, pagination, and CSV export.
+
 ### Admin Dashboard (`/admin`)
 - **Auth:** Supabase Auth (email/password). Disable public sign-ups in Supabase. Leave `ADMIN_EMAILS` blank so every team account created in-app counts as an admin.
 - **Creating admins:** bootstrap the **first** account once in Supabase → Authentication → Users (or set `ADMIN_EMAILS` to your email and sign up). After that, manage admins entirely in-app at **`/admin/team`** — add (email + temp password, auto-confirmed) or remove accounts (can't remove yourself). Uses the Supabase Admin API via the service-role key.
