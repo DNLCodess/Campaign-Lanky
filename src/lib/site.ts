@@ -48,6 +48,9 @@ export const site = {
   whatsappGroup:
     "https://chat.whatsapp.com/DiXF4xgwlMEHXSfP3skN6M?s=cl&p=a&mlu=4",
 
+  // INEC portal — voters can verify their ward & polling unit here.
+  inecUrl: "https://www.inecnigeria.org/",
+
   // TODO(client): confirm office address, email, WhatsApp number, social handles.
   contact: {
     email: "", // TODO

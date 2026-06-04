@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { submitVoterRegistration } from "@/app/actions";
 import type { FormState } from "@/lib/form-state";
 import { FormSuccess } from "@/components/forms/form-success";
+import { site } from "@/lib/site";
 
 const initial: FormState = { status: "idle" };
 
@@ -58,6 +59,19 @@ export function VoterRegistrationForm() {
         />
       </div>
       <Field label="Residential address" name="residential_address" required />
+
+      <div className="rounded-brand border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-text-muted">
+        Don&apos;t know your ward or polling unit?{" "}
+        <a
+          href={site.inecUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-accent hover:text-accent-hover"
+        >
+          Look it up on the INEC portal →
+        </a>
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Ward" name="ward" required />
         <Field label="Polling unit" name="polling_unit" required />
