@@ -127,14 +127,14 @@ export default async function AdminDashboard({
       </div>
 
       {/* Tabs */}
-      <nav className="mt-10 flex flex-wrap gap-2 border-b border-border/60">
+      <nav className="mt-10 flex gap-1 overflow-x-auto border-b border-border/60">
         {ADMIN_TABLE_ORDER.map((t) => {
           const active = t === view;
           return (
             <Link
               key={t}
               href={buildUrl(t, 1, "")}
-              className={`-mb-px rounded-t-brand border-b-2 px-4 py-2.5 text-sm transition-colors ${
+              className={`-mb-px shrink-0 whitespace-nowrap rounded-t-brand border-b-2 px-4 py-2.5 text-sm transition-colors ${
                 active
                   ? "border-primary text-text"
                   : "border-transparent text-text-muted hover:text-text"
@@ -148,64 +148,79 @@ export default async function AdminDashboard({
       </nav>
 
       {/* Search + export */}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <form method="get" className="flex items-center gap-2">
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <form method="get" className="flex w-full items-center gap-2 sm:w-auto">
           <input type="hidden" name="view" value={view} />
           <input
             type="search"
             name="q"
             defaultValue={q}
             placeholder={`Search ${ADMIN_TABLES[view].label.toLowerCase()}…`}
-            className="w-56 rounded-brand border border-border bg-bg px-4 py-2 text-sm text-text focus:border-accent focus:outline-none"
+            className="w-full rounded-brand border border-border bg-bg px-4 py-2 text-sm text-text focus:border-accent focus:outline-none sm:w-56"
           />
           <button
             type="submit"
-            className="rounded-brand border border-border px-3 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+            className="shrink-0 rounded-brand border border-border px-3 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
           >
             Search
           </button>
           {q && (
-            <Link href={buildUrl(view, 1, "")} className="text-sm text-text-muted hover:text-text">
+            <Link
+              href={buildUrl(view, 1, "")}
+              className="shrink-0 text-sm text-text-muted hover:text-text"
+            >
               Clear
             </Link>
           )}
         </form>
         <a
           href={`/admin/export/${view}${q ? `?q=${encodeURIComponent(q)}` : ""}`}
-          className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="rounded-brand bg-primary px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           Export CSV
         </a>
       </div>
 
-      {/* Table */}
-      <div className="mt-4 overflow-x-auto rounded-brand border border-border">
-        <table className="w-full min-w-160 text-left text-sm">
-          <thead>
-            <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
-              {headsFor(view).map((h) => (
-                <th key={h} className="px-4 py-3 font-medium">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="text-text-muted">
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={headsFor(view).length} className="px-4 py-10 text-center text-text-muted">
-                  {q ? "No matching records." : "No records yet."}
-                </td>
+      {/* Empty state */}
+      {rows.length === 0 && (
+        <div className="mt-4 rounded-brand border border-border bg-surface/30 px-4 py-12 text-center text-text-muted">
+          {q ? "No matching records." : "No records yet."}
+        </div>
+      )}
+
+      {/* Table (md+) */}
+      {rows.length > 0 && (
+        <div className="mt-4 hidden overflow-x-auto rounded-brand border border-border md:block">
+          <table className="w-full min-w-160 text-left text-sm">
+            <thead>
+              <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
+                {headsFor(view).map((h) => (
+                  <th key={h} className="px-4 py-3 font-medium">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              rows.map((r, i) => <RowView key={(r.id as string) ?? i} view={view} r={r} />)
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="text-text-muted">
+              {rows.map((r, i) => (
+                <RowView key={(r.id as string) ?? i} view={view} r={r} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Cards (mobile) */}
+      {rows.length > 0 && (
+        <div className="mt-4 space-y-3 md:hidden">
+          {rows.map((r, i) => (
+            <MobileCard key={(r.id as string) ?? i} view={view} r={r} />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
+      <div className="mt-4 flex flex-col items-center justify-between gap-3 text-sm text-text-muted sm:flex-row">
         <span>
           {total === 0
             ? "0 records"
@@ -291,6 +306,77 @@ function RowView({ view, r }: { view: AdminTableKey; r: Row }) {
       </Td>
       <Td className="max-w-md whitespace-pre-wrap">{String(r.message ?? "")}</Td>
     </tr>
+  );
+}
+
+function CardMeta({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-sm">
+      <span className="text-xs uppercase tracking-wide text-text-muted/70">{label}</span>
+      <span className="text-right text-text-muted">{value}</span>
+    </div>
+  );
+}
+
+function MobileCard({ view, r }: { view: AdminTableKey; r: Row }) {
+  const base = "rounded-brand border border-border bg-surface/40 p-4";
+
+  if (view === "donations") {
+    return (
+      <div className={base}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-medium text-text">{String(r.donor_name ?? "")}</p>
+            <p className="truncate text-xs text-text-muted">{String(r.donor_email ?? "")}</p>
+          </div>
+          <p className="shrink-0 font-heading text-lg text-text">{naira(r.amount)}</p>
+        </div>
+        <div className="mt-3 flex items-center justify-between">
+          <StatusPill status={String(r.status ?? "")} />
+          <span className="text-xs text-text-muted">{when(r.created_at)}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "volunteers") {
+    const interests = (r.interests as string[] | null) ?? [];
+    return (
+      <div className={base}>
+        <p className="font-medium text-text">{String(r.name ?? "")}</p>
+        {r.email ? <p className="text-xs text-text-muted">{String(r.email)}</p> : null}
+        <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
+          <CardMeta label="Phone" value={String(r.phone ?? "—")} />
+          <CardMeta label="Ward" value={String(r.ward ?? "—")} />
+          <CardMeta label="Interests" value={interests.length ? interests.join(", ") : "—"} />
+          <CardMeta label="Date" value={when(r.created_at)} />
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "leads") {
+    return (
+      <div className={base}>
+        <p className="truncate font-medium text-text">{String(r.email ?? "")}</p>
+        <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
+          <CardMeta label="Phone" value={String(r.phone ?? "—")} />
+          <CardMeta label="Source" value={String(r.source ?? "—")} />
+          <CardMeta label="Date" value={when(r.created_at)} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={base}>
+      <p className="font-medium text-text">{String(r.name ?? "")}</p>
+      <p className="text-xs text-text-muted">{String(r.contact ?? "")}</p>
+      <p className="mt-3 whitespace-pre-wrap border-t border-border/40 pt-3 text-sm text-text-muted">
+        {String(r.message ?? "")}
+      </p>
+      <p className="mt-3 text-xs text-text-muted/70">{when(r.created_at)}</p>
+    </div>
   );
 }
 

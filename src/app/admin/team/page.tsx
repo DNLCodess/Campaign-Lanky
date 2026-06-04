@@ -69,47 +69,83 @@ export default async function AdminTeamPage() {
             set.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-brand border border-border">
-            <table className="w-full min-w-140 text-left text-sm">
-              <thead>
-                <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
-                  <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Added</th>
-                  <th className="px-4 py-3 font-medium">Last sign-in</th>
-                  <th className="px-4 py-3 font-medium" />
-                </tr>
-              </thead>
-              <tbody className="text-text-muted">
-                {users.map((u) => (
-                  <tr key={u.id} className="border-t border-border/40">
-                    <td className="px-4 py-3 text-text">
+          <>
+            {/* Table (md+) */}
+            <div className="mt-3 hidden overflow-x-auto rounded-brand border border-border md:block">
+              <table className="w-full min-w-140 text-left text-sm">
+                <thead>
+                  <tr className="bg-surface/60 text-xs uppercase tracking-wide text-text-muted">
+                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Added</th>
+                    <th className="px-4 py-3 font-medium">Last sign-in</th>
+                    <th className="px-4 py-3 font-medium" />
+                  </tr>
+                </thead>
+                <tbody className="text-text-muted">
+                  {users.map((u) => (
+                    <tr key={u.id} className="border-t border-border/40">
+                      <td className="px-4 py-3 text-text">
+                        {u.email}
+                        {u.id === me.id && (
+                          <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
+                            you
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">{when(u.created_at)}</td>
+                      <td className="px-4 py-3">{when(u.last_sign_in_at)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {u.id !== me.id && (
+                          <form action={removeAdmin}>
+                            <input type="hidden" name="id" value={u.id} />
+                            <button
+                              type="submit"
+                              className="rounded-brand border border-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-primary hover:text-primary"
+                            >
+                              Remove
+                            </button>
+                          </form>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards (mobile) */}
+            <div className="mt-3 space-y-3 md:hidden">
+              {users.map((u) => (
+                <div key={u.id} className="rounded-brand border border-border bg-surface/40 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 break-all font-medium text-text">
                       {u.email}
                       {u.id === me.id && (
                         <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
                           you
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3">{when(u.created_at)}</td>
-                    <td className="px-4 py-3">{when(u.last_sign_in_at)}</td>
-                    <td className="px-4 py-3 text-right">
-                      {u.id !== me.id && (
-                        <form action={removeAdmin}>
-                          <input type="hidden" name="id" value={u.id} />
-                          <button
-                            type="submit"
-                            className="rounded-brand border border-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-primary hover:text-primary"
-                          >
-                            Remove
-                          </button>
-                        </form>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </p>
+                    {u.id !== me.id && (
+                      <form action={removeAdmin} className="shrink-0">
+                        <input type="hidden" name="id" value={u.id} />
+                        <button
+                          type="submit"
+                          className="rounded-brand border border-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-primary hover:text-primary"
+                        >
+                          Remove
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                  <div className="mt-3 space-y-1 border-t border-border/40 pt-3 text-xs text-text-muted">
+                    <p>Added {when(u.created_at)}</p>
+                    <p>Last sign-in {when(u.last_sign_in_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
     </div>
