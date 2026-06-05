@@ -18,7 +18,7 @@ export function StructuredData() {
     description: `${site.party} candidate for the ${site.office}, ${site.constituency}.`,
     jobTitle: `Candidate, ${site.office}`,
     url: `${url}/about`,
-    image: `${url}/brand/candidate-1.jpeg`,
+    image: `${url}/brand/candidate-4.png`,
     homeLocation: {
       "@type": "Place",
       name: `${site.constituency}, ${site.state}, Nigeria`,

@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 };
 
 const gallery = [
-  { src: "/brand/candidate-1.jpeg", label: "On the campaign" },
-  { src: "/brand/candidate-3.jpeg", label: "With the community" },
-  { src: "/brand/candidate-2.jpeg", label: "In conversation" },
+  { src: "/brand/candidate-4.png", label: "On the campaign" },
+  { src: "/brand/candidate-6.png", label: "With the community" },
+  { src: "/brand/candidate-5.png", label: "In conversation" },
 ];
 
 export default function NewsPage() {
@@ -112,19 +112,29 @@ export default function NewsPage() {
               delay={i * 0.05}
               className="group relative aspect-4/5 overflow-hidden rounded-brand border border-border"
             >
+              {/* Branded backdrop behind the transparent cut-out */}
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{
+                  backgroundColor: "#0b2a3d",
+                  backgroundImage:
+                    "radial-gradient(110% 75% at 50% 12%, rgba(103,156,188,0.28), transparent 62%)",
+                }}
+              />
               <Image
                 src={g.src}
                 alt={g.label}
                 fill
                 sizes="(max-width: 1024px) 90vw, 30vw"
-                className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                className="object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
               />
               <div
                 aria-hidden
                 className="absolute inset-0"
                 style={{
                   background:
-                    "linear-gradient(to top, rgba(7,26,38,0.85), rgba(7,26,38,0) 55%)",
+                    "linear-gradient(to top, rgba(7,26,38,0.9), rgba(7,26,38,0) 55%)",
                 }}
               />
               <span className="absolute bottom-4 left-4 font-heading text-lg text-white">
