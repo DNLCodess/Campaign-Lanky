@@ -33,10 +33,19 @@ export function VoterRegistrationForm() {
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Middle name" name="middle_name" />
-        <Field label="Mobile number" name="mobile" type="tel" required />
+        <Field
+          label="Date of birth"
+          name="date_of_birth"
+          type="date"
+          required
+          className="scheme-dark"
+        />
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Mobile number" name="mobile" type="tel" required />
         <Field label="Email" name="email" type="email" />
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
         <Field
           label="NIN (11 digits)"
           name="nin"
@@ -45,19 +54,17 @@ export function VoterRegistrationForm() {
           maxLength={11}
           required
         />
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="State of origin" name="state_of_origin" required />
         <Field label="Place of birth" name="place_of_birth" required />
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="State of origin" name="state_of_origin" required />
         <Field label="State of residence" name="state_of_residence" required />
-        <Field
-          label="Local government of residence"
-          name="lga_of_residence"
-          required
-        />
       </div>
+      <Field
+        label="Local government of residence"
+        name="lga_of_residence"
+        required
+      />
       <Field label="Residential address" name="residential_address" required />
 
       <div className="rounded-brand border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-text-muted">
@@ -103,6 +110,7 @@ function Field({
   inputMode,
   pattern,
   maxLength,
+  className = "",
 }: {
   label: string;
   name: string;
@@ -111,6 +119,7 @@ function Field({
   inputMode?: "numeric" | "text" | "tel";
   pattern?: string;
   maxLength?: number;
+  className?: string;
 }) {
   return (
     <label className="block">
@@ -125,7 +134,7 @@ function Field({
         inputMode={inputMode}
         pattern={pattern}
         maxLength={maxLength}
-        className="mt-2 w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
+        className={`mt-2 w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none ${className}`}
       />
     </label>
   );

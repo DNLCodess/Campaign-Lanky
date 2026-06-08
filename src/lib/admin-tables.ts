@@ -21,6 +21,7 @@ export const ADMIN_TABLES: Record<
       "surname",
       "first_name",
       "middle_name",
+      "date_of_birth",
       "mobile",
       "email",
       "nin",

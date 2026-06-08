@@ -254,7 +254,7 @@ export default async function AdminDashboard({
 function headsFor(view: AdminTableKey): string[] {
   switch (view) {
     case "voter_registrations":
-      return ["Date", "Name", "Mobile", "NIN", "Ward", "Polling unit", "LGA"];
+      return ["Date", "Name", "DOB", "Mobile", "NIN", "Ward", "Polling unit", "LGA"];
     case "donations":
       return ["Date", "Donor", "Amount", "Status", "Method"];
     case "volunteers":
@@ -275,6 +275,7 @@ function RowView({ view, r }: { view: AdminTableKey; r: Row }) {
       <tr className="border-t border-border/40">
         <Td>{when(r.created_at)}</Td>
         <Td className="text-text">{fullName}</Td>
+        <Td>{String(r.date_of_birth ?? "—")}</Td>
         <Td>{String(r.mobile ?? "")}</Td>
         <Td className="font-mono text-xs">{String(r.nin ?? "—")}</Td>
         <Td>{String(r.ward ?? "—")}</Td>
@@ -357,6 +358,7 @@ function MobileCard({ view, r }: { view: AdminTableKey; r: Row }) {
         <p className="font-medium text-text">{fullName}</p>
         <p className="text-xs text-text-muted">{String(r.mobile ?? "")}</p>
         <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
+          <CardMeta label="Date of birth" value={String(r.date_of_birth ?? "—")} />
           <CardMeta label="NIN" value={String(r.nin ?? "—")} />
           <CardMeta label="Ward" value={String(r.ward ?? "—")} />
           <CardMeta label="Polling unit" value={String(r.polling_unit ?? "—")} />

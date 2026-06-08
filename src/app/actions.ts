@@ -129,6 +129,7 @@ export async function submitVoterRegistration(
     surname: str(formData, "surname"),
     first_name: str(formData, "first_name"),
     middle_name: str(formData, "middle_name"),
+    date_of_birth: str(formData, "date_of_birth"),
     mobile: str(formData, "mobile"),
     email: str(formData, "email"),
     nin: str(formData, "nin"),
@@ -145,6 +146,7 @@ export async function submitVoterRegistration(
   const required: [keyof typeof f, string][] = [
     ["surname", "surname"],
     ["first_name", "first name"],
+    ["date_of_birth", "date of birth"],
     ["mobile", "mobile number"],
     ["nin", "NIN"],
     ["state_of_origin", "state of origin"],
@@ -163,6 +165,19 @@ export async function submitVoterRegistration(
   }
   if (f.email && !f.email.includes("@")) {
     return { status: "error", message: "Please enter a valid email address." };
+  }
+  // Validate date of birth: real date, not in the future, and 18+ (voting age).
+  const dob = new Date(f.date_of_birth);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date_of_birth) || Number.isNaN(dob.getTime())) {
+    return { status: "error", message: "Please enter a valid date of birth." };
+  }
+  const eighteenAgo = new Date();
+  eighteenAgo.setFullYear(eighteenAgo.getFullYear() - 18);
+  if (dob > new Date()) {
+    return { status: "error", message: "Date of birth cannot be in the future." };
+  }
+  if (dob > eighteenAgo) {
+    return { status: "error", message: "You must be at least 18 to register to vote." };
   }
 
   try {
