@@ -22,11 +22,31 @@ export const site = {
   // Constituency scenes featured in the hero slider (real photography).
   // NOTE: folder is spelled "consituency" on disk — keep paths in sync.
   constituencySlides: [
-    { name: "Oluyole Statue", note: "Ibadan", src: "/consituency/8.jpeg" as string | null },
-    { name: "Our Roads", note: "Ibadan South-West", src: "/consituency/1.jpeg" as string | null },
-    { name: "Eleyele", note: "Ibadan South-West", src: "/consituency/9.jpeg" as string | null },
-    { name: "Our Markets", note: "Ibadan North-West", src: "/consituency/10.jpeg" as string | null },
-    { name: "Cocoa House", note: "Ibadan North-West", src: "/consituency/5.jpeg" as string | null },
+    {
+      name: "Oluyole Statue",
+      note: "Ibadan",
+      src: "/consituency/8.jpeg" as string | null,
+    },
+    {
+      name: "Our Roads",
+      note: "Ibadan South-West",
+      src: "/consituency/1.jpeg" as string | null,
+    },
+    {
+      name: "Eleyele",
+      note: "Ibadan South-West",
+      src: "/consituency/9.jpeg" as string | null,
+    },
+    {
+      name: "Our Markets",
+      note: "Ibadan North-West",
+      src: "/consituency/10.jpeg" as string | null,
+    },
+    {
+      name: "Cocoa House",
+      note: "Ibadan North-West",
+      src: "/consituency/5.jpeg" as string | null,
+    },
   ],
 
   nav: [
@@ -60,8 +80,8 @@ export const site = {
 
   socials: [
     // TODO(client): real handles
-    { label: "Facebook", href: "#" },
-    { label: "Instagram", href: "#" },
+    { label: "Facebook", href: "https://Facebook.com/votelanky2027" },
+    { label: "Instagram", href: "https://www.instagram.com/votelanky2027" },
     { label: "X", href: "#" },
     { label: "YouTube", href: "#" },
   ],
