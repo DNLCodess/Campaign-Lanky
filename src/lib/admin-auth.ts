@@ -8,7 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
  * only invited team members have accounts. An optional ADMIN_EMAILS allowlist
  * (comma-separated) further restricts who counts as an admin.
  */
-function allowedEmails(): string[] {
+export function allowedEmails(): string[] {
   return (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((s) => s.trim().toLowerCase())

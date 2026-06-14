@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin, allowedEmails } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 
-export type TeamState = { error?: string; success?: string };
+export type TeamState = { error?: string; success?: string; warning?: string };
 
 /** Create a new admin account (Supabase Admin API). Confirmed immediately so
  *  they can sign in right away with the password you set. */
@@ -32,6 +32,18 @@ export async function createAdmin(
     });
     if (error) return { error: error.message };
     revalidatePath("/admin/team");
+
+    // Warn if ADMIN_EMAILS is set and doesn't include this new email — the
+    // account will exist in Supabase but login will be blocked until the env
+    // var is updated.
+    const list = allowedEmails();
+    if (list.length > 0 && !list.includes(email)) {
+      return {
+        success: `Account created for ${email}.`,
+        warning: `ADMIN_EMAILS is set but does not include ${email}. Add it to ADMIN_EMAILS and redeploy, otherwise this account cannot log in.`,
+      };
+    }
+
     return { success: `Admin account created for ${email}.` };
   } catch (err) {
     console.error("[createAdmin]", err);

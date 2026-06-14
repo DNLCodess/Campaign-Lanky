@@ -79,11 +79,11 @@ export const site = {
   },
 
   socials: [
-    // TODO(client): real handles
-    { label: "Facebook", href: "https://Facebook.com/votelanky2027" },
-    { label: "Instagram", href: "https://www.instagram.com/votelanky2027" },
-    { label: "X", href: "#" },
-    { label: "YouTube", href: "#" },
+    { label: "Facebook",  href: "https://facebook.com/votelanky2027"          },
+    { label: "Instagram", href: "https://www.instagram.com/votelanky2027"     },
+    { label: "X",         href: "https://x.com/lanky2027"                     },
+    { label: "TikTok",    href: "https://www.tiktok.com/@votelanky2027"       },
+    { label: "YouTube",   href: "#"                                            },
   ],
 
   // Numbers use +234 international format so diaspora supporters can dial directly.

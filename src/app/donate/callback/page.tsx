@@ -1,14 +1,17 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { FormSuccess } from "@/components/forms/form-success";
 import { CtaButton } from "@/components/ui/cta-button";
+import { DonationProgress } from "@/components/donation-progress";
 import { verifyTransaction } from "@/lib/flutterwave";
 import {
   finalizeDonation,
   getDonationByRef,
   markAbandonedIfPending,
 } from "@/lib/donations";
+import { PendingRefresher } from "./pending-refresher";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -46,19 +49,17 @@ export default async function DonationCallback({
         view = "cancelled";
         amount = Number(donation.amount);
       } else {
-        // Verify server-side (source of truth). If verification itself fails
-        // transiently, leave it pending — the webhook will finalize.
         amount = Number(donation.amount);
         try {
           const v = await verifyTransaction(txId);
           const result = await finalizeDonation(txRef, v);
           view = result.ok ? "success" : "failed";
         } catch {
+          // Transient verification failure — leave pending; webhook reconciles.
           view = "pending";
         }
       }
     } catch (err) {
-      // DB/config error — never show a false failure; the webhook reconciles.
       console.error("[donation callback]", err);
       view = "pending";
     }
@@ -80,19 +81,45 @@ export default async function DonationCallback({
         <div className="mx-auto max-w-xl sm:px-8">
           <div className="rounded-brand border border-border bg-surface/40 p-8 text-center sm:p-10">
             {view === "success" && (
-              <FormSuccess
-                title="Your donation is in!"
-                message={`Thank you for contributing ${naira(amount)} to the movement. Your support powers real change across the constituency.`}
-              />
+              <div>
+                <FormSuccess
+                  title="Your donation is in!"
+                  message={`Thank you for contributing ${naira(amount)} to the movement. Your support powers real change across the constituency.`}
+                />
+                <div className="mt-8 border-t border-border pt-6 text-left">
+                  <p className="mb-4 text-sm font-medium text-text-muted">
+                    Campaign progress
+                  </p>
+                  <Suspense fallback={null}>
+                    <DonationProgress variant="compact" />
+                  </Suspense>
+                </div>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <CtaButton href="/" variant="primary" size="lg">
+                    Back to site
+                  </CtaButton>
+                  <CtaButton href="/donate" variant="outline" size="lg">
+                    Donate again
+                  </CtaButton>
+                </div>
+              </div>
             )}
 
             {view === "pending" && (
-              <Result
-                title="Almost there…"
-                body="We're confirming your payment with the bank. This can take a moment — if you completed payment, it will reflect shortly and we'll email your receipt. You can safely refresh this page."
-                primary={{ label: "Refresh status", href: txRef ? `?tx_ref=${txRef}&transaction_id=${txId ?? ""}` : "/donate" }}
-                secondary={{ label: "Back to site", href: "/" }}
-              />
+              <>
+                <PendingRefresher />
+                <Result
+                  title="Almost there…"
+                  body="We're confirming your payment with the bank. This usually takes a moment — if you completed the payment, it will reflect here automatically. You can also refresh this page manually."
+                  primary={{
+                    label: "Refresh status",
+                    href: txRef
+                      ? `?tx_ref=${txRef}&transaction_id=${txId ?? ""}`
+                      : "/donate",
+                  }}
+                  secondary={{ label: "Back to site", href: "/" }}
+                />
+              </>
             )}
 
             {view === "cancelled" && (
@@ -107,7 +134,7 @@ export default async function DonationCallback({
             {view === "failed" && (
               <Result
                 title="Payment not completed"
-                body="Your payment could not be confirmed and you have not been charged. Please try again, or use a different method on the checkout page."
+                body="Your payment could not be confirmed and you have not been charged. Please try again, or use a different payment method on the checkout page."
                 primary={{ label: "Try again", href: "/donate" }}
                 secondary={{ label: "Contact us", href: "/contact" }}
               />

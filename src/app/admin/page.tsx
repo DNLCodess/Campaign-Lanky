@@ -9,6 +9,7 @@ import {
   searchExpression,
   type AdminTableKey,
 } from "@/lib/admin-tables";
+import { DonationProgressBar } from "@/components/donation-progress-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export default async function AdminDashboard({
   };
   let raised = 0;
   let successfulCount = 0;
+  let firstDonationAt: string | null = null;
   let rows: Row[] = [];
   let total = 0;
 
@@ -58,13 +60,20 @@ export default async function AdminDashboard({
       const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
-    const [vrc, dc, vc, lc, mc, successful] = await Promise.all([
+    const [vrc, dc, vc, lc, mc, successful, firstDonation] = await Promise.all([
       countOf("voter_registrations"),
       countOf("donations"),
       countOf("volunteers"),
       countOf("leads"),
       countOf("messages"),
       supabase.from("donations").select("amount").eq("status", "successful").limit(10000),
+      supabase
+        .from("donations")
+        .select("created_at")
+        .eq("status", "successful")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
     ]);
     counts.voter_registrations = vrc;
     counts.donations = dc;
@@ -74,6 +83,7 @@ export default async function AdminDashboard({
     const sRows = (successful.data ?? []) as { amount: number }[];
     successfulCount = sRows.length;
     raised = sRows.reduce((s, r) => s + Number(r.amount), 0);
+    firstDonationAt = (firstDonation.data as { created_at: string } | null)?.created_at ?? null;
 
     // Active table page (with optional search).
     let query = supabase
@@ -102,6 +112,12 @@ export default async function AdminDashboard({
           <p className="text-sm text-text-muted">{user.email}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin/blog"
+            className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          >
+            Blog posts
+          </Link>
           <Link
             href="/admin/team"
             className="rounded-brand border border-border px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
@@ -133,6 +149,24 @@ export default async function AdminDashboard({
         <Stat label="Supporters" value={String(counts.leads)} sub="email / phone signups" />
         <Stat label="Volunteers" value={String(counts.volunteers)} sub="sign-ups" />
         <Stat label="Messages" value={String(counts.messages)} sub="contact form" />
+      </div>
+
+      {/* Campaign goal section */}
+      <div className="mt-8 rounded-brand border border-border bg-surface/30 p-6 sm:p-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-heading text-xl text-text">Campaign fundraising goal</h2>
+            <p className="mt-0.5 text-sm text-text-muted">Target: ₦100,000,000</p>
+          </div>
+          {configured && successfulCount > 0 && firstDonationAt && (
+            <GoalVelocity raised={raised} firstDonationAt={firstDonationAt} />
+          )}
+        </div>
+        {configured ? (
+          <DonationProgressBar raised={raised} count={successfulCount} variant="full" />
+        ) : (
+          <p className="text-sm text-text-muted/60">Configure Supabase to see live goal progress.</p>
+        )}
       </div>
 
       {/* Tabs */}
@@ -425,6 +459,53 @@ function MobileCard({ view, r }: { view: AdminTableKey; r: Row }) {
         {String(r.message ?? "")}
       </p>
       <p className="mt-3 text-xs text-text-muted/70">{when(r.created_at)}</p>
+    </div>
+  );
+}
+
+function GoalVelocity({
+  raised,
+  firstDonationAt,
+}: {
+  raised: number;
+  firstDonationAt: string;
+}) {
+  const GOAL = 100_000_000;
+  const remaining = Math.max(0, GOAL - raised);
+  const daysSinceStart = Math.max(
+    1,
+    (Date.now() - new Date(firstDonationAt).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const dailyRate = raised / daysSinceStart;
+  const daysToGoal = dailyRate > 0 ? Math.ceil(remaining / dailyRate) : null;
+
+  const fmt = (n: number) =>
+    n >= 1_000_000
+      ? `₦${(n / 1_000_000).toFixed(1)}M`
+      : n >= 1_000
+        ? `₦${Math.round(n / 1_000)}K`
+        : `₦${Math.round(n).toLocaleString("en-NG")}`;
+
+  return (
+    <div className="flex flex-wrap gap-4 text-right text-xs text-text-muted">
+      <div>
+        <p className="font-medium text-text">{fmt(Math.round(dailyRate))}</p>
+        <p>avg / day</p>
+      </div>
+      <div>
+        <p className="font-medium text-text">{fmt(remaining)}</p>
+        <p>remaining</p>
+      </div>
+      {daysToGoal !== null && (
+        <div>
+          <p className="font-medium text-text">
+            {daysToGoal > 365
+              ? `${Math.round(daysToGoal / 30)}mo`
+              : `${daysToGoal}d`}
+          </p>
+          <p>est. to goal</p>
+        </div>
+      )}
     </div>
   );
 }

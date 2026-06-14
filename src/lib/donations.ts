@@ -1,5 +1,7 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { notifyCampaign, sendDonorReceipt } from "@/lib/email";
 import type { FlwVerifyData } from "@/lib/flutterwave";
 
 export type FinalizeResult =
@@ -12,8 +14,10 @@ export type FinalizeResult =
  * `tx_ref` unique row + the `status != 'successful'` guard ensure a single
  * successful transition regardless of ordering or duplicates.
  *
- * Verifies authenticity by matching tx_ref, currency, and that the paid
- * amount is at least the amount we recorded (guards client tampering).
+ * On a fresh successful finalization, fires three best-effort side effects:
+ *   1. Donor receipt email
+ *   2. Campaign team notification
+ *   3. ISR revalidation of /donate and / so the goal meter updates site-wide
  */
 export async function finalizeDonation(
   txRef: string,
@@ -55,9 +59,36 @@ export async function finalizeDonation(
     .eq("tx_ref", txRef)
     .neq("status", "successful"); // idempotency guard against races
 
-  return success
-    ? { ok: true, status: "successful", already: false, amount: Number(donation.amount) }
-    : { ok: false, status: "failed" };
+  if (!success) return { ok: false, status: "failed" };
+
+  const amount = Number(donation.amount);
+  const naira = `₦${amount.toLocaleString("en-NG")}`;
+
+  // Best-effort side effects — never block or fail the finalization result.
+  void Promise.all([
+    sendDonorReceipt({
+      name: donation.donor_name,
+      email: donation.donor_email,
+      amount,
+      txRef,
+    }),
+    notifyCampaign(
+      `New donation: ${naira} from ${donation.donor_name}`,
+      [
+        `Donor:  ${donation.donor_name}`,
+        `Email:  ${donation.donor_email}`,
+        `Phone:  ${donation.donor_phone ?? "—"}`,
+        `Amount: ${naira}`,
+        `Ref:    ${txRef}`,
+        `Date:   ${new Date().toISOString()}`,
+      ].join("\n"),
+    ),
+  ]).catch((err) => console.error("[finalizeDonation] side effects:", err));
+
+  revalidatePath("/donate");
+  revalidatePath("/");
+
+  return { ok: true, status: "successful", already: false, amount };
 }
 
 export async function getDonationByRef(txRef: string) {
@@ -80,5 +111,22 @@ export async function markAbandonedIfPending(txRef: string) {
       .eq("status", "pending");
   } catch {
     // best-effort
+  }
+}
+
+export async function getDonationTotals(): Promise<{ total: number; count: number }> {
+  try {
+    const supabase = createAdminSupabase();
+    const { data } = await supabase
+      .from("donations")
+      .select("amount")
+      .eq("status", "successful");
+    const rows = data ?? [];
+    return {
+      total: rows.reduce((sum, d) => sum + Number(d.amount), 0),
+      count: rows.length,
+    };
+  } catch {
+    return { total: 0, count: 0 };
   }
 }

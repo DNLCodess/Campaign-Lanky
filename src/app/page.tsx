@@ -5,10 +5,13 @@ import { Bridge } from "@/components/home/bridge";
 import { Commitments } from "@/components/home/commitments";
 import { PromiseQuote } from "@/components/home/promise";
 import { GetInvolvedTeaser } from "@/components/home/get-involved-teaser";
+import { DonateTeaser } from "@/components/home/donate-teaser";
 import { Reveal } from "@/components/motion/reveal";
 import { CtaButton } from "@/components/ui/cta-button";
 import { JoinForm } from "@/components/forms/join-form";
 import { site } from "@/lib/site";
+
+export const revalidate = 60;
 
 const pillars = [
   {
@@ -98,6 +101,9 @@ export default function Home() {
 
       {/* Get Involved teaser */}
       <GetInvolvedTeaser />
+
+      {/* Fundraising goal meter */}
+      <DonateTeaser />
 
       {/* Join the Movement — email/phone capture */}
       <section className="tone-red border-y border-border/60">

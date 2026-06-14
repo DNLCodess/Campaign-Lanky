@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* ============================================================
    LANKY — Brand-Pure Dark Theme
@@ -129,6 +130,12 @@ h1, h2, h3, h4, h5 {
   }
 }
 
+/* Fundraising bar — bright streak sweeps left-to-right on a loop */
+@keyframes lanky-shimmer {
+  0%   { transform: translateX(-150%) skewX(-15deg); }
+  100% { transform: translateX(500%)  skewX(-15deg); }
+}
+
 /* Slow crossfade slider (hero constituency images) */
 @keyframes lanky-kenburns {
   0% {
@@ -137,6 +144,30 @@ h1, h2, h3, h4, h5 {
   100% {
     transform: scale(1.14);
   }
+}
+
+/* 404 page — floating particles */
+@keyframes nf-float {
+  0%, 100% { transform: translateY(0px); opacity: 0.6; }
+  50%       { transform: translateY(-16px); opacity: 1;  }
+}
+
+/* 404 page — radar rings (expand + fade) */
+@keyframes nf-radar {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(4.8); opacity: 0;    }
+}
+
+/* 404 page — slow clockwise spin (dashed decorative ring) */
+@keyframes nf-spin-slow {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* 404 page — counter-clockwise spin (inner ring) */
+@keyframes nf-spin-ccw {
+  from { transform: rotate(0deg);    }
+  to   { transform: rotate(-360deg); }
 }
 
 /* Respect reduced-motion globally as a safety net (JS also guards GSAP). */

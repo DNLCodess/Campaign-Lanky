@@ -5,8 +5,11 @@ import { createServerClient } from "@supabase/ssr";
  * Refreshes the Supabase auth session cookie on admin routes so server
  * components always see a valid session. Page-level `requireAdmin()` still
  * enforces access.
+ *
+ * Named `proxy` — Next.js 16 renamed the "middleware" file convention to
+ * "proxy". The exported function must match.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

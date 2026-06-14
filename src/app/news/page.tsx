@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { Reveal } from "@/components/motion/reveal";
+import { PostCard } from "@/components/blog/post-card";
+import { getPublishedPosts } from "@/lib/blog";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "News & Media",
@@ -16,7 +21,8 @@ const gallery = [
   { src: "/brand/candidate-5.png", label: "In conversation" },
 ];
 
-export default function NewsPage() {
+export default async function NewsPage() {
+  const posts = await getPublishedPosts(9);
   return (
     <>
       <PageHeader
@@ -65,33 +71,44 @@ export default function NewsPage() {
         </Reveal>
       </section>
 
-      {/* Blog — coming soon */}
+      {/* Campaign blog */}
       <section className="tone-navy border-y border-border/60">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
-          <Reveal>
-            <h2 className="font-heading text-3xl text-text sm:text-4xl">
-              Campaign blog
-            </h2>
-            <p className="mt-4 max-w-xl text-text-muted">
-              Regular updates on consultation tours, town halls, and community
-              engagements are on the way.
-            </p>
+          <Reveal className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-heading text-3xl text-text sm:text-4xl">
+                Campaign blog
+              </h2>
+              <p className="mt-4 max-w-xl text-text-muted">
+                Regular updates on consultation tours, town halls, and community
+                engagements.
+              </p>
+            </div>
+            <Link
+              href="/news/rss.xml"
+              className="shrink-0 rounded-brand border border-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-accent hover:text-text"
+              title="RSS feed"
+            >
+              RSS
+            </Link>
           </Reveal>
-          {/* TODO(client): wire blog posts to Supabase (title, slug, body, date). */}
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Reveal
-                key={i}
-                delay={i * 0.05}
-                className="rounded-brand border border-dashed border-border bg-surface/30 p-8 text-center"
-              >
-                <p className="font-heading text-xl text-text-muted">Coming soon</p>
-                <p className="mt-2 text-sm text-text-muted/70">
-                  New post will appear here
-                </p>
-              </Reveal>
-            ))}
-          </div>
+
+          {posts.length === 0 ? (
+            <Reveal className="mt-10 rounded-brand border border-dashed border-border bg-surface/30 p-12 text-center">
+              <p className="font-heading text-xl text-text-muted">Coming soon</p>
+              <p className="mt-2 text-sm text-text-muted/70">
+                Check back for updates from the campaign trail
+              </p>
+            </Reveal>
+          ) : (
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {posts.map((post, i) => (
+                <Reveal key={post.id} delay={i * 0.04}>
+                  <PostCard post={post} />
+                </Reveal>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

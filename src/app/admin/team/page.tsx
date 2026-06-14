@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin, allowedEmails } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { AddAdminForm } from "@/app/admin/team/add-admin-form";
 import { removeAdmin } from "@/app/admin/team/actions";
@@ -11,6 +11,7 @@ const when = (iso?: string | null) =>
 
 export default async function AdminTeamPage() {
   const me = await requireAdmin();
+  const allowlist = allowedEmails(); // empty = no restriction
 
   let users: { id: string; email?: string; created_at: string; last_sign_in_at?: string | null }[] = [];
   let loadError = false;
@@ -45,6 +46,20 @@ export default async function AdminTeamPage() {
           ← Dashboard
         </Link>
       </header>
+
+      {/* ADMIN_EMAILS restriction warning */}
+      {allowlist.length > 0 && (
+        <div className="mt-6 rounded-brand border border-yellow-500/30 bg-yellow-500/8 p-4 text-sm">
+          <p className="font-medium text-yellow-300">ADMIN_EMAILS allowlist is active</p>
+          <p className="mt-1 text-text-muted">
+            Only these addresses can log in:{" "}
+            <span className="font-mono text-text">{allowlist.join(", ")}</span>.
+            After creating an account here you must also add the email to{" "}
+            <code className="text-accent">ADMIN_EMAILS</code> in your environment
+            variables and redeploy, otherwise the account will be blocked on login.
+          </p>
+        </div>
+      )}
 
       {/* Add admin */}
       <section className="mt-8 rounded-brand border border-border bg-surface/40 p-6">
@@ -91,6 +106,11 @@ export default async function AdminTeamPage() {
                             you
                           </span>
                         )}
+                        {allowlist.length > 0 && u.email && !allowlist.includes(u.email.toLowerCase()) && (
+                          <span className="ml-2 rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs text-yellow-300" title="Not in ADMIN_EMAILS — cannot log in">
+                            ⚠ blocked
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">{when(u.created_at)}</td>
                       <td className="px-4 py-3">{when(u.last_sign_in_at)}</td>
@@ -123,6 +143,11 @@ export default async function AdminTeamPage() {
                       {u.id === me.id && (
                         <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
                           you
+                        </span>
+                      )}
+                      {allowlist.length > 0 && u.email && !allowlist.includes(u.email.toLowerCase()) && (
+                        <span className="ml-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-xs text-yellow-300">
+                          ⚠ blocked
                         </span>
                       )}
                     </p>

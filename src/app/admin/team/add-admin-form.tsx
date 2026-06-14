@@ -41,6 +41,11 @@ export function AddAdminForm() {
       {state.success && (
         <p className="text-sm text-accent sm:col-span-3">{state.success}</p>
       )}
+      {state.warning && (
+        <p className="rounded-brand border border-yellow-500/30 bg-yellow-500/8 p-3 text-sm text-yellow-300 sm:col-span-3">
+          ⚠ {state.warning}
+        </p>
+      )}
     </form>
   );
 }
