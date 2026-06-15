@@ -83,7 +83,7 @@ export const site = {
     { label: "Instagram", href: "https://www.instagram.com/votelanky2027"     },
     { label: "X",         href: "https://x.com/lanky2027"                     },
     { label: "TikTok",    href: "https://www.tiktok.com/@votelanky2027"       },
-    { label: "YouTube",   href: "#"                                            },
+    { label: "YouTube",   href: "https://www.youtube.com/@votelanky2027"      },
   ],
 
   // Numbers use +234 international format so diaspora supporters can dial directly.
