@@ -120,6 +120,39 @@ export async function submitContact(
   }
 }
 
+/** "I Stand With Lanky" DP generator — captures supporter name + email. */
+export async function submitDpSupporter(data: {
+  name: string;
+  email: string;
+}): Promise<FormState> {
+  const name = data.name?.trim() ?? "";
+  const email = data.email?.trim() ?? "";
+
+  if (!name) return { status: "error", message: "Please enter your name." };
+  if (!email || !email.includes("@")) {
+    return { status: "error", message: "Please enter a valid email address." };
+  }
+
+  try {
+    const supabase = createServerSupabase();
+    const { error } = await supabase
+      .from("dp_supporters")
+      .insert({ name: name.slice(0, 120), email });
+    if (error) {
+      console.error("[submitDpSupporter]", error);
+      return { status: "error", message: GENERIC_ERROR };
+    }
+    await notifyCampaign(
+      "New 'I Stand With' supporter",
+      `Name: ${name}\nEmail: ${email}`,
+    );
+    return { status: "success" };
+  } catch (err) {
+    console.error("[submitDpSupporter]", err);
+    return { status: "error", message: GENERIC_ERROR };
+  }
+}
+
 /** Voter card registration assistance. Stores sensitive PII (server-only reads). */
 export async function submitVoterRegistration(
   _prev: FormState,

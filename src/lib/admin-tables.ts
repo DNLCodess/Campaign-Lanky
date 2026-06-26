@@ -7,6 +7,7 @@ export type AdminTableKey =
   | "donations"
   | "volunteers"
   | "leads"
+  | "dp_supporters"
   | "messages";
 
 export const ADMIN_TABLES: Record<
@@ -60,6 +61,11 @@ export const ADMIN_TABLES: Record<
     search: ["email", "phone", "source"],
     csv: ["created_at", "email", "phone", "source"],
   },
+  dp_supporters: {
+    label: "DP Supporters",
+    search: ["name", "email"],
+    csv: ["created_at", "name", "email"],
+  },
   messages: {
     label: "Messages",
     search: ["name", "contact", "message"],
@@ -72,6 +78,7 @@ export const ADMIN_TABLE_ORDER: AdminTableKey[] = [
   "donations",
   "volunteers",
   "leads",
+  "dp_supporters",
   "messages",
 ];
 

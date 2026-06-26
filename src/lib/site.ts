@@ -54,6 +54,7 @@ export const site = {
     { label: "Manifesto", href: "/manifesto" },
     { label: "Wards & LG", href: "/wards" },
     { label: "News & Media", href: "/news" },
+    { label: "Get Your DP", href: "/dp" },
     { label: "Get Involved", href: "/get-involved" },
     { label: "Contact", href: "/contact" },
   ],

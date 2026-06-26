@@ -27,9 +27,7 @@ export function StructuredData() {
       "@type": "PoliticalParty",
       name: site.party,
     },
-    sameAs: site.socials
-      .map((s) => s.href)
-      .filter((href) => href && href !== "#"),
+    sameAs: site.socials.map((s) => s.href).filter(Boolean),
   };
 
   const organization = {

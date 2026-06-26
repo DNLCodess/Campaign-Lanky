@@ -45,6 +45,7 @@ export default async function AdminDashboard({
     donations: 0,
     volunteers: 0,
     leads: 0,
+    dp_supporters: 0,
     messages: 0,
   };
   let raised = 0;
@@ -60,11 +61,12 @@ export default async function AdminDashboard({
       const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
-    const [vrc, dc, vc, lc, mc, successful, firstDonation] = await Promise.all([
+    const [vrc, dc, vc, lc, dpc, mc, successful, firstDonation] = await Promise.all([
       countOf("voter_registrations"),
       countOf("donations"),
       countOf("volunteers"),
       countOf("leads"),
+      countOf("dp_supporters"),
       countOf("messages"),
       supabase.from("donations").select("amount").eq("status", "successful").limit(10000),
       supabase
@@ -79,6 +81,7 @@ export default async function AdminDashboard({
     counts.donations = dc;
     counts.volunteers = vc;
     counts.leads = lc;
+    counts.dp_supporters = dpc;
     counts.messages = mc;
     const sRows = (successful.data ?? []) as { amount: number }[];
     successfulCount = sRows.length;
@@ -295,6 +298,8 @@ function headsFor(view: AdminTableKey): string[] {
       return ["Date", "Name", "Phone", "Ward", "Interests"];
     case "leads":
       return ["Date", "Email", "Phone", "Source"];
+    case "dp_supporters":
+      return ["Date", "Name", "Email"];
     case "messages":
       return ["Date", "From", "Message"];
   }
@@ -356,6 +361,15 @@ function RowView({ view, r }: { view: AdminTableKey; r: Row }) {
         <Td>{String(r.email ?? "")}</Td>
         <Td>{String(r.phone ?? "—")}</Td>
         <Td>{String(r.source ?? "—")}</Td>
+      </tr>
+    );
+  }
+  if (view === "dp_supporters") {
+    return (
+      <tr className="border-t border-border/40">
+        <Td>{when(r.created_at)}</Td>
+        <Td className="text-text">{String(r.name ?? "")}</Td>
+        <Td>{String(r.email ?? "")}</Td>
       </tr>
     );
   }
@@ -445,6 +459,18 @@ function MobileCard({ view, r }: { view: AdminTableKey; r: Row }) {
         <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
           <CardMeta label="Phone" value={String(r.phone ?? "—")} />
           <CardMeta label="Source" value={String(r.source ?? "—")} />
+          <CardMeta label="Date" value={when(r.created_at)} />
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "dp_supporters") {
+    return (
+      <div className={base}>
+        <p className="font-medium text-text">{String(r.name ?? "")}</p>
+        <p className="truncate text-xs text-text-muted">{String(r.email ?? "")}</p>
+        <div className="mt-3 border-t border-border/40 pt-3">
           <CardMeta label="Date" value={when(r.created_at)} />
         </div>
       </div>
