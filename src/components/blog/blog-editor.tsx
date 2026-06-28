@@ -13,7 +13,7 @@ import {
   publishPost,
   unpublishPost,
   deletePost,
-} from "@/app/admin/blog/actions";
+} from "@/app/admin/(dashboard)/blog/actions";
 import { generateSlug } from "@/lib/slug";
 
 type SaveState = "saved" | "saving" | "unsaved" | "error";

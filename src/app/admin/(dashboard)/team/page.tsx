@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireAdmin, allowedEmails } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { AddAdminForm } from "@/app/admin/team/add-admin-form";
-import { removeAdmin } from "@/app/admin/team/actions";
+import { AddAdminForm } from "@/app/admin/(dashboard)/team/add-admin-form";
+import { removeAdmin } from "@/app/admin/(dashboard)/team/actions";
 
 export const dynamic = "force-dynamic";
 

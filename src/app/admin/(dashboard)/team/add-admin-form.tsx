@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createAdmin, type TeamState } from "@/app/admin/team/actions";
+import { createAdmin, type TeamState } from "@/app/admin/(dashboard)/team/actions";
 
 const initial: TeamState = {};
 
