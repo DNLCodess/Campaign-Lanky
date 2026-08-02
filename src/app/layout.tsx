@@ -7,16 +7,18 @@ import { SiteChrome } from "@/components/site-chrome";
 import { StructuredData } from "@/components/structured-data";
 import { site } from "@/lib/site";
 
+// latin-ext carries U+20A0–20AB — without it the naira sign (₦) falls back to a
+// system font and renders mismatched next to the loaded digits.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   display: "swap",
   axes: ["opsz", "SOFT", "WONK"],
 });
 
 const inter = Inter({
   variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 

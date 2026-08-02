@@ -81,8 +81,8 @@ export const site = {
 
   socials: [
     { label: "Facebook",  href: "https://facebook.com/votelanky2027"          },
-    { label: "Instagram", href: "https://www.instagram.com/votelanky2027"     },
-    { label: "X",         href: "https://x.com/lanky2027"                     },
+    { label: "Instagram", href: "https://www.instagram.com/olanrewajuokesooto" },
+    { label: "X",         href: "https://x.com/omokesooto"                     },
     { label: "TikTok",    href: "https://www.tiktok.com/@votelanky2027"       },
     { label: "YouTube",   href: "https://www.youtube.com/@votelanky2027"      },
   ],
