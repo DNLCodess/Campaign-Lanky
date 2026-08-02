@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  // The PVC registration exercise has closed. /register was printed on flyers
+  // and shared on WhatsApp, so send that traffic somewhere useful rather than
+  // to a 404. Temporary (307) — if registration reopens for the next cycle,
+  // a cached 308 would be impossible to undo in people's browsers.
+  async redirects() {
+    return [{ source: "/register", destination: "/get-involved", permanent: false }];
+  },
   images: {
     // Temporary: Unsplash stock photos for the hero slider until the client
     // provides real constituency photography.

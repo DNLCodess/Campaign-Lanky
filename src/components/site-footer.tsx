@@ -35,14 +35,6 @@ export function SiteFooter() {
           <div>
             <h4 className="text-sm font-semibold tracking-wide text-text">Explore</h4>
             <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link
-                  href={site.cta.register.href}
-                  className="text-sm font-medium text-accent transition-colors hover:text-accent-hover"
-                >
-                  {site.cta.register.label}
-                </Link>
-              </li>
               {site.nav.map((item) => (
                 <li key={item.href}>
                   <Link

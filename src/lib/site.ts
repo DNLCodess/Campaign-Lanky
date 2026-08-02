@@ -62,7 +62,6 @@ export const site = {
   cta: {
     donate: { label: "Donate", href: "/donate" },
     volunteer: { label: "Volunteer", href: "/get-involved" },
-    register: { label: "Register to Vote", href: "/register" },
   },
 
   // Public WhatsApp community group (shown after a successful form submission).
