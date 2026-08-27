@@ -11,6 +11,7 @@ const NAV: NavItem[] = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/submissions", label: "Submissions" },
   { href: "/admin/unit-leaders", label: "Unit Leaders" },
+  { href: "/admin/team-leaders", label: "Team Leaders" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/team", label: "Team" },
 ];

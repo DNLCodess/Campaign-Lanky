@@ -8,6 +8,39 @@ function resend() {
 }
 
 /**
+ * Sends a hierarchy-scoped broadcast message to one leader. Returns whether
+ * it actually sent — callers use this to report an accurate emailed/total
+ * count rather than assuming success.
+ */
+export async function notifyLeader({
+  to,
+  name,
+  subject,
+  body,
+}: {
+  to: string;
+  name: string;
+  subject: string;
+  body: string;
+}): Promise<boolean> {
+  const client = resend();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.emails.send({
+      from: FROM,
+      to,
+      subject,
+      text: `Dear ${name},\n\n${body}\n\n— The Lanky Campaign Team`,
+    });
+    return !error;
+  } catch (err) {
+    console.error("[notifyLeader] email send failed:", err);
+    return false;
+  }
+}
+
+/**
  * Best-effort notification email to the campaign team via Resend.
  * Never throws — a failed email must not fail the form submission.
  * Configure RESEND_API_KEY and NOTIFY_EMAIL to enable; otherwise it no-ops.

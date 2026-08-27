@@ -3,9 +3,10 @@
 import { usePathname } from "next/navigation";
 
 /**
- * Renders the public header/footer around page content — except under /admin,
- * which has its own chrome. Header/footer are passed in as props so they stay
- * server-rendered.
+ * Renders the public header/footer around page content — except under /admin
+ * or /portal (election results portal, rewritten here from
+ * portal.votelanky.com by middleware), which have their own chrome.
+ * Header/footer are passed in as props so they stay server-rendered.
  */
 export function SiteChrome({
   header,
@@ -17,7 +18,7 @@ export function SiteChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/portal")) {
     return <main className="flex-1">{children}</main>;
   }
   return (

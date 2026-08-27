@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "atavwpoistostnqxmeal.supabase.co" },
     ],
   },
+  experimental: {
+    serverActions: {
+      // Default is 1MB — the election results portal accepts result-sheet
+      // photo uploads (server action FormData) up to 10MB.
+      bodySizeLimit: "11mb",
+    },
+  },
 };
 
 export default nextConfig;
