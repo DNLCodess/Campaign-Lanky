@@ -10,7 +10,9 @@ export async function listElections() {
   const admin = createAdminSupabase();
   const { data } = await admin
     .from("elections")
-    .select("id, name, status, created_at, candidates(id, name, party, is_incumbent, display_order)")
+    .select(
+      "id, name, status, published, results_published_at, created_at, candidates(id, name, party, is_incumbent, display_order)",
+    )
     .order("created_at", { ascending: false });
   return data ?? [];
 }
@@ -92,5 +94,37 @@ export async function setElectionStatus(
   });
 
   revalidatePath("/portal/admin/elections");
+  return { success: true };
+}
+
+/**
+ * Publishing is independent of election status — a manual decision, not a
+ * side effect of marking an election active/closed. Public /results shows
+ * nothing until this is flipped, regardless of how far collation has gotten.
+ */
+export async function setElectionPublished(
+  _prev: ElectionActionState,
+  formData: FormData,
+): Promise<ElectionActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const electionId = String(formData.get("election_id") ?? "");
+  const published = formData.get("published") === "true";
+
+  const admin = createAdminSupabase();
+  const { error } = await admin
+    .from("elections")
+    .update({ published, results_published_at: published ? new Date().toISOString() : null })
+    .eq("id", electionId);
+  if (error) return { error: "Failed to update publish status." };
+
+  await logPortalAudit({
+    action: published ? "RESULTS_PUBLISHED" : "RESULTS_UNPUBLISHED",
+    tableName: "elections",
+    recordId: electionId,
+    performedBy: session.id,
+  });
+
+  revalidatePath("/portal/admin/elections");
+  revalidatePath("/results");
   return { success: true };
 }

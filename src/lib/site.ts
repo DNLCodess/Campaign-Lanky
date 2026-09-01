@@ -53,6 +53,7 @@ export const site = {
     { label: "About", href: "/about" },
     { label: "Manifesto", href: "/manifesto" },
     { label: "Wards & LG", href: "/wards" },
+    { label: "Results", href: "/results" },
     { label: "News & Media", href: "/news" },
     { label: "Get Your DP", href: "/dp" },
     { label: "Get Involved", href: "/get-involved" },

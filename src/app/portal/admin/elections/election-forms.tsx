@@ -5,6 +5,7 @@ import {
   createElection,
   addCandidate,
   setElectionStatus,
+  setElectionPublished,
   type ElectionActionState,
 } from "@/app/portal/actions/elections";
 
@@ -58,6 +59,29 @@ export function AddCandidateForm({ electionId }: { electionId: string }) {
       >
         {isPending ? "Adding…" : "Add candidate"}
       </button>
+      {state.error && <span className="text-xs text-primary">{state.error}</span>}
+    </form>
+  );
+}
+
+export function PublishToggle({ electionId, published }: { electionId: string; published: boolean }) {
+  const [state, formAction, isPending] = useActionState(setElectionPublished, initial);
+  return (
+    <form action={formAction} className="flex items-center gap-2">
+      <input type="hidden" name="election_id" value={electionId} />
+      <input type="hidden" name="published" value={(!published).toString()} />
+      <button
+        type="submit"
+        disabled={isPending}
+        className={`rounded-brand border px-3 py-1.5 text-xs font-medium transition-colors ${
+          published
+            ? "border-border text-text-muted hover:border-primary hover:text-primary"
+            : "border-accent/50 text-accent hover:bg-accent/10"
+        }`}
+      >
+        {isPending ? "Saving…" : published ? "Unpublish from public site" : "Publish to public site"}
+      </button>
+      {published && <span className="text-xs text-accent">Live at /results</span>}
       {state.error && <span className="text-xs text-primary">{state.error}</span>}
     </form>
   );
