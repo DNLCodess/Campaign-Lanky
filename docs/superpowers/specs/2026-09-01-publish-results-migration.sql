@@ -1,6 +1,6 @@
--- Run this once in the Supabase SQL editor (Database > SQL Editor) for the
--- campaign-lanky project. The Supabase MCP connection dropped mid-session and
--- needs interactive reauthorization, so this couldn't be applied automatically.
+-- APPLIED 2026-09-02 via the Supabase MCP once the connection was
+-- reauthorized (it had dropped mid-session on 2026-09-01, blocking DDL —
+-- kept here as a record of what ran, not as a pending step).
 --
 -- Adds the manual publish toggle for public results (independent of
 -- election.status — publishing is a separate decision from active/closed).
