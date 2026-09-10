@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
@@ -35,8 +36,14 @@ async function getVerifiedUser(supabase: Awaited<ReturnType<typeof createSupabas
   return null;
 }
 
-/** Returns the signed-in portal account for this request, or null. */
-export async function getPortalSession(): Promise<PortalSession | null> {
+/**
+ * Returns the signed-in portal account for this request, or null.
+ *
+ * Wrapped in React `cache()` so the layout guard and the page guard in the
+ * same render share one `auth.getUser()` round trip + one `portal_accounts`
+ * lookup instead of doing it twice per navigation.
+ */
+export const getPortalSession = cache(async (): Promise<PortalSession | null> => {
   const supabase = await createSupabaseServerClient();
   const user = await getVerifiedUser(supabase);
   if (!user) return null;
@@ -50,7 +57,7 @@ export async function getPortalSession(): Promise<PortalSession | null> {
 
   if (!account || !account.is_active) return null;
   return account as PortalSession;
-}
+});
 
 /** Guard for a portal page — redirects to login if not signed in as one of `roles`. */
 export async function requirePortalRole(roles: PortalRole[]): Promise<PortalSession> {

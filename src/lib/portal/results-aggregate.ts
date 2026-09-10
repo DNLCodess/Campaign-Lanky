@@ -1,6 +1,38 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { getCachedGeo } from "@/lib/portal/geo";
 import { LGAS } from "@/lib/portal/constants";
+
+/**
+ * The election/candidate/results reads behind one aggregate, cached for a
+ * short window and tagged `election-results`. On a busy results night dozens
+ * of dashboards re-render per minute but the underlying vote data changes at
+ * most once per PU submission — the write path calls
+ * `revalidateTag("election-results")` so a fresh submission still shows up
+ * within a request, and otherwise this collapses the load to ~1 DB hit / 15s.
+ */
+const getCachedElectionData = unstable_cache(
+  async (electionId: string) => {
+    const admin = createAdminSupabase();
+    const [{ data: election }, { data: candidatesRaw }, { data: results }] = await Promise.all([
+      admin.from("elections").select("id, name").eq("id", electionId).single(),
+      admin
+        .from("candidates")
+        .select("id, name, party")
+        .eq("election_id", electionId)
+        .order("display_order")
+        .order("name"),
+      admin
+        .from("election_results")
+        .select("lga, ward, polling_unit, candidate_id, votes_cast")
+        .eq("election_id", electionId),
+    ]);
+    return { election, candidatesRaw, results };
+  },
+  ["election-aggregate-data-v1"],
+  { revalidate: 15, tags: ["election-results"] },
+);
 
 export type CandidateInfo = { id: string; name: string; party: string | null; colorIndex: number };
 export type CandidateTotal = CandidateInfo & { votes: number };
@@ -33,21 +65,9 @@ export type ElectionAggregate = {
  * src/lib/public-results.ts).
  */
 export async function getElectionAggregate(electionId: string): Promise<ElectionAggregate | null> {
-  const admin = createAdminSupabase();
-
-  const [{ data: election }, { data: candidatesRaw }, { data: results }, { data: geo }] = await Promise.all([
-    admin.from("elections").select("id, name").eq("id", electionId).single(),
-    admin
-      .from("candidates")
-      .select("id, name, party")
-      .eq("election_id", electionId)
-      .order("display_order")
-      .order("name"),
-    admin
-      .from("election_results")
-      .select("lga, ward, polling_unit, candidate_id, votes_cast")
-      .eq("election_id", electionId),
-    admin.from("constituency_geo").select("lga, ward"),
+  const [{ election, candidatesRaw, results }, geo] = await Promise.all([
+    getCachedElectionData(electionId),
+    getCachedGeo(),
   ]);
 
   if (!election || !candidatesRaw) return null;

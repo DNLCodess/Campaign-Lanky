@@ -1,5 +1,6 @@
 import { requirePortalRole } from "@/lib/portal/session";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { getCachedGeo } from "@/lib/portal/geo";
 import { getActiveElection } from "@/app/portal/actions/results";
 
 export const dynamic = "force-dynamic";
@@ -7,14 +8,10 @@ export const dynamic = "force-dynamic";
 export default async function WardOverviewPage() {
   const session = await requirePortalRole(["ward_agent"]);
   const admin = createAdminSupabase();
-  const election = await getActiveElection();
 
-  const [{ count: totalPus }, { count: totalPuAgents }, { data: results }] = await Promise.all([
-    admin
-      .from("constituency_geo")
-      .select("*", { count: "exact", head: true })
-      .eq("lga", session.lga!)
-      .eq("ward", session.ward!),
+  const [geo, election, { count: totalPuAgents }] = await Promise.all([
+    getCachedGeo(),
+    getActiveElection(),
     admin
       .from("portal_accounts")
       .select("*", { count: "exact", head: true })
@@ -22,15 +19,17 @@ export default async function WardOverviewPage() {
       .eq("lga", session.lga!)
       .eq("ward", session.ward!)
       .eq("is_active", true),
-    election
-      ? admin
-          .from("election_results")
-          .select("polling_unit")
-          .eq("election_id", election.id)
-          .eq("lga", session.lga!)
-          .eq("ward", session.ward!)
-      : Promise.resolve({ data: [] as { polling_unit: string }[] }),
   ]);
+
+  const totalPus = geo.filter((g) => g.lga === session.lga && g.ward === session.ward).length;
+  const { data: results } = election
+    ? await admin
+        .from("election_results")
+        .select("polling_unit")
+        .eq("election_id", election.id)
+        .eq("lga", session.lga!)
+        .eq("ward", session.ward!)
+    : { data: [] as { polling_unit: string }[] };
 
   const submitted = new Set((results ?? []).map((r) => r.polling_unit)).size;
 

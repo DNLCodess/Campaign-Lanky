@@ -1,10 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requirePortalRole, logPortalAudit } from "@/lib/portal/session";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 
 export type ElectionActionState = { error?: string; success?: boolean };
+
+/**
+ * Anything that changes which election is active, its candidate list, or its
+ * published state invalidates the short-lived `election-results` caches
+ * (`getActiveElection`, the results aggregate) so the next render is fresh.
+ */
+function revalidateElectionData() {
+  revalidateTag("election-results", "max");
+  revalidatePath("/portal/admin/elections");
+}
 
 export async function listElections() {
   const admin = createAdminSupabase();
@@ -37,7 +47,7 @@ export async function createElection(
     notes: `Election created: ${name}`,
   });
 
-  revalidatePath("/portal/admin/elections");
+  revalidateElectionData();
   return { success: true };
 }
 
@@ -68,7 +78,7 @@ export async function addCandidate(
     notes: `Candidate added: ${name} (${party || "no party"})`,
   });
 
-  revalidatePath("/portal/admin/elections");
+  revalidateElectionData();
   return { success: true };
 }
 
@@ -93,7 +103,7 @@ export async function setElectionStatus(
     notes: `Status set to ${status}`,
   });
 
-  revalidatePath("/portal/admin/elections");
+  revalidateElectionData();
   return { success: true };
 }
 
@@ -124,7 +134,7 @@ export async function setElectionPublished(
     performedBy: session.id,
   });
 
-  revalidatePath("/portal/admin/elections");
+  revalidateElectionData();
   revalidatePath("/results");
   return { success: true };
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { requirePortalRole, logPortalAudit } from "@/lib/portal/session";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { computeResultChecksum } from "@/lib/portal/checksum";
@@ -97,42 +97,57 @@ export async function submitElectionResult(
 
   const { error: insertError } = await admin.from("election_results").insert(rows);
   if (insertError) {
+    // The row insert failed, so the photo we just uploaded is now orphaned —
+    // clean it up rather than leave it billing storage forever. (A 23505 is a
+    // duplicate submission; the photo path is unique per attempt either way.)
+    await admin.storage.from("result-sheets").remove([path]);
     if (insertError.code === "23505") {
       return { error: "You have already submitted a result for this election." };
     }
     return { error: "Failed to submit result. Please try again." };
   }
 
-  // Ignore errors here (e.g. a unique-violation race) — the reward already
-  // existing is not a failure condition for the submission itself.
-  await admin.from("rewards").insert({
-    recipient_id: session.id,
-    trigger_type: "result_submission",
-    trigger_ref: electionId,
-    created_by: session.id,
-  });
+  // Reward insert errors are ignored (e.g. a unique-violation race — the reward
+  // already existing is not a failure of the submission). Both of these are
+  // off the critical path, so run them together.
+  await Promise.all([
+    admin.from("rewards").insert({
+      recipient_id: session.id,
+      trigger_type: "result_submission",
+      trigger_ref: electionId,
+      created_by: session.id,
+    }),
+    logPortalAudit({
+      action: "INSERT",
+      tableName: "election_results",
+      performedBy: session.id,
+      notes: `Result submitted for ${session.polling_unit} (${votes.length} candidates)`,
+    }),
+  ]);
 
-  await logPortalAudit({
-    action: "INSERT",
-    tableName: "election_results",
-    performedBy: session.id,
-    notes: `Result submitted for ${session.polling_unit} (${votes.length} candidates)`,
-  });
-
+  revalidateTag("election-results", "max");
   revalidatePath("/portal/pu");
   return { success: true };
 }
 
+const getCachedActiveElection = unstable_cache(
+  async () => {
+    const admin = createAdminSupabase();
+    const { data } = await admin
+      .from("elections")
+      .select("id, name, status, candidates(id, name, party, display_order)")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data;
+  },
+  ["active-election-v1"],
+  { revalidate: 30, tags: ["election-results"] },
+);
+
 export async function getActiveElection() {
-  const admin = createAdminSupabase();
-  const { data } = await admin
-    .from("elections")
-    .select("id, name, status, candidates(id, name, party, display_order)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
+  return getCachedActiveElection();
 }
 
 export async function getMySubmission(electionId: string) {
@@ -147,16 +162,26 @@ export async function getMySubmission(electionId: string) {
   return data && data.length > 0 ? data : null;
 }
 
-/** Read-only roll-up for ward_agent / lga_coordinator / constituency_admin, scoped to their branch. */
+/**
+ * Read-only roll-up for ward_agent / lga_coordinator / constituency_admin,
+ * scoped to their branch. Limited to the active election and a hard row cap —
+ * across multiple election cycles an unbounded, unfiltered fetch would return
+ * every result row ever recorded.
+ */
 export async function listResults() {
   const session = await requirePortalRole(["constituency_admin", "lga_coordinator", "ward_agent"]);
   const admin = createAdminSupabase();
+  const election = await getActiveElection();
+  if (!election) return [];
+
   let query = admin
     .from("election_results")
     .select(
-      "id, election_id, lga, ward, polling_unit, votes_cast, accredited_voters, registered_voters, created_at, candidates(name, party), portal_accounts!election_results_submitted_by_fkey(full_name)",
+      "id, election_id, lga, ward, polling_unit, votes_cast, accredited_voters, registered_voters, result_image_path, created_at, candidates(name, party), portal_accounts!election_results_submitted_by_fkey(full_name)",
     )
-    .order("created_at", { ascending: false });
+    .eq("election_id", election.id)
+    .order("created_at", { ascending: false })
+    .limit(2000);
 
   if (session.role === "lga_coordinator") query = query.eq("lga", session.lga);
   if (session.role === "ward_agent") query = query.eq("lga", session.lga).eq("ward", session.ward);
