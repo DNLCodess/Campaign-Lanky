@@ -8,27 +8,28 @@ import {
   setElectionPublished,
   type ElectionActionState,
 } from "@/app/portal/actions/elections";
+import {
+  TextField,
+  CheckboxField,
+  FormBanner,
+  SubmitButton,
+} from "@/app/portal/_components/form";
 
 const initial: ElectionActionState = {};
 
 export function CreateElectionForm() {
   const [state, formAction, isPending] = useActionState(createElection, initial);
   return (
-    <form action={formAction} className="flex flex-wrap gap-3">
-      <input
+    <form action={formAction} className="max-w-md space-y-4">
+      {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+      <TextField
         name="name"
-        required
-        placeholder="Election name (e.g. 2027 House of Reps — Ibadan NW/SW)"
-        className="min-w-64 flex-1 rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
+        label="Election name"
+        helper="For example: 2027 House of Reps — Ibadan NW/SW"
       />
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-      >
-        {isPending ? "Creating…" : "Create election"}
-      </button>
-      {state.error && <p className="w-full text-sm text-primary">{state.error}</p>}
+      <SubmitButton pending={isPending} pendingLabel="Creating…">
+        Create election
+      </SubmitButton>
     </form>
   );
 }
@@ -36,30 +37,19 @@ export function CreateElectionForm() {
 export function AddCandidateForm({ electionId }: { electionId: string }) {
   const [state, formAction, isPending] = useActionState(addCandidate, initial);
   return (
-    <form action={formAction} className="flex flex-wrap items-center gap-2">
+    <form action={formAction} className="max-w-md space-y-4">
       <input type="hidden" name="election_id" value={electionId} />
-      <input
-        name="name"
-        required
-        placeholder="Candidate name"
-        className="rounded-brand border border-border bg-bg px-3 py-1.5 text-sm text-text focus:border-accent focus:outline-none"
+      {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+      <TextField name="name" label="Candidate name" />
+      <TextField name="party" label="Party" optional />
+      <CheckboxField
+        name="is_incumbent"
+        label="Currently holds this seat"
+        helper="Marks this candidate as the incumbent."
       />
-      <input
-        name="party"
-        placeholder="Party"
-        className="w-28 rounded-brand border border-border bg-bg px-3 py-1.5 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <label className="flex items-center gap-1.5 text-xs text-text-muted">
-        <input type="checkbox" name="is_incumbent" /> Incumbent
-      </label>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-brand border border-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-accent hover:text-accent"
-      >
-        {isPending ? "Adding…" : "Add candidate"}
-      </button>
-      {state.error && <span className="text-xs text-primary">{state.error}</span>}
+      <SubmitButton pending={isPending} pendingLabel="Adding…">
+        Add candidate
+      </SubmitButton>
     </form>
   );
 }

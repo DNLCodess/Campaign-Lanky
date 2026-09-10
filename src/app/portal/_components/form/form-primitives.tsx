@@ -36,7 +36,7 @@ export function FieldSection({
           {description && <p className="mt-0.5 text-sm text-text-muted">{description}</p>}
         </div>
       </div>
-      <div className="space-y-4 pl-9">{children}</div>
+      <div className="space-y-4 sm:pl-9">{children}</div>
     </section>
   );
 }
@@ -83,6 +83,7 @@ export function TextField({
   inputMode,
   value,
   onChange,
+  onEnter,
 }: {
   name: string;
   label: string;
@@ -95,6 +96,7 @@ export function TextField({
   inputMode?: "text" | "email" | "tel";
   value?: string;
   onChange?: (value: string) => void;
+  onEnter?: () => void;
 }) {
   const id = useId();
   return (
@@ -109,9 +111,223 @@ export function TextField({
         inputMode={inputMode}
         value={onChange ? (value ?? "") : undefined}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+        onKeyDown={
+          onEnter
+            ? (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onEnter();
+                }
+              }
+            : undefined
+        }
         className={inputClass}
       />
     </Field>
+  );
+}
+
+/** Field + number input, with large touch-friendly sizing for on-phone entry. */
+export function NumberField({
+  name,
+  label,
+  helper,
+  error,
+  min = 0,
+  optional,
+  autoFocus,
+}: {
+  name: string;
+  label: string;
+  helper?: string;
+  error?: string;
+  min?: number;
+  optional?: boolean;
+  autoFocus?: boolean;
+}) {
+  const id = useId();
+  return (
+    <Field label={label} htmlFor={id} optional={optional} helper={helper} error={error}>
+      <input
+        id={id}
+        name={name}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        step={1}
+        required={!optional}
+        autoFocus={autoFocus}
+        className={inputClass}
+      />
+    </Field>
+  );
+}
+
+export function TextareaField({
+  name,
+  label,
+  helper,
+  error,
+  rows = 4,
+  optional,
+}: {
+  name: string;
+  label: string;
+  helper?: string;
+  error?: string;
+  rows?: number;
+  optional?: boolean;
+}) {
+  const id = useId();
+  return (
+    <Field label={label} htmlFor={id} optional={optional} helper={helper} error={error}>
+      <textarea id={id} name={name} rows={rows} required={!optional} className={inputClass} />
+    </Field>
+  );
+}
+
+export function FileField({
+  name,
+  label,
+  helper,
+  error,
+  accept,
+  optional,
+}: {
+  name: string;
+  label: string;
+  helper?: string;
+  error?: string;
+  accept?: string;
+  optional?: boolean;
+}) {
+  const id = useId();
+  return (
+    <Field label={label} htmlFor={id} optional={optional} helper={helper} error={error}>
+      <input
+        id={id}
+        name={name}
+        type="file"
+        accept={accept}
+        required={!optional}
+        className={
+          inputClass +
+          " file:mr-3 file:rounded-brand file:border-0 file:bg-surface-2 file:px-3 file:py-1.5 file:text-sm file:text-text"
+        }
+      />
+    </Field>
+  );
+}
+
+/** Checkbox with its explanation to the right — the label describes the effect of ticking it. */
+export function CheckboxField({
+  name,
+  label,
+  helper,
+  checked,
+  defaultChecked,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  helper?: string;
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onChange?: (checked: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex gap-3">
+      <input
+        id={id}
+        name={name}
+        type="checkbox"
+        checked={onChange ? checked : undefined}
+        defaultChecked={onChange ? undefined : defaultChecked}
+        onChange={onChange ? (e) => onChange(e.target.checked) : undefined}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-bg accent-primary"
+      />
+      <label htmlFor={id} className="text-sm text-text">
+        {label}
+        {helper && <span className="mt-0.5 block text-sm text-text-muted">{helper}</span>}
+      </label>
+    </div>
+  );
+}
+
+/** Password input with a show/hide toggle. */
+export function PasswordField({
+  name,
+  label,
+  helper,
+  error,
+  autoComplete = "current-password",
+  autoFocus,
+  minLength,
+  onEnter,
+}: {
+  name: string;
+  label: string;
+  helper?: string;
+  error?: string;
+  autoComplete?: string;
+  autoFocus?: boolean;
+  minLength?: number;
+  onEnter?: () => void;
+}) {
+  const id = useId();
+  const [show, setShow] = useState(false);
+  return (
+    <Field label={label} htmlFor={id} helper={helper} error={error}>
+      <div className="relative">
+        <input
+          id={id}
+          name={name}
+          type={show ? "text" : "password"}
+          required
+          minLength={minLength}
+          autoFocus={autoFocus}
+          autoComplete={autoComplete}
+          onKeyDown={
+            onEnter
+              ? (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onEnter();
+                  }
+                }
+              : undefined
+          }
+          className={inputClass + " pr-11"}
+        />
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          aria-label={show ? "Hide password" : "Show password"}
+          aria-pressed={show}
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-text-muted transition-colors hover:text-text"
+        >
+          {show ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
+      </div>
+    </Field>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M10.7 5.1A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a17.4 17.4 0 0 1-3.3 4.2M6.6 6.6A17.6 17.6 0 0 0 2 12s3.5 7 10 7a10.4 10.4 0 0 0 5.4-1.5M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </svg>
   );
 }
 
@@ -158,7 +374,7 @@ export function SelectField({
         onChange={(e) => onChange(e.target.value)}
         className={inputClass}
       >
-        <option value="" disabled>
+        <option value="" disabled={!optional && !disabledReason}>
           {disabledReason ?? placeholder}
         </option>
         {!disabled &&
@@ -196,7 +412,7 @@ export function RadioCardGroup({
         return (
           <label
             key={o.value}
-            className={`flex cursor-pointer gap-3 rounded-brand border p-3.5 transition-colors ${
+            className={`flex cursor-pointer gap-3 rounded-brand border p-3.5 transition-colors  has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ${
               selected ? "border-accent bg-accent/10" : "border-border hover:border-accent/50"
             }`}
           >
@@ -243,17 +459,23 @@ export function FormBanner({ tone, children }: { tone: "error" | "info"; childre
 export function SubmitButton({
   pending,
   pendingLabel,
+  fullWidth,
+  disabled,
   children,
 }: {
   pending: boolean;
   pendingLabel: string;
+  fullWidth?: boolean;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   return (
     <button
       type="submit"
-      disabled={pending}
-      className="rounded-brand bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+      disabled={pending || disabled}
+      className={`rounded-brand bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60 ${
+        fullWidth ? "w-full" : ""
+      }`}
     >
       {pending ? pendingLabel : children}
     </button>

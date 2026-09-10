@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef } from "react";
 import Image from "next/image";
 import { loginPortal, type PortalActionState } from "@/app/portal/actions/auth";
+import { TextField, PasswordField, FormBanner, SubmitButton } from "@/app/portal/_components/form";
 
 const initial: PortalActionState = {};
 
@@ -10,17 +11,10 @@ const TRUST_MARKERS = ["Agent-verified", "Result-sheet backed", "Checksummed"];
 
 export default function PortalLoginPage() {
   const [state, formAction, isPending] = useActionState(loginPortal, initial);
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Submit on Enter from either field. Native implicit submission already does
-  // this, but requestSubmit() keeps it reliable across browsers and makes the
-  // behaviour explicit (and still routes through the useActionState action).
-  function submitOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && !isPending) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  }
+  const formRef = useRef<HTMLFormElement>(null);
+  const submit = () => {
+    if (!isPending) formRef.current?.requestSubmit();
+  };
 
   return (
     <div className="tone-aurora relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-12">
@@ -64,48 +58,28 @@ export default function PortalLoginPage() {
           </p>
           <h1 className="mt-2 font-heading text-2xl text-text">Results Portal</h1>
           <p className="mt-1 text-sm text-text-muted">
-            Sign in with your polling unit, ward, LGA, or admin account.
+            Sign in with the account your coordinator gave you.
           </p>
 
-          <form action={formAction} className="mt-6 space-y-4">
-            <input
-              type="email"
+          <form ref={formRef} action={formAction} className="mt-6 space-y-4">
+            {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+            <TextField
               name="email"
-              required
-              autoFocus
+              label="Email address"
+              type="email"
               autoComplete="email"
-              onKeyDown={submitOnEnter}
-              placeholder="Email"
-              className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
+              autoFocus
+              onEnter={submit}
             />
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                required
-                autoComplete="current-password"
-                onKeyDown={submitOnEnter}
-                placeholder="Password"
-                className="w-full rounded-brand border border-border bg-bg px-4 py-3 pr-11 text-sm text-text focus:border-accent focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                aria-pressed={showPassword}
-                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-text-muted transition-colors hover:text-text"
-              >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-            >
-              {isPending ? "Signing in…" : "Sign in"}
-            </button>
-            {state.error && <p className="text-sm text-primary">{state.error}</p>}
+            <PasswordField
+              name="password"
+              label="Password"
+              autoComplete="current-password"
+              onEnter={submit}
+            />
+            <SubmitButton pending={isPending} pendingLabel="Signing in…" fullWidth>
+              Sign in
+            </SubmitButton>
           </form>
         </div>
 
@@ -128,22 +102,5 @@ export default function PortalLoginPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-function EyeOffIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M10.7 5.1A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a17.4 17.4 0 0 1-3.3 4.2M6.6 6.6A17.6 17.6 0 0 0 2 12s3.5 7 10 7a10.4 10.4 0 0 0 5.4-1.5M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-    </svg>
   );
 }

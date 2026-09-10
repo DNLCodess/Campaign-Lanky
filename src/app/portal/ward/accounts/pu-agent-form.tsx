@@ -1,61 +1,24 @@
 "use client";
 
-import { useActionState } from "react";
-import { createPortalAccount, type AccountActionState } from "@/app/portal/actions/accounts";
+import { CreateSubAccountForm } from "@/app/portal/_components/create-sub-account-form";
 
-const initial: AccountActionState = {};
-
-export function PuAgentForm({ pollingUnits }: { pollingUnits: { pu_code: string; pu_name: string }[] }) {
-  const [state, formAction, isPending] = useActionState(createPortalAccount, initial);
-
+export function PuAgentForm({
+  pollingUnits,
+}: {
+  pollingUnits: { pu_code: string; pu_name: string }[];
+}) {
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <input
-        name="full_name"
-        required
-        placeholder="Full name"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <input
-        name="email"
-        type="email"
-        required
-        placeholder="Email"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <input
-        name="phone"
-        placeholder="Phone (optional)"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <select
-        name="polling_unit"
-        required
-        defaultValue=""
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      >
-        <option value="" disabled>
-          Polling unit
-        </option>
-        {pollingUnits.map((pu) => (
-          <option key={pu.pu_code} value={pu.pu_code}>
-            {pu.pu_name} ({pu.pu_code})
-          </option>
-        ))}
-      </select>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-      >
-        {isPending ? "Creating…" : "Add PU agent"}
-      </button>
-      {state.error && <p className="col-span-full text-sm text-primary">{state.error}</p>}
-      {state.plainPassword && (
-        <p className="col-span-full rounded-brand bg-surface-2 px-3 py-2 text-sm text-text">
-          Account created. Temporary password: <code className="font-mono">{state.plainPassword}</code>
-        </p>
-      )}
-    </form>
+    <CreateSubAccountForm
+      heading="Add a polling unit agent"
+      intro="Create a sign-in for someone who will submit results from one polling unit on election day."
+      locationStep="Which polling unit?"
+      locationName="polling_unit"
+      locationLabel="Polling unit"
+      locationPlaceholder="Choose a polling unit"
+      options={pollingUnits.map((pu) => ({
+        value: pu.pu_code,
+        label: `${pu.pu_name} (${pu.pu_code})`,
+      }))}
+    />
   );
 }

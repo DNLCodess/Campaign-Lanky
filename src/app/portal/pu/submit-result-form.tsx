@@ -2,88 +2,94 @@
 
 import { useActionState } from "react";
 import { submitElectionResult, type ResultActionState } from "@/app/portal/actions/results";
+import {
+  FieldSection,
+  NumberField,
+  FileField,
+  TextareaField,
+  FormBanner,
+  SubmitButton,
+} from "@/app/portal/_components/form";
 
 const initial: ResultActionState = {};
 
 type Candidate = { id: string; name: string; party: string | null };
 
-export function SubmitResultForm({ electionId, candidates }: { electionId: string; candidates: Candidate[] }) {
+export function SubmitResultForm({
+  electionId,
+  candidates,
+}: {
+  electionId: string;
+  candidates: Candidate[];
+}) {
   const [state, formAction, isPending] = useActionState(submitElectionResult, initial);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-8">
       <input type="hidden" name="election_id" value={electionId} />
 
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-text">Votes per candidate</p>
-        {candidates.map((c) => (
-          <div key={c.id} className="flex items-center gap-3">
-            <label className="w-48 text-sm text-text-muted">
-              {c.name} {c.party && <span className="text-xs">({c.party})</span>}
-            </label>
-            <input
-              type="number"
-              name={`votes_${c.id}`}
-              min="0"
-              required
-              className="w-32 rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-            />
-          </div>
-        ))}
-      </div>
+      {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="block text-sm text-text-muted">
-          Accredited voters
-          <input
-            type="number"
-            name="accredited_voters"
-            min="0"
-            required
-            className="mt-1 w-full rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-          />
-        </label>
-        <label className="block text-sm text-text-muted">
-          Registered voters
-          <input
-            type="number"
-            name="registered_voters"
-            min="0"
-            required
-            className="mt-1 w-full rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-          />
-        </label>
-      </div>
-
-      <label className="block text-sm text-text-muted">
-        Photo of the result sheet (JPEG/PNG, max 10MB)
-        <input
-          type="file"
-          name="photo"
-          accept="image/jpeg,image/png"
-          required
-          className="mt-1 w-full rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text file:mr-3 file:rounded-brand file:border-0 file:bg-surface-2 file:px-3 file:py-1.5 file:text-text focus:border-accent focus:outline-none"
-        />
-      </label>
-
-      <label className="block text-sm text-text-muted">
-        Notes (optional)
-        <textarea
-          name="notes"
-          rows={2}
-          className="mt-1 w-full rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-        />
-      </label>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+      <FieldSection
+        step={1}
+        title="Votes for each candidate"
+        description="Copy the number from the result sheet exactly. Enter 0 if a candidate got no votes."
       >
-        {isPending ? "Submitting…" : "Submit result"}
-      </button>
-      {state.error && <p className="text-sm text-primary">{state.error}</p>}
-      {state.success && <p className="text-sm text-accent">Result submitted — reward claimed and pending review.</p>}
+        {candidates.map((c, i) => (
+          <NumberField
+            key={c.id}
+            name={`votes_${c.id}`}
+            label={c.party ? `${c.name} (${c.party})` : c.name}
+            autoFocus={i === 0}
+          />
+        ))}
+      </FieldSection>
+
+      <FieldSection
+        step={2}
+        title="Voter numbers"
+        description="These are printed near the top of the result sheet."
+      >
+        <NumberField
+          name="accredited_voters"
+          label="Accredited voters"
+          helper="People who were checked in to vote at your polling unit."
+        />
+        <NumberField
+          name="registered_voters"
+          label="Registered voters"
+          helper="Total voters registered for your polling unit."
+        />
+      </FieldSection>
+
+      <FieldSection
+        step={3}
+        title="Photo of the result sheet"
+        description="Take a clear photo showing all the numbers. This is your proof."
+      >
+        <FileField
+          name="photo"
+          label="Result sheet photo"
+          accept="image/jpeg,image/png"
+          helper="JPEG or PNG, up to 10MB."
+        />
+        <TextareaField
+          name="notes"
+          label="Anything the coordinator should know"
+          rows={2}
+          optional
+        />
+      </FieldSection>
+
+      <SubmitButton pending={isPending} pendingLabel="Submitting…">
+        Submit result
+      </SubmitButton>
+
+      {state.success && (
+        <FormBanner tone="info">
+          Result submitted. Your airtime reward is now pending review.
+        </FormBanner>
+      )}
     </form>
   );
 }

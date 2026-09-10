@@ -48,10 +48,14 @@ export default async function PuSubmitPage() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <h1 className="font-heading text-2xl text-text">Submit result — {session.polling_unit}</h1>
-        <p className="mt-1 text-sm text-text-muted">{election.name}</p>
+        <h1 className="font-heading text-2xl text-text">Submit your result</h1>
+        <p className="mt-1 text-sm text-text-muted">
+          {election.name} · Polling unit {session.polling_unit}
+        </p>
       </div>
-      <SubmitResultForm electionId={election.id} candidates={election.candidates ?? []} />
+      <div className="rounded-brand border border-border bg-surface/40 p-5 sm:p-6">
+        <SubmitResultForm electionId={election.id} candidates={election.candidates ?? []} />
+      </div>
     </div>
   );
 }

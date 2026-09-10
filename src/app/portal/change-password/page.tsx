@@ -1,49 +1,45 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { changePortalPassword, type PortalActionState } from "@/app/portal/actions/auth";
+import { PasswordField, FormBanner, SubmitButton } from "@/app/portal/_components/form";
 
 const initial: PortalActionState = {};
 
 export default function ChangePasswordPage() {
   const [state, formAction, isPending] = useActionState(changePortalPassword, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const submit = () => formRef.current?.requestSubmit();
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5">
+    <div className="flex min-h-screen items-center justify-center px-5 py-12">
       <div className="w-full max-w-sm rounded-brand border border-border bg-surface/40 p-8">
-        <h1 className="font-heading text-2xl text-text">Set a new password</h1>
+        <h1 className="font-heading text-2xl text-text">Set your password</h1>
         <p className="mt-1 text-sm text-text-muted">
-          This account was created with a temporary password. Choose a new one to continue.
+          Your account was created with a temporary password. Choose your own to continue.
         </p>
 
-        <form action={formAction} className="mt-6 space-y-4">
-          <input
-            type="password"
+        <form ref={formRef} action={formAction} className="mt-6 space-y-4">
+          {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+          <PasswordField
             name="password"
-            required
-            minLength={8}
+            label="New password"
+            helper="At least 8 characters."
+            autoComplete="new-password"
             autoFocus
-            autoComplete="new-password"
-            placeholder="New password (min. 8 characters)"
-            className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
-          />
-          <input
-            type="password"
-            name="confirm"
-            required
             minLength={8}
-            autoComplete="new-password"
-            placeholder="Confirm new password"
-            className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
+            onEnter={submit}
           />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-          >
-            {isPending ? "Saving…" : "Save password"}
-          </button>
-          {state.error && <p className="text-sm text-primary">{state.error}</p>}
+          <PasswordField
+            name="confirm"
+            label="Repeat new password"
+            autoComplete="new-password"
+            minLength={8}
+            onEnter={submit}
+          />
+          <SubmitButton pending={isPending} pendingLabel="Saving…" fullWidth>
+            Save password
+          </SubmitButton>
         </form>
       </div>
     </div>
