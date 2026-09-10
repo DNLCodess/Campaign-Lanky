@@ -127,6 +127,7 @@ export async function createPortalAccount(
   });
 
   revalidatePath("/portal");
+  revalidatePath("/portal/admin/accounts");
   return { success: true, plainPassword };
 }
 

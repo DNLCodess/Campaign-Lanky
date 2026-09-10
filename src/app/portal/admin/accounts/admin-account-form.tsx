@@ -2,29 +2,63 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { createPortalAccount, type AccountActionState } from "@/app/portal/actions/accounts";
-import type { PortalRole } from "@/lib/portal/constants";
+import {
+  FieldSection,
+  TextField,
+  SelectField,
+  RadioCardGroup,
+  FormBanner,
+  SubmitButton,
+  CredentialHandoff,
+} from "@/app/portal/_components/form";
 
 const initial: AccountActionState = {};
 
 type GeoRow = { lga: string; ward: number; pu_code: string; pu_name: string };
+type Role = "lga_coordinator" | "ward_agent" | "pu_agent";
 
-const ROLE_LABELS: Record<Exclude<PortalRole, "constituency_admin" | "pu_agent"> | "pu_agent", string> = {
-  lga_coordinator: "LGA Coordinator",
-  ward_agent: "Ward Agent",
-  pu_agent: "PU Agent",
-};
+const ROLE_OPTIONS = [
+  {
+    value: "lga_coordinator",
+    label: "LGA Coordinator",
+    description: "Oversees every ward in one local government area.",
+  },
+  {
+    value: "ward_agent",
+    label: "Ward Agent",
+    description: "Oversees the polling units in a single ward.",
+  },
+  {
+    value: "pu_agent",
+    label: "Polling Unit Agent",
+    description: "Submits results from one polling unit on election day.",
+  },
+];
 
+/** Outer wrapper: bumping `key` on the inner form remounts it, clearing every
+ *  field and the action state, so "Add another person" is a clean slate. */
 export function AdminAccountForm({ geo }: { geo: GeoRow[] }) {
+  const [instance, setInstance] = useState(0);
+  return <AccountForm key={instance} geo={geo} onReset={() => setInstance((n) => n + 1)} />;
+}
+
+function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
   const [state, formAction, isPending] = useActionState(createPortalAccount, initial);
 
-  const [role, setRole] = useState<"lga_coordinator" | "ward_agent" | "pu_agent">("lga_coordinator");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("lga_coordinator");
   const [lga, setLga] = useState("");
   const [ward, setWard] = useState("");
   const [pollingUnit, setPollingUnit] = useState("");
 
+  const needsWard = role === "ward_agent" || role === "pu_agent";
+  const needsPu = role === "pu_agent";
+
   const lgas = useMemo(() => Array.from(new Set(geo.map((g) => g.lga))), [geo]);
   const wards = useMemo(
-    () => Array.from(new Set(geo.filter((g) => g.lga === lga).map((g) => g.ward))).sort((a, b) => a - b),
+    () =>
+      Array.from(new Set(geo.filter((g) => g.lga === lga).map((g) => g.ward))).sort((a, b) => a - b),
     [geo, lga],
   );
   const pollingUnits = useMemo(
@@ -32,132 +66,129 @@ export function AdminAccountForm({ geo }: { geo: GeoRow[] }) {
     [geo, lga, ward],
   );
 
-  const [handledSuccess, setHandledSuccess] = useState(false);
-  if (state.success && !handledSuccess) {
-    setHandledSuccess(true);
-    setLga("");
-    setWard("");
-    setPollingUnit("");
+  if (state.success && state.plainPassword) {
+    return (
+      <CredentialHandoff
+        name={fullName || "the new account"}
+        email={email}
+        password={state.plainPassword}
+        onReset={onReset}
+      />
+    );
   }
-  if (!state.success && handledSuccess) setHandledSuccess(false);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <select
-        name="target_role"
-        required
-        value={role}
-        onChange={(e) => {
-          setRole(e.target.value as typeof role);
-          setLga("");
-          setWard("");
-          setPollingUnit("");
-        }}
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      >
-        {Object.entries(ROLE_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <input
-        name="full_name"
-        required
-        placeholder="Full name"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <input
-        name="email"
-        type="email"
-        required
-        placeholder="Email"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
-      <input
-        name="phone"
-        placeholder="Phone (optional)"
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      />
+    <form action={formAction} className="space-y-8">
+      <div>
+        <h2 className="font-heading text-lg text-text">Add a team member</h2>
+        <p className="mt-1 text-sm text-text-muted">
+          Create a sign-in for someone on the campaign team.
+        </p>
+      </div>
 
-      <select
-        name="lga"
-        required
-        value={lga}
-        onChange={(e) => {
-          setLga(e.target.value);
-          setWard("");
-          setPollingUnit("");
-        }}
-        className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-      >
-        <option value="" disabled>
-          LGA
-        </option>
-        {lgas.map((l) => (
-          <option key={l} value={l}>
-            {l}
-          </option>
-        ))}
-      </select>
+      {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
 
-      {(role === "ward_agent" || role === "pu_agent") && (
-        <select
-          name="ward"
-          required
-          value={ward}
-          disabled={!lga}
-          onChange={(e) => {
-            setWard(e.target.value);
+      <FieldSection step={1} title="Who is this person?">
+        <TextField
+          name="full_name"
+          label="Full name"
+          autoFocus
+          autoComplete="off"
+          value={fullName}
+          onChange={setFullName}
+        />
+        <TextField
+          name="email"
+          label="Email address"
+          type="email"
+          autoComplete="off"
+          helper="They sign in with this address."
+          value={email}
+          onChange={setEmail}
+        />
+        <TextField
+          name="phone"
+          label="Phone number"
+          type="tel"
+          inputMode="tel"
+          optional
+          helper="Used to send airtime rewards."
+        />
+      </FieldSection>
+
+      <FieldSection step={2} title="What will they do?">
+        <RadioCardGroup
+          name="target_role"
+          legend="Role"
+          value={role}
+          onChange={(v) => {
+            setRole(v as Role);
+            setLga("");
+            setWard("");
             setPollingUnit("");
           }}
-          className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none"
-        >
-          <option value="" disabled>
-            Ward
-          </option>
-          {wards.map((w) => (
-            <option key={w} value={w}>
-              Ward {w}
-            </option>
-          ))}
-        </select>
-      )}
+          options={ROLE_OPTIONS}
+        />
+      </FieldSection>
 
-      {role === "pu_agent" && (
-        <select
-          name="polling_unit"
-          required
-          value={pollingUnit}
-          disabled={!ward}
-          onChange={(e) => setPollingUnit(e.target.value)}
-          className="rounded-brand border border-border bg-bg px-3 py-2 text-sm text-text focus:border-accent focus:outline-none sm:col-span-2"
-        >
-          <option value="" disabled>
-            Polling unit
-          </option>
-          {pollingUnits.map((pu) => (
-            <option key={pu.pu_code} value={pu.pu_code}>
-              {pu.pu_name} ({pu.pu_code})
-            </option>
-          ))}
-        </select>
-      )}
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+      <FieldSection
+        step={3}
+        title="Where do they work?"
+        description={
+          needsPu
+            ? "Choose the local government, then the ward, then the polling unit."
+            : needsWard
+              ? "Choose the local government, then the ward."
+              : "Choose the local government area they will coordinate."
+        }
       >
-        {isPending ? "Creating…" : "Add account"}
-      </button>
-      {state.error && <p className="col-span-full text-sm text-primary">{state.error}</p>}
-      {state.plainPassword && (
-        <p className="col-span-full rounded-brand bg-surface-2 px-3 py-2 text-sm text-text">
-          Account created. Temporary password: <code className="font-mono">{state.plainPassword}</code> — share
-          this securely; they&apos;ll be asked to change it on first login.
-        </p>
-      )}
+        <SelectField
+          name="lga"
+          label="Local government area"
+          value={lga}
+          onChange={(v) => {
+            setLga(v);
+            setWard("");
+            setPollingUnit("");
+          }}
+          placeholder="Choose one"
+          options={lgas.map((l) => ({ value: l, label: l }))}
+        />
+
+        {needsWard && (
+          <SelectField
+            name="ward"
+            label="Ward"
+            value={ward}
+            onChange={(v) => {
+              setWard(v);
+              setPollingUnit("");
+            }}
+            placeholder="Choose a ward"
+            disabledReason={lga ? undefined : "Choose a local government area first"}
+            options={wards.map((w) => ({ value: String(w), label: `Ward ${w}` }))}
+          />
+        )}
+
+        {needsPu && (
+          <SelectField
+            name="polling_unit"
+            label="Polling unit"
+            value={pollingUnit}
+            onChange={setPollingUnit}
+            placeholder="Choose a polling unit"
+            disabledReason={ward ? undefined : "Choose a ward first"}
+            options={pollingUnits.map((pu) => ({
+              value: pu.pu_code,
+              label: `${pu.pu_name} (${pu.pu_code})`,
+            }))}
+          />
+        )}
+      </FieldSection>
+
+      <SubmitButton pending={isPending} pendingLabel="Creating account…">
+        Create account
+      </SubmitButton>
     </form>
   );
 }
