@@ -44,3 +44,4 @@ next-env.d.ts
 # local MCP config
 .mcp.json
 tdl.md
+seed.md

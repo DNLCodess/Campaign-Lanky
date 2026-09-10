@@ -5,6 +5,7 @@ import { AccountRowActions } from "@/app/portal/_components/account-row-actions"
 import { AdminAccountForm } from "@/app/portal/admin/accounts/admin-account-form";
 import type { PortalRole } from "@/lib/portal/constants";
 import { LGAS } from "@/lib/portal/constants";
+import { portalPath } from "@/lib/portal/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function AdminAccountsPage({
     if (nextRole) params.set("role", nextRole);
     if (nextLga) params.set("lga", nextLga);
     const qs = params.toString();
-    return `/admin/accounts${qs ? `?${qs}` : ""}`;
+    return portalPath(`/admin/accounts${qs ? `?${qs}` : ""}`);
   };
 
   return (

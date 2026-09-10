@@ -128,6 +128,21 @@ h1, h2, h3, h4, h5 {
       radial-gradient(55% 60% at 80% 8%, rgba(103, 156, 188, 0.26), transparent 68%),
       radial-gradient(52% 65% at 6% 96%, rgba(194, 23, 32, 0.2), transparent 70%);
   }
+  /* Faint polling-unit grid overlay — evokes a PU map without an image.
+     Put on a full-bleed layer behind content (e.g. the portal login). */
+  .portal-grid {
+    background-image:
+      linear-gradient(rgba(30, 77, 105, 0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30, 77, 105, 0.14) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(75% 70% at 50% 40%, #000 30%, transparent 100%);
+  }
+}
+
+/* Portal login — expanding radar ring accent */
+@keyframes portal-radar {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(4.2); opacity: 0;   }
 }
 
 /* Fundraising bar — bright streak sweeps left-to-right on a loop */

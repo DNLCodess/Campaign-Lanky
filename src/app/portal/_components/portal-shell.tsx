@@ -20,6 +20,8 @@ export function PortalShell({
         nav={nav}
         identity={`${session.full_name} — ${roleLabel}`}
         logoutAction={logoutPortal}
+        logo={{ src: "/brand/logo-white.png", alt: "Lanky — Results Portal" }}
+        tone
       />
       <main className="min-w-0 flex-1 px-5 py-8">{children}</main>
     </div>

@@ -111,7 +111,7 @@ export function SiteHeader() {
       <div
         ref={overlay}
         className={cn(
-          "fixed inset-0 z-50 flex flex-col lg:hidden",
+          "fixed inset-0 z-70 flex flex-col lg:hidden",
           "transition-[opacity,visibility] duration-300",
           open ? "visible opacity-100" : "invisible opacity-0",
         )}

@@ -1,3 +1,5 @@
+import { portalPath } from "@/lib/portal/routes";
+
 export const LGAS = ["Ibadan North-West", "Ibadan South-West"] as const;
 export type Lga = (typeof LGAS)[number];
 
@@ -14,8 +16,11 @@ export const ROLE_CONFIG: Record<
   PortalRole,
   { creates: PortalRole | null; homePath: string; label: string }
 > = {
-  constituency_admin: { creates: "lga_coordinator", homePath: "/admin", label: "Constituency Admin" },
-  lga_coordinator: { creates: "ward_agent", homePath: "/lga", label: "LGA Coordinator" },
-  ward_agent: { creates: "pu_agent", homePath: "/ward", label: "Ward Agent" },
-  pu_agent: { creates: null, homePath: "/pu", label: "Polling Unit Agent" },
+  // homePath goes through portalPath(): bare (`/admin`) in production where the
+  // portal.votelanky.com proxy rewrites it, `/portal/...` in local dev. Portal
+  // accounts are also kept out of the campaign `/admin` dashboard by getAdminUser().
+  constituency_admin: { creates: "lga_coordinator", homePath: portalPath("/admin"), label: "Constituency Admin" },
+  lga_coordinator: { creates: "ward_agent", homePath: portalPath("/lga"), label: "LGA Coordinator" },
+  ward_agent: { creates: "pu_agent", homePath: portalPath("/ward"), label: "Ward Agent" },
+  pu_agent: { creates: null, homePath: portalPath("/pu"), label: "Polling Unit Agent" },
 };

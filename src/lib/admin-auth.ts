@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 
 /**
  * Admin access via Supabase Auth. Sign-ups should be disabled in Supabase, so
@@ -21,6 +22,28 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
   return allow.includes((email ?? "").toLowerCase());
 }
 
+/**
+ * True if this auth user is an election-portal account (constituency_admin,
+ * lga_coordinator, ward_agent, pu_agent). The portal and the campaign site
+ * share one Supabase project, so a valid portal session is also a valid
+ * Supabase session — this check keeps portal accounts out of the campaign
+ * `/admin` dashboard regardless of the ADMIN_EMAILS allowlist.
+ */
+async function isPortalAccount(userId: string): Promise<boolean> {
+  try {
+    const admin = createAdminSupabase();
+    const { data } = await admin
+      .from("portal_accounts")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    return Boolean(data);
+  } catch {
+    // Fail closed: if we can't confirm, don't grant campaign-admin access.
+    return true;
+  }
+}
+
 /** Returns the signed-in admin user, or null. */
 export async function getAdminUser(): Promise<User | null> {
   const supabase = await createSupabaseServerClient();
@@ -28,6 +51,7 @@ export async function getAdminUser(): Promise<User | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || !isAllowedEmail(user.email)) return null;
+  if (await isPortalAccount(user.id)) return null;
   return user;
 }
 
