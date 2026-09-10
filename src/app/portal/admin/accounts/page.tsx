@@ -1,5 +1,5 @@
 import { requirePortalRole } from "@/lib/portal/session";
-import { listAllAccounts } from "@/app/portal/actions/accounts";
+import { listAllAccounts, getPortalAccountById } from "@/app/portal/actions/accounts";
 import { getAllConstituencyGeo } from "@/lib/portal/geo";
 import { AccountRowActions } from "@/app/portal/_components/account-row-actions";
 import { AdminAccountForm } from "@/app/portal/admin/accounts/admin-account-form";
@@ -18,14 +18,15 @@ const ROLE_LABELS: Record<string, string> = {
 export default async function AdminAccountsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; lga?: string }>;
+  searchParams: Promise<{ role?: string; lga?: string; edit?: string }>;
 }) {
   await requirePortalRole(["constituency_admin"]);
-  const { role, lga } = await searchParams;
+  const { role, lga, edit } = await searchParams;
 
-  const [accounts, geo] = await Promise.all([
+  const [accounts, geo, editing] = await Promise.all([
     listAllAccounts({ role: role as PortalRole | undefined, lga }),
     getAllConstituencyGeo(),
+    edit ? getPortalAccountById(edit) : Promise.resolve(null),
   ]);
 
   const filterHref = (nextRole?: string, nextLga?: string) => {
@@ -47,7 +48,7 @@ export default async function AdminAccountsPage({
       </div>
 
       <div className="rounded-brand border border-border bg-surface/40 p-5">
-        <AdminAccountForm geo={geo} />
+        <AdminAccountForm geo={geo} account={editing ?? undefined} />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -105,7 +106,7 @@ export default async function AdminAccountsPage({
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <AccountRowActions accountId={a.id} isActive={a.is_active} />
+                  <AccountRowActions accountId={a.id} isActive={a.is_active} canEdit />
                 </td>
               </tr>
             ))}

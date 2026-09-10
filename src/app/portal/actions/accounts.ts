@@ -206,6 +206,168 @@ export async function toggleAccountStatus(
   return { success: true };
 }
 
+/** One account, for pre-filling the edit form. constituency_admin only. */
+export async function getPortalAccountById(id: string) {
+  await requirePortalRole(["constituency_admin"]);
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("portal_accounts")
+    .select("id, email, full_name, phone, role, lga, ward, polling_unit, is_active")
+    .eq("id", id)
+    .maybeSingle();
+  return data;
+}
+
+/**
+ * Edit an existing account's details — including its role and where it's
+ * assigned. constituency_admin only, since re-homing an account across the
+ * hierarchy is not something a coordinator should do.
+ */
+export async function updatePortalAccount(
+  _prev: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const accountId = String(formData.get("account_id") ?? "");
+  if (!accountId) return { error: "Missing account." };
+
+  const admin = createAdminSupabase();
+  const { data: current } = await admin
+    .from("portal_accounts")
+    .select("id, email, role, polling_unit")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (!current) return { error: "Account not found." };
+
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const role = String(formData.get("target_role") ?? current.role) as PortalRole;
+  if (!fullName || !email) return { error: "Full name and email are required." };
+  if (!(["lga_coordinator", "ward_agent", "pu_agent"] as const).includes(role as never)) {
+    return { error: "Choose a valid role." };
+  }
+
+  let lga: string | null = null;
+  let ward: number | null = null;
+  let pollingUnit: string | null = null;
+
+  if (role === "lga_coordinator") {
+    lga = String(formData.get("lga") ?? "").trim();
+    if (!LGAS.includes(lga as (typeof LGAS)[number])) return { error: "Choose a valid LGA." };
+  } else if (role === "ward_agent") {
+    lga = String(formData.get("lga") ?? "").trim();
+    ward = Number(formData.get("ward"));
+    if (!LGAS.includes(lga as (typeof LGAS)[number])) return { error: "Choose a valid LGA." };
+    if (!ward || ward < 1) return { error: "Choose a valid ward." };
+  } else {
+    lga = String(formData.get("lga") ?? "").trim();
+    ward = Number(formData.get("ward"));
+    pollingUnit = String(formData.get("polling_unit") ?? "").trim();
+    if (!LGAS.includes(lga as (typeof LGAS)[number])) return { error: "Choose a valid LGA." };
+    if (!ward || ward < 1) return { error: "Choose a valid ward." };
+    if (!pollingUnit) return { error: "Choose a valid polling unit." };
+    const pu = await getPollingUnit(pollingUnit);
+    if (!pu || pu.lga !== lga || pu.ward !== ward) {
+      return { error: "That polling unit is not in the selected ward." };
+    }
+    if (pollingUnit !== current.polling_unit) {
+      const { data: taken } = await admin
+        .from("portal_accounts")
+        .select("id")
+        .eq("polling_unit", pollingUnit)
+        .eq("is_active", true)
+        .neq("id", accountId)
+        .maybeSingle();
+      if (taken) return { error: "Another active agent is already assigned to that polling unit." };
+    }
+  }
+
+  if (email !== current.email) {
+    const { error: authErr } = await admin.auth.admin.updateUserById(accountId, {
+      email,
+      email_confirm: true,
+    });
+    if (authErr) {
+      return authErr.message?.includes("already")
+        ? { error: "Another account already uses that email." }
+        : { error: "Could not update the email address." };
+    }
+  }
+
+  const { error } = await admin
+    .from("portal_accounts")
+    .update({ full_name: fullName, email, phone: phone || null, role, lga, ward, polling_unit: pollingUnit })
+    .eq("id", accountId);
+  if (error) return { error: "Could not save the changes." };
+
+  await logPortalAudit({
+    action: "ACCOUNT_UPDATED",
+    tableName: "portal_accounts",
+    recordId: accountId,
+    performedBy: session.id,
+    notes: `${ROLE_CONFIG[role].label}: ${email}`,
+  });
+
+  revalidatePath("/portal/admin/accounts");
+  return { success: true };
+}
+
+/**
+ * Permanently remove an account. Refused if it has submitted results or
+ * received a reward — those must stay attributable, so deactivate instead.
+ * Other history (audit log, messages sent) is kept with a null actor.
+ */
+export async function deletePortalAccount(
+  _prev: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const accountId = String(formData.get("account_id") ?? "");
+  if (!accountId || accountId === session.id) return { error: "You cannot delete this account." };
+
+  const admin = createAdminSupabase();
+  const { data: target } = await admin
+    .from("portal_accounts")
+    .select("id, email, full_name, role")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (!target) return { error: "Account not found." };
+
+  const { count: resultCount } = await admin
+    .from("election_results")
+    .select("id", { count: "exact", head: true })
+    .eq("submitted_by", accountId);
+  if (resultCount && resultCount > 0) {
+    return { error: "This account has submitted results. Deactivate it instead so the results stay linked to it." };
+  }
+
+  const { count: rewardCount } = await admin
+    .from("rewards")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_id", accountId);
+  if (rewardCount && rewardCount > 0) {
+    return { error: "This account has received a reward. Deactivate it instead." };
+  }
+
+  await logPortalAudit({
+    action: "ACCOUNT_DELETED",
+    tableName: "portal_accounts",
+    recordId: accountId,
+    performedBy: session.id,
+    notes: `${ROLE_CONFIG[target.role as PortalRole]?.label ?? target.role}: ${target.full_name} (${target.email})`,
+  });
+
+  // portal_accounts.id -> auth.users.id is ON DELETE CASCADE, so removing the
+  // auth user removes the portal row too.
+  const { error } = await admin.auth.admin.deleteUser(accountId);
+  if (error) return { error: "Could not delete the account. Try again." };
+
+  revalidatePath("/portal");
+  revalidatePath("/portal/admin/accounts");
+  return { success: true };
+}
+
 export async function regenerateAccountPassword(
   _prev: AccountActionState,
   formData: FormData,

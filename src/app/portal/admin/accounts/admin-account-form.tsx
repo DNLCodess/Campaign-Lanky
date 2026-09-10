@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { createPortalAccount, type AccountActionState } from "@/app/portal/actions/accounts";
+import Link from "next/link";
+import {
+  createPortalAccount,
+  updatePortalAccount,
+  type AccountActionState,
+} from "@/app/portal/actions/accounts";
+import { portalPath } from "@/lib/portal/routes";
 import {
   FieldSection,
   TextField,
@@ -16,6 +22,17 @@ const initial: AccountActionState = {};
 
 type GeoRow = { lga: string; ward: number; pu_code: string; pu_name: string };
 type Role = "lga_coordinator" | "ward_agent" | "pu_agent";
+
+export type EditableAccount = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  lga: string | null;
+  ward: number | null;
+  polling_unit: string | null;
+};
 
 const ROLE_OPTIONS = [
   {
@@ -37,20 +54,39 @@ const ROLE_OPTIONS = [
 
 /** Outer wrapper: bumping `key` on the inner form remounts it, clearing every
  *  field and the action state, so "Add another person" is a clean slate. */
-export function AdminAccountForm({ geo }: { geo: GeoRow[] }) {
+export function AdminAccountForm({ geo, account }: { geo: GeoRow[]; account?: EditableAccount }) {
   const [instance, setInstance] = useState(0);
-  return <AccountForm key={instance} geo={geo} onReset={() => setInstance((n) => n + 1)} />;
+  return (
+    <AccountForm
+      key={instance}
+      geo={geo}
+      account={account}
+      onReset={() => setInstance((n) => n + 1)}
+    />
+  );
 }
 
-function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
-  const [state, formAction, isPending] = useActionState(createPortalAccount, initial);
+function AccountForm({
+  geo,
+  account,
+  onReset,
+}: {
+  geo: GeoRow[];
+  account?: EditableAccount;
+  onReset: () => void;
+}) {
+  const isEdit = Boolean(account);
+  const [state, formAction, isPending] = useActionState(
+    isEdit ? updatePortalAccount : createPortalAccount,
+    initial,
+  );
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("lga_coordinator");
-  const [lga, setLga] = useState("");
-  const [ward, setWard] = useState("");
-  const [pollingUnit, setPollingUnit] = useState("");
+  const [fullName, setFullName] = useState(account?.full_name ?? "");
+  const [email, setEmail] = useState(account?.email ?? "");
+  const [role, setRole] = useState<Role>((account?.role as Role) ?? "lga_coordinator");
+  const [lga, setLga] = useState(account?.lga ?? "");
+  const [ward, setWard] = useState(account?.ward ? String(account.ward) : "");
+  const [pollingUnit, setPollingUnit] = useState(account?.polling_unit ?? "");
 
   const needsWard = role === "ward_agent" || role === "pu_agent";
   const needsPu = role === "pu_agent";
@@ -66,7 +102,7 @@ function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
     [geo, lga, ward],
   );
 
-  if (state.success && state.plainPassword) {
+  if (!isEdit && state.success && state.plainPassword) {
     return (
       <CredentialHandoff
         name={fullName || "the new account"}
@@ -77,12 +113,31 @@ function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
     );
   }
 
+  if (isEdit && state.success) {
+    return (
+      <div className="space-y-4 rounded-brand border border-accent/40 bg-accent/5 p-5">
+        <p className="text-sm text-text">Saved. {fullName}&apos;s account has been updated.</p>
+        <Link
+          href={portalPath("/admin/accounts")}
+          className="inline-block rounded-brand border border-border px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+        >
+          Back to accounts
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <form action={formAction} className="space-y-8">
+      {isEdit && <input type="hidden" name="account_id" value={account!.id} />}
       <div>
-        <h2 className="font-heading text-lg text-text">Add a team member</h2>
+        <h2 className="font-heading text-lg text-text">
+          {isEdit ? `Edit ${account!.full_name}` : "Add a team member"}
+        </h2>
         <p className="mt-1 text-sm text-text-muted">
-          Create a sign-in for someone on the campaign team.
+          {isEdit
+            ? "Change their details, role, or where they are assigned."
+            : "Create a sign-in for someone on the campaign team."}
         </p>
       </div>
 
@@ -113,6 +168,7 @@ function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
           inputMode="tel"
           optional
           helper="Used to send airtime rewards."
+          defaultValue={account?.phone ?? ""}
         />
       </FieldSection>
 
@@ -186,9 +242,22 @@ function AccountForm({ geo, onReset }: { geo: GeoRow[]; onReset: () => void }) {
         )}
       </FieldSection>
 
-      <SubmitButton pending={isPending} pendingLabel="Creating account…">
-        Create account
-      </SubmitButton>
+      <div className="flex items-center gap-3">
+        <SubmitButton
+          pending={isPending}
+          pendingLabel={isEdit ? "Saving…" : "Creating account…"}
+        >
+          {isEdit ? "Save changes" : "Create account"}
+        </SubmitButton>
+        {isEdit && (
+          <Link
+            href={portalPath("/admin/accounts")}
+            className="rounded-brand border border-border px-4 py-2.5 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+          >
+            Cancel
+          </Link>
+        )}
+      </div>
     </form>
   );
 }
