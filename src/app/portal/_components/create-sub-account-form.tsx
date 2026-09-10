@@ -10,7 +10,7 @@ import {
   SubmitButton,
   CredentialHandoff,
   type SelectOption,
-} from "@/app/portal/_components/form";
+} from "@/components/form";
 
 const initial: AccountActionState = {};
 

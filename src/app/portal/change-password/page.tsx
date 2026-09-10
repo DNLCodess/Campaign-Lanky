@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { changePortalPassword, type PortalActionState } from "@/app/portal/actions/auth";
-import { PasswordField, FormBanner, SubmitButton } from "@/app/portal/_components/form";
+import { PasswordField, FormBanner, SubmitButton } from "@/components/form";
 
 const initial: PortalActionState = {};
 

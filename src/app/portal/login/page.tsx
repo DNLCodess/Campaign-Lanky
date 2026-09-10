@@ -3,7 +3,7 @@
 import { useActionState, useRef } from "react";
 import Image from "next/image";
 import { loginPortal, type PortalActionState } from "@/app/portal/actions/auth";
-import { TextField, PasswordField, FormBanner, SubmitButton } from "@/app/portal/_components/form";
+import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components/form";
 
 const initial: PortalActionState = {};
 

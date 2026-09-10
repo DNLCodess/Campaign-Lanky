@@ -8,7 +8,7 @@ import {
   CheckboxField,
   FormBanner,
   SubmitButton,
-} from "@/app/portal/_components/form";
+} from "@/components/form";
 
 const initial: CreateAdminState = {};
 

@@ -1,16 +1,21 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import Image from "next/image";
 import { login, type LoginState } from "@/app/admin/actions";
+import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components/form";
 
 const initial: LoginState = {};
 
 export default function AdminLoginPage() {
   const [state, formAction, isPending] = useActionState(login, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const submit = () => {
+    if (!isPending) formRef.current?.requestSubmit();
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5">
+    <div className="flex min-h-screen items-center justify-center px-5 py-12">
       <div className="w-full max-w-sm rounded-brand border border-border bg-surface/40 p-8">
         <Image
           src="/brand/logo-white.png"
@@ -20,36 +25,27 @@ export default function AdminLoginPage() {
           className="h-7 w-auto"
         />
         <h1 className="mt-6 font-heading text-2xl text-text">Campaign Admin</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Sign in with your campaign team account.
-        </p>
+        <p className="mt-1 text-sm text-text-muted">Sign in with your campaign team account.</p>
 
-        <form action={formAction} className="mt-6 space-y-4">
-          <input
-            type="email"
+        <form ref={formRef} action={formAction} className="mt-6 space-y-4">
+          {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+          <TextField
             name="email"
-            required
-            autoFocus
+            label="Email address"
+            type="email"
             autoComplete="email"
-            placeholder="Email"
-            className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
+            autoFocus
+            onEnter={submit}
           />
-          <input
-            type="password"
+          <PasswordField
             name="password"
-            required
+            label="Password"
             autoComplete="current-password"
-            placeholder="Password"
-            className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
+            onEnter={submit}
           />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-brand bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-          >
-            {isPending ? "Signing in…" : "Sign in"}
-          </button>
-          {state.error && <p className="text-sm text-primary">{state.error}</p>}
+          <SubmitButton pending={isPending} pendingLabel="Signing in…" fullWidth>
+            Sign in
+          </SubmitButton>
         </form>
       </div>
     </div>

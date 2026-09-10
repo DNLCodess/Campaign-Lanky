@@ -82,6 +82,7 @@ export function TextField({
   autoComplete,
   inputMode,
   value,
+  defaultValue,
   onChange,
   onEnter,
 }: {
@@ -95,6 +96,7 @@ export function TextField({
   autoComplete?: string;
   inputMode?: "text" | "email" | "tel";
   value?: string;
+  defaultValue?: string;
   onChange?: (value: string) => void;
   onEnter?: () => void;
 }) {
@@ -110,6 +112,7 @@ export function TextField({
         autoComplete={autoComplete}
         inputMode={inputMode}
         value={onChange ? (value ?? "") : undefined}
+        defaultValue={onChange ? undefined : defaultValue}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         onKeyDown={
           onEnter
@@ -136,6 +139,7 @@ export function NumberField({
   min = 0,
   optional,
   autoFocus,
+  defaultValue,
 }: {
   name: string;
   label: string;
@@ -144,6 +148,7 @@ export function NumberField({
   min?: number;
   optional?: boolean;
   autoFocus?: boolean;
+  defaultValue?: string | number;
 }) {
   const id = useId();
   return (
@@ -157,6 +162,7 @@ export function NumberField({
         step={1}
         required={!optional}
         autoFocus={autoFocus}
+        defaultValue={defaultValue}
         className={inputClass}
       />
     </Field>
@@ -170,6 +176,7 @@ export function TextareaField({
   error,
   rows = 4,
   optional,
+  defaultValue,
 }: {
   name: string;
   label: string;
@@ -177,11 +184,12 @@ export function TextareaField({
   error?: string;
   rows?: number;
   optional?: boolean;
+  defaultValue?: string;
 }) {
   const id = useId();
   return (
     <Field label={label} htmlFor={id} optional={optional} helper={helper} error={error}>
-      <textarea id={id} name={name} rows={rows} required={!optional} className={inputClass} />
+      <textarea id={id} name={name} rows={rows} required={!optional} defaultValue={defaultValue} className={inputClass} />
     </Field>
   );
 }
@@ -412,7 +420,7 @@ export function RadioCardGroup({
         return (
           <label
             key={o.value}
-            className={`flex cursor-pointer gap-3 rounded-brand border p-3.5 transition-colors  has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ${
+            className={`flex cursor-pointer gap-3 rounded-brand border p-3.5 transition-colors  has-focus-visible:ring-2 has-focus-visible:ring-accent ${
               selected ? "border-accent bg-accent/10" : "border-border hover:border-accent/50"
             }`}
           >

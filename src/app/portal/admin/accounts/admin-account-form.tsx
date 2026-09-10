@@ -10,7 +10,7 @@ import {
   FormBanner,
   SubmitButton,
   CredentialHandoff,
-} from "@/app/portal/_components/form";
+} from "@/components/form";
 
 const initial: AccountActionState = {};
 
