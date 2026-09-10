@@ -4,43 +4,89 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 
 const WINDOW_MINUTES = 15;
 const MAX_FAILURES_PER_IP = 10;
+const MAX_FAILURES_PER_EMAIL = 5;
+const CLEANUP_AFTER_MINUTES = 60;
 
-/** Best-effort client IP from the proxy chain. */
+/**
+ * Client IP for throttling. In production the app runs behind Vercel's proxy,
+ * which sets `x-vercel-forwarded-for` / `x-real-ip` to the real connecting
+ * address and does NOT let a client forge them — so those are trusted first.
+ * The leftmost `x-forwarded-for` entry is client-controlled and only used as a
+ * last resort (local dev / a non-Vercel host); treat it as advisory.
+ */
 export async function getClientIp(): Promise<string> {
   const hdrs = await headers();
+  const trusted = hdrs.get("x-vercel-forwarded-for") || hdrs.get("x-real-ip");
+  if (trusted) return trusted.trim();
   const fwd = hdrs.get("x-forwarded-for");
-  return fwd?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "unknown";
+  return fwd?.split(",")[0]?.trim() || "unknown";
+}
+
+function emailKey(email: string): string {
+  return `email:${email.trim().toLowerCase()}`;
+}
+function ipKey(ip: string): string {
+  return `ip:${ip}`;
 }
 
 /**
- * True if this IP has had too many failed portal logins recently. Fail-open:
- * if the check itself errors we let the attempt through rather than lock
- * everyone out on a transient DB blip.
+ * True if either this IP or this email address has had too many failed portal
+ * logins in the window. Per-email throttling catches a distributed attempt
+ * (many IPs) against one account that a per-IP limit alone would miss.
+ *
+ * Fail-open: if the check itself errors we allow the attempt rather than lock
+ * every portal user out on a transient DB problem — Supabase Auth's own
+ * server-side per-IP rate limiting on signInWithPassword is the backstop when
+ * this layer is unavailable. The error is logged so a persistent failure is
+ * visible rather than silent.
  */
-export async function isLoginRateLimited(ip: string): Promise<boolean> {
-  if (ip === "unknown") return false;
+export async function isLoginRateLimited(ip: string, email: string): Promise<boolean> {
+  const identifiers = [emailKey(email)];
+  if (ip !== "unknown") identifiers.push(ipKey(ip));
+
   const admin = createAdminSupabase();
   const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
-  const { count, error } = await admin
+  const { data, error } = await admin
     .from("portal_login_attempts")
-    .select("*", { count: "exact", head: true })
-    .eq("identifier", ip)
+    .select("identifier")
+    .in("identifier", identifiers)
     .eq("succeeded", false)
     .gte("created_at", since);
-  if (error) return false;
-  return (count ?? 0) >= MAX_FAILURES_PER_IP;
+  if (error) {
+    console.error("[portal] login rate-limit check failed, allowing attempt", error);
+    return false;
+  }
+
+  let ipFails = 0;
+  let emailFails = 0;
+  for (const row of data ?? []) {
+    if (row.identifier === ipKey(ip)) ipFails++;
+    else emailFails++;
+  }
+  return ipFails >= MAX_FAILURES_PER_IP || emailFails >= MAX_FAILURES_PER_EMAIL;
 }
 
-/** Record a login attempt. On success, also clears this IP's failure history. */
-export async function recordLoginAttempt(ip: string, succeeded: boolean): Promise<void> {
-  if (ip === "unknown") return;
+/**
+ * Record a login attempt against both the IP and the email key. On success,
+ * clears the failure history for those same keys so a legitimate user who
+ * fat-fingered their password isn't left throttled.
+ */
+export async function recordLoginAttempt(ip: string, email: string, succeeded: boolean): Promise<void> {
   const admin = createAdminSupabase();
-  await admin.from("portal_login_attempts").insert({ identifier: ip, succeeded });
+  const rows = [{ identifier: emailKey(email), succeeded }];
+  if (ip !== "unknown") rows.push({ identifier: ipKey(ip), succeeded });
+  await admin.from("portal_login_attempts").insert(rows);
+
   if (succeeded) {
-    await admin.from("portal_login_attempts").delete().eq("identifier", ip).eq("succeeded", false);
-  } else {
-    // Opportunistic cleanup so the table doesn't grow unbounded.
-    const cutoff = new Date(Date.now() - 60 * 60_000).toISOString();
-    await admin.from("portal_login_attempts").delete().lt("created_at", cutoff);
+    await admin
+      .from("portal_login_attempts")
+      .delete()
+      .in("identifier", rows.map((r) => r.identifier))
+      .eq("succeeded", false);
+    return;
   }
+
+  // Opportunistic cleanup so the table doesn't grow unbounded.
+  const cutoff = new Date(Date.now() - CLEANUP_AFTER_MINUTES * 60_000).toISOString();
+  await admin.from("portal_login_attempts").delete().lt("created_at", cutoff);
 }

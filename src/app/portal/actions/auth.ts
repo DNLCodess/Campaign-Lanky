@@ -18,7 +18,7 @@ export async function loginPortal(
   if (!email || !password) return { error: "Enter your email and password." };
 
   const ip = await getClientIp();
-  if (await isLoginRateLimited(ip)) {
+  if (await isLoginRateLimited(ip, email)) {
     return { error: "Too many failed attempts. Wait a few minutes and try again." };
   }
 
@@ -28,7 +28,7 @@ export async function loginPortal(
     password,
   });
   if (authError || !authData.user) {
-    await recordLoginAttempt(ip, false);
+    await recordLoginAttempt(ip, email, false);
     return { error: "Invalid email or password." };
   }
 
@@ -41,13 +41,13 @@ export async function loginPortal(
 
   if (!account || !account.is_active) {
     await supabase.auth.signOut();
-    await recordLoginAttempt(ip, false);
+    await recordLoginAttempt(ip, email, false);
     return { error: "This account is not authorised for the results portal." };
   }
 
   await Promise.all([
     admin.from("portal_accounts").update({ last_login: new Date().toISOString() }).eq("id", account.id),
-    recordLoginAttempt(ip, true),
+    recordLoginAttempt(ip, email, true),
   ]);
 
   if (account.must_change_password) redirect("/portal/change-password");
