@@ -40,18 +40,12 @@ export async function submitElectionResult(
 
   const admin = createAdminSupabase();
 
-  const { data: election } = await admin
-    .from("elections")
-    .select("status")
-    .eq("id", electionId)
-    .single();
+  const [{ data: election }, { data: candidates }] = await Promise.all([
+    admin.from("elections").select("status").eq("id", electionId).single(),
+    admin.from("candidates").select("id, name").eq("election_id", electionId),
+  ]);
   if (!election) return { error: "Election not found." };
   if (election.status !== "active") return { error: "This election is not accepting submissions." };
-
-  const { data: candidates } = await admin
-    .from("candidates")
-    .select("id, name")
-    .eq("election_id", electionId);
   if (!candidates || candidates.length === 0) return { error: "No candidates configured for this election." };
 
   const votes: { candidateId: string; votes: number }[] = [];
@@ -187,5 +181,22 @@ export async function listResults() {
   if (session.role === "ward_agent") query = query.eq("lga", session.lga).eq("ward", session.ward);
 
   const { data } = await query;
-  return data ?? [];
+  const rows = data ?? [];
+
+  // The result-sheet photos live in a private bucket. Mint short-lived signed
+  // URLs (one per distinct PU photo) so reviewers can check the entered numbers
+  // against the sheet — the whole reason the photo is required.
+  const paths = [...new Set(rows.map((r) => r.result_image_path).filter(Boolean) as string[])];
+  const signedByPath = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await admin.storage.from("result-sheets").createSignedUrls(paths, 3600);
+    for (const s of signed ?? []) {
+      if (s.path && s.signedUrl) signedByPath.set(s.path, s.signedUrl);
+    }
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    result_sheet_url: r.result_image_path ? signedByPath.get(r.result_image_path) ?? null : null,
+  }));
 }

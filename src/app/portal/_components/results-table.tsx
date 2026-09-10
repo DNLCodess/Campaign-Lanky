@@ -7,6 +7,7 @@ type ResultRow = {
   accredited_voters: number;
   registered_voters: number;
   created_at: string;
+  result_sheet_url?: string | null;
   candidates: { name: string; party: string | null } | { name: string; party: string | null }[] | null;
   portal_accounts: { full_name: string } | { full_name: string }[] | null;
 };
@@ -28,12 +29,13 @@ export function ResultsTable({ rows }: { rows: ResultRow[] }) {
             <th className="px-4 py-3 font-medium">Votes</th>
             <th className="px-4 py-3 font-medium">Accredited / Registered</th>
             <th className="px-4 py-3 font-medium">Submitted by</th>
+            <th className="px-4 py-3 font-medium">Sheet</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-6 text-center text-text-muted">
+              <td colSpan={7} className="px-4 py-6 text-center text-text-muted">
                 No results submitted yet.
               </td>
             </tr>
@@ -53,6 +55,20 @@ export function ResultsTable({ rows }: { rows: ResultRow[] }) {
                   {r.accredited_voters} / {r.registered_voters}
                 </td>
                 <td className="px-4 py-3 text-text-muted">{agent?.full_name ?? "—"}</td>
+                <td className="px-4 py-3">
+                  {r.result_sheet_url ? (
+                    <a
+                      href={r.result_sheet_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-accent underline underline-offset-2 hover:text-text"
+                    >
+                      View
+                    </a>
+                  ) : (
+                    <span className="text-text-muted">—</span>
+                  )}
+                </td>
               </tr>
             );
           })}

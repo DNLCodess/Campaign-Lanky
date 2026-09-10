@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { requirePortalSession, logPortalAudit } from "@/lib/portal/session";
+import { getClientIp, isLoginRateLimited, recordLoginAttempt } from "@/lib/portal/rate-limit";
 import { ROLE_CONFIG, type PortalRole } from "@/lib/portal/constants";
 
 export type PortalActionState = { error?: string };
@@ -16,12 +17,20 @@ export async function loginPortal(
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Enter your email and password." };
 
+  const ip = await getClientIp();
+  if (await isLoginRateLimited(ip)) {
+    return { error: "Too many failed attempts. Wait a few minutes and try again." };
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-  if (authError || !authData.user) return { error: "Invalid email or password." };
+  if (authError || !authData.user) {
+    await recordLoginAttempt(ip, false);
+    return { error: "Invalid email or password." };
+  }
 
   const admin = createAdminSupabase();
   const { data: account } = await admin
@@ -32,13 +41,14 @@ export async function loginPortal(
 
   if (!account || !account.is_active) {
     await supabase.auth.signOut();
+    await recordLoginAttempt(ip, false);
     return { error: "This account is not authorised for the results portal." };
   }
 
-  await admin
-    .from("portal_accounts")
-    .update({ last_login: new Date().toISOString() })
-    .eq("id", account.id);
+  await Promise.all([
+    admin.from("portal_accounts").update({ last_login: new Date().toISOString() }).eq("id", account.id),
+    recordLoginAttempt(ip, true),
+  ]);
 
   if (account.must_change_password) redirect("/portal/change-password");
   redirect(ROLE_CONFIG[account.role as PortalRole].homePath);
