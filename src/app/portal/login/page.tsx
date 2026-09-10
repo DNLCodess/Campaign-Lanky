@@ -12,6 +12,16 @@ export default function PortalLoginPage() {
   const [state, formAction, isPending] = useActionState(loginPortal, initial);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Submit on Enter from either field. Native implicit submission already does
+  // this, but requestSubmit() keeps it reliable across browsers and makes the
+  // behaviour explicit (and still routes through the useActionState action).
+  function submitOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !isPending) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  }
+
   return (
     <div className="tone-aurora relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-12">
       {/* Faint polling-unit grid */}
@@ -64,6 +74,7 @@ export default function PortalLoginPage() {
               required
               autoFocus
               autoComplete="email"
+              onKeyDown={submitOnEnter}
               placeholder="Email"
               className="w-full rounded-brand border border-border bg-bg px-4 py-3 text-sm text-text focus:border-accent focus:outline-none"
             />
@@ -73,6 +84,7 @@ export default function PortalLoginPage() {
                 name="password"
                 required
                 autoComplete="current-password"
+                onKeyDown={submitOnEnter}
                 placeholder="Password"
                 className="w-full rounded-brand border border-border bg-bg px-4 py-3 pr-11 text-sm text-text focus:border-accent focus:outline-none"
               />
