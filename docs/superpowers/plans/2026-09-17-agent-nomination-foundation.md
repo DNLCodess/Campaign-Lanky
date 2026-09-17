@@ -82,9 +82,15 @@ alter table public.nomination_authorities enable row level security;
 create policy "authority reads own row"
   on public.nomination_authorities for select to authenticated
   using (id = auth.uid());
-create policy "authority updates own row"
-  on public.nomination_authorities for update to authenticated
-  using (id = auth.uid()) with check (id = auth.uid());
+-- No UPDATE policy: nothing in this sub-project writes to this table via the
+-- authenticated client. An unused grant would let an authority self-reactivate
+-- after an admin deactivation, or edit their own slug/email, with no real
+-- consumer to justify the exposure. Add a narrower, column-scoped policy in
+-- Sub-project 3 if/when authorities need to self-edit anything.
+-- (This was caught by post-commit security review during execution of this
+-- plan and corrected in-branch — see commit "fix(db): remove unused authority
+-- self-service UPDATE RLS policies" — this block reflects the corrected,
+-- actually-applied schema, not the plan's original draft.)
 
 -- agent_login_attempts: brute-force throttle for /agents/login, mirrors
 -- the existing portal_login_attempts table exactly (service-role only,
@@ -138,9 +144,10 @@ alter table public.agent_nominations enable row level security;
 create policy "authority reads own nominations"
   on public.agent_nominations for select to authenticated
   using (authority_id = auth.uid());
-create policy "authority updates own nominations"
-  on public.agent_nominations for update to authenticated
-  using (authority_id = auth.uid()) with check (authority_id = auth.uid());
+-- No UPDATE policy: flag/verify/countersign actions aren't built until
+-- Sub-project 3. A blanket row-scoped grant today would let an authority
+-- forge status/countersign fields outside the real approval flow. Add the
+-- specific, narrower policy in Sub-project 3 alongside its actual UI.
 
 -- agent_nomination_files: pvc/photo/signature/generated_pdf storage refs.
 create table public.agent_nomination_files (
@@ -209,7 +216,7 @@ and tablename in (
 )
 order by tablename, policyname;
 ```
-Expected: 6 rows total — 2 for `nomination_authorities` (select, update), 2 for `agent_nominations` (select, update), 1 for `agent_nomination_files` (select), 1 for `agent_nomination_audit_log` (select). `agent_login_attempts` has zero rows (no policies, by design).
+Expected: 4 rows total — 1 for `nomination_authorities` (select), 1 for `agent_nominations` (select), 1 for `agent_nomination_files` (select), 1 for `agent_nomination_audit_log` (select). `agent_login_attempts` has zero rows (no policies, by design). No `update` policies — see the UPDATE-policy notes inline above.
 
 - [ ] **Step 4: Run the security advisor**
 

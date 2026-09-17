@@ -41,8 +41,8 @@ One new private Supabase Storage bucket (e.g. `agent-nominations`), signed-URL a
 
 ## Auth & RLS
 
-- `nomination_authorities`: an authority can `SELECT`/`UPDATE` only their own row (`id = auth.uid()`). Row creation is service-role only (via the dev-only admin UI).
-- `agent_nominations`, `agent_nomination_files`, `agent_nomination_audit_log`: no policies for `anon`/nominee writes — those always go through the service-role client. Authenticated authorities get `SELECT` (and the specific `UPDATE`s needed for flag/verify/countersign) scoped to `authority_id = auth.uid()` directly, or via an `EXISTS` subquery to `agent_nominations` for the files/audit tables. This mirrors the existing portal's RLS-scoping-by-ownership pattern.
+- `nomination_authorities`: an authority can `SELECT` only their own row (`id = auth.uid()`). Row creation is service-role only (via the dev-only admin UI). No `UPDATE` policy in Sub-project 1 — nothing writes to this table via the authenticated client yet, and a self-service grant with no consumer would let an authority undo an admin's `is_active = false` deactivation or edit their own `slug`/`email`. Added when a real consumer needs it.
+- `agent_nominations`, `agent_nomination_files`, `agent_nomination_audit_log`: no policies for `anon`/nominee writes — those always go through the service-role client. Authenticated authorities get `SELECT` scoped to `authority_id = auth.uid()` directly, or via an `EXISTS` subquery to `agent_nominations` for the files/audit tables. This mirrors the existing portal's RLS-scoping-by-ownership pattern. No `UPDATE` policy yet either — the flag/verify/countersign actions that would need one aren't built until Sub-project 3, which adds the specific, narrower policy alongside its real UI rather than this sub-project granting a blanket one in advance.
 
 ## Subdomain routing
 
