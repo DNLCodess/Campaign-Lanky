@@ -17,9 +17,12 @@ alter table public.nomination_authorities enable row level security;
 create policy "authority reads own row"
   on public.nomination_authorities for select to authenticated
   using (id = auth.uid());
-create policy "authority updates own row"
-  on public.nomination_authorities for update to authenticated
-  using (id = auth.uid()) with check (id = auth.uid());
+-- No UPDATE policy: nothing in this sub-project writes to this table via the
+-- authenticated client (all writes go through the service-role client). An
+-- unused UPDATE grant would let an authority self-reactivate after an admin
+-- deactivation, or edit their own slug/email, with no real consumer to
+-- justify the exposure. Sub-project 3 adds a narrower, column-scoped policy
+-- if/when it needs authorities to self-edit anything.
 
 -- agent_login_attempts: brute-force throttle for /agents/login, mirrors
 -- the existing portal_login_attempts table exactly (service-role only,
@@ -73,9 +76,11 @@ alter table public.agent_nominations enable row level security;
 create policy "authority reads own nominations"
   on public.agent_nominations for select to authenticated
   using (authority_id = auth.uid());
-create policy "authority updates own nominations"
-  on public.agent_nominations for update to authenticated
-  using (authority_id = auth.uid()) with check (authority_id = auth.uid());
+-- No UPDATE policy: flag/verify/countersign actions aren't built until
+-- Sub-project 3, and a blanket row-scoped UPDATE today would let an
+-- authority forge status/countersign fields outside the real approval flow
+-- if the authenticated client ever reached this table directly. Sub-project
+-- 3 adds the specific, narrower UPDATE policy its actual UI needs.
 
 -- agent_nomination_files: pvc/photo/signature/generated_pdf storage refs.
 create table public.agent_nomination_files (
