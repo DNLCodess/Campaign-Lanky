@@ -200,3 +200,54 @@ export async function listResults() {
     result_sheet_url: r.result_image_path ? signedByPath.get(r.result_image_path) ?? null : null,
   }));
 }
+
+export type DeleteResultState = { error?: string; success?: boolean };
+
+/**
+ * Removes every candidate row for one PU's submission on one election, so the
+ * PU agent can resubmit — the unique constraint on election_results otherwise
+ * refuses a second submission outright, so a correction has no other path.
+ * constituency_admin only; also clears the result-sheet photo from storage.
+ */
+export async function deleteResultSubmission(
+  _prev: DeleteResultState,
+  formData: FormData,
+): Promise<DeleteResultState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const electionId = String(formData.get("election_id") ?? "");
+  const pollingUnit = String(formData.get("polling_unit") ?? "");
+  if (!electionId || !pollingUnit) return { error: "Missing submission." };
+
+  const admin = createAdminSupabase();
+  const { data: existing } = await admin
+    .from("election_results")
+    .select("id, result_image_path")
+    .eq("election_id", electionId)
+    .eq("polling_unit", pollingUnit);
+  if (!existing || existing.length === 0) return { error: "That submission was not found." };
+
+  const imagePath = existing[0]?.result_image_path;
+  const { error } = await admin
+    .from("election_results")
+    .delete()
+    .eq("election_id", electionId)
+    .eq("polling_unit", pollingUnit);
+  if (error) return { error: "Could not remove this submission. Try again." };
+
+  if (imagePath) await admin.storage.from("result-sheets").remove([imagePath]);
+
+  await logPortalAudit({
+    action: "RESULT_CORRECTED",
+    tableName: "election_results",
+    recordId: pollingUnit,
+    performedBy: session.id,
+    notes: `Cleared submission for PU ${pollingUnit} (election ${electionId}) — ${existing.length} candidate row(s) removed for resubmission.`,
+  });
+
+  revalidateTag("election-results", "max");
+  revalidatePath("/portal/admin/results");
+  revalidatePath("/portal/lga/results");
+  revalidatePath("/portal/ward/results");
+  revalidatePath("/results");
+  return { success: true };
+}

@@ -10,6 +10,7 @@ const NAV: SidebarNavItem[] = [
   { href: portalPath("/admin/coverage"), label: "Coverage", icon: "coverage" },
   { href: portalPath("/admin/accounts"), label: "LGA Coordinators", icon: "people" },
   { href: portalPath("/admin/elections"), label: "Election", icon: "election" },
+  { href: portalPath("/admin/results"), label: "Results", icon: "results" },
   { href: portalPath("/admin/rewards"), label: "Rewards", icon: "rewards" },
   { href: portalPath("/admin/messages"), label: "Messages", icon: "messages" },
   { href: portalPath("/admin/audit"), label: "Audit Log", icon: "audit" },
