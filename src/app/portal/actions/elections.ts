@@ -82,6 +82,150 @@ export async function addCandidate(
   return { success: true };
 }
 
+export async function updateElection(
+  _prev: ElectionActionState,
+  formData: FormData,
+): Promise<ElectionActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const electionId = String(formData.get("election_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!electionId) return { error: "Missing election." };
+  if (!name) return { error: "Election name is required." };
+
+  const admin = createAdminSupabase();
+  const { error } = await admin.from("elections").update({ name }).eq("id", electionId);
+  if (error) return { error: "Could not rename the election." };
+
+  await logPortalAudit({
+    action: "UPDATE",
+    tableName: "elections",
+    recordId: electionId,
+    performedBy: session.id,
+    notes: `Renamed to: ${name}`,
+  });
+
+  revalidateElectionData();
+  revalidatePath("/results");
+  return { success: true };
+}
+
+/** Delete a draft election. Refused once it is active/closed or has any results. */
+export async function deleteElection(
+  _prev: ElectionActionState,
+  formData: FormData,
+): Promise<ElectionActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const electionId = String(formData.get("election_id") ?? "");
+  if (!electionId) return { error: "Missing election." };
+
+  const admin = createAdminSupabase();
+  const { data: election } = await admin
+    .from("elections")
+    .select("id, name, status")
+    .eq("id", electionId)
+    .maybeSingle();
+  if (!election) return { error: "Election not found." };
+  if (election.status !== "draft") {
+    return { error: "Only a draft election can be deleted. Set it back to draft first, or close it instead." };
+  }
+
+  const { count } = await admin
+    .from("election_results")
+    .select("id", { count: "exact", head: true })
+    .eq("election_id", electionId);
+  if (count && count > 0) {
+    return { error: "This election already has submitted results and cannot be deleted." };
+  }
+
+  await admin.from("candidates").delete().eq("election_id", electionId);
+  const { error } = await admin.from("elections").delete().eq("id", electionId);
+  if (error) return { error: "Could not delete the election." };
+
+  await logPortalAudit({
+    action: "ELECTION_DELETED",
+    tableName: "elections",
+    recordId: electionId,
+    performedBy: session.id,
+    notes: `Deleted draft election: ${election.name}`,
+  });
+
+  revalidateElectionData();
+  return { success: true };
+}
+
+export async function updateCandidate(
+  _prev: ElectionActionState,
+  formData: FormData,
+): Promise<ElectionActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const candidateId = String(formData.get("candidate_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const party = String(formData.get("party") ?? "").trim();
+  const isIncumbent = formData.get("is_incumbent") === "on";
+  if (!candidateId) return { error: "Missing candidate." };
+  if (!name) return { error: "Candidate name is required." };
+
+  const admin = createAdminSupabase();
+  const { error } = await admin
+    .from("candidates")
+    .update({ name, party: party || null, is_incumbent: isIncumbent })
+    .eq("id", candidateId);
+  if (error) return { error: "Could not save the candidate." };
+
+  await logPortalAudit({
+    action: "UPDATE",
+    tableName: "candidates",
+    recordId: candidateId,
+    performedBy: session.id,
+    notes: `Candidate updated: ${name} (${party || "no party"})`,
+  });
+
+  revalidateElectionData();
+  revalidatePath("/results");
+  return { success: true };
+}
+
+/** Remove a candidate. Refused if any result has already been recorded for them. */
+export async function removeCandidate(
+  _prev: ElectionActionState,
+  formData: FormData,
+): Promise<ElectionActionState> {
+  const session = await requirePortalRole(["constituency_admin"]);
+  const candidateId = String(formData.get("candidate_id") ?? "");
+  if (!candidateId) return { error: "Missing candidate." };
+
+  const admin = createAdminSupabase();
+  const { data: candidate } = await admin
+    .from("candidates")
+    .select("id, name")
+    .eq("id", candidateId)
+    .maybeSingle();
+  if (!candidate) return { error: "Candidate not found." };
+
+  const { count } = await admin
+    .from("election_results")
+    .select("id", { count: "exact", head: true })
+    .eq("candidate_id", candidateId);
+  if (count && count > 0) {
+    return { error: "Results have already been recorded for this candidate, so they cannot be removed." };
+  }
+
+  const { error } = await admin.from("candidates").delete().eq("id", candidateId);
+  if (error) return { error: "Could not remove the candidate." };
+
+  await logPortalAudit({
+    action: "CANDIDATE_REMOVED",
+    tableName: "candidates",
+    recordId: candidateId,
+    performedBy: session.id,
+    notes: `Candidate removed: ${candidate.name}`,
+  });
+
+  revalidateElectionData();
+  revalidatePath("/results");
+  return { success: true };
+}
+
 export async function setElectionStatus(
   _prev: ElectionActionState,
   formData: FormData,

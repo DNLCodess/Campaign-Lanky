@@ -5,6 +5,8 @@ import { LeaderboardBars } from "@/components/charts/leaderboard-bars";
 import {
   CreateElectionForm,
   AddCandidateForm,
+  ElectionHeader,
+  CandidateRow,
   ElectionStatusButtons,
   PublishToggle,
 } from "@/app/portal/admin/elections/election-forms";
@@ -50,10 +52,7 @@ async function ElectionCard({
   return (
     <div className="rounded-brand border border-border p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-heading text-lg text-text">{election.name}</h2>
-          <p className="text-xs uppercase tracking-wide text-text-muted">{election.status}</p>
-        </div>
+        <ElectionHeader electionId={election.id} name={election.name} status={election.status} />
         <div className="flex flex-wrap items-center gap-2">
           <ElectionStatusButtons electionId={election.id} status={election.status} />
           <PublishToggle electionId={election.id} published={election.published} />
@@ -62,15 +61,7 @@ async function ElectionCard({
 
       <div className="mt-4 space-y-2">
         {(election.candidates ?? []).map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center justify-between rounded-brand bg-surface-2 px-3 py-2 text-sm"
-          >
-            <span className="text-text">
-              {c.name} {c.is_incumbent && <span className="text-accent">(incumbent)</span>}
-            </span>
-            <span className="text-text-muted">{c.party || "—"}</span>
-          </div>
+          <CandidateRow key={c.id} candidate={c} />
         ))}
         {(election.candidates ?? []).length === 0 && (
           <p className="text-sm text-text-muted">No candidates yet.</p>
