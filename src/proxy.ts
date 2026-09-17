@@ -7,15 +7,19 @@ import { createServerClient } from "@supabase/ssr";
  * (alongside `src/app`), not the project root, or it is silently never
  * invoked — see node_modules/next/dist/docs/.../proxy.md.
  *
- * Two independent responsibilities:
+ * Three independent responsibilities:
  * 1. Refresh the Supabase auth session cookie on /admin routes so server
  *    components always see a valid session. Page-level `requireAdmin()`
  *    still enforces access.
  * 2. Rewrite requests to portal.votelanky.com (the election results portal,
  *    same deployment as the public site) to /portal/*. Locally,
  *    `portal.localhost:3000` works the same way for dev/testing.
+ * 3. Rewrite requests to agents.votelanky.com (the Party Agent Nomination
+ *    Platform, same deployment) to /agents/*. Locally,
+ *    `agents.localhost:3000` works the same way for dev/testing.
  */
 const PORTAL_HOSTS = ["portal.votelanky.com", "portal.localhost"];
+const AGENTS_HOSTS = ["agents.votelanky.com", "agents.localhost"];
 
 export async function proxy(request: NextRequest) {
   const hostname = (request.headers.get("host") ?? "").split(":")[0];
@@ -23,6 +27,12 @@ export async function proxy(request: NextRequest) {
   if (PORTAL_HOSTS.includes(hostname) && !request.nextUrl.pathname.startsWith("/portal")) {
     const url = request.nextUrl.clone();
     url.pathname = `/portal${request.nextUrl.pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  if (AGENTS_HOSTS.includes(hostname) && !request.nextUrl.pathname.startsWith("/agents")) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/agents${request.nextUrl.pathname}`;
     return NextResponse.rewrite(url);
   }
 
@@ -59,8 +69,8 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except static assets and Next.js internals —
-     * broad enough to catch the portal-host rewrite on any path, while the
-     * session-refresh logic above still only touches /admin.
+     * broad enough to catch the portal-host and agents-host rewrites on any
+     * path, while the session-refresh logic above still only touches /admin.
      */
     "/((?!_next/static|_next/image|favicon.ico|favicon_io|brand|consituency).*)",
   ],
