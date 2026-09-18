@@ -22,8 +22,8 @@ export type GeneratePdfInput = {
   pollingUnitName: string;
   photoBytes: Uint8Array;
   signatureBytes: Uint8Array;
-  authorityName: string;
-  authoritySignatureBytes: Uint8Array;
+  authorizedNominatorName: string;
+  authorizedNominatorSignatureBytes: Uint8Array;
   submissionDate: Date;
 };
 
@@ -95,13 +95,13 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   const dateStr = formatDate(input.submissionDate);
   text(fullName, TEXT_FIELDS.attestationName);
   text(dateStr, TEXT_FIELDS.attestationDate);
-  text(input.authorityName, TEXT_FIELDS.authorisedNominatorName);
+  text(input.authorizedNominatorName, TEXT_FIELDS.authorisedNominatorName);
   text(dateStr, TEXT_FIELDS.authorisedNominatorDate);
 
   await image(input.photoBytes, PHOTO_BOX);
   await image(input.signatureBytes, SIGNATURE_BOXES.specimen);
   await image(input.signatureBytes, SIGNATURE_BOXES.attestation);
-  await image(input.authoritySignatureBytes, SIGNATURE_BOXES.authorisedNominator);
+  await image(input.authorizedNominatorSignatureBytes, SIGNATURE_BOXES.authorisedNominator);
 
   return doc.save();
 }

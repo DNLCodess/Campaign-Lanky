@@ -12,13 +12,13 @@ export default async function SubmitNominationPage({
 }) {
   const { slug } = await params;
   const admin = createAdminSupabase();
-  const { data: authority } = await admin
-    .from("nomination_authorities")
+  const { data: candidate } = await admin
+    .from("nomination_candidates")
     .select("id, full_name, office, election_type, slug, is_active")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!authority || !authority.is_active) {
+  if (!candidate || !candidate.is_active) {
     return (
       <div className="flex min-h-screen items-center justify-center px-5 py-12">
         <div className="max-w-sm text-center">
@@ -35,9 +35,9 @@ export default async function SubmitNominationPage({
 
   return (
     <NominationWizard
-      slug={authority.slug}
-      authorityOffice={authority.office}
-      electionTypeLabel={ELECTION_TYPE_LABELS[authority.election_type as ElectionType]}
+      slug={candidate.slug}
+      candidateOffice={candidate.office}
+      electionTypeLabel={ELECTION_TYPE_LABELS[candidate.election_type as ElectionType]}
       geo={geo}
     />
   );

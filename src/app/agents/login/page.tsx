@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { loginAuthority, type AgentActionState } from "@/app/agents/actions/auth";
+import { loginCandidate, type AgentActionState } from "@/app/agents/actions/auth";
 import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components/form";
 
 const initial: AgentActionState = {};
 
 export default function AgentsLoginPage() {
-  const [state, formAction, isPending] = useActionState(loginAuthority, initial);
+  const [state, formAction, isPending] = useActionState(loginCandidate, initial);
   const formRef = useRef<HTMLFormElement>(null);
   const submit = () => {
     if (!isPending) formRef.current?.requestSubmit();
@@ -21,7 +21,7 @@ export default function AgentsLoginPage() {
         </p>
         <h1 className="mt-2 font-heading text-2xl text-text">Sign in</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Review and countersign nominations submitted under your candidacy.
+          Review nominations submitted under your candidacy.
         </p>
 
         <form ref={formRef} action={formAction} className="mt-6 space-y-4">

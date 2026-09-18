@@ -36,12 +36,12 @@ const initialActionState: SubmitNominationState = {};
 
 export function NominationWizard({
   slug,
-  authorityOffice,
+  candidateOffice,
   electionTypeLabel,
   geo,
 }: {
   slug: string;
-  authorityOffice: string;
+  candidateOffice: string;
   electionTypeLabel: string;
   geo: GeoRow[];
 }) {
@@ -165,7 +165,7 @@ export function NominationWizard({
   return (
     <div className="mx-auto max-w-lg px-5 py-10">
       <p className="text-xs font-medium uppercase tracking-wide text-accent">
-        {electionTypeLabel} — {authorityOffice}
+        {electionTypeLabel} — {candidateOffice}
       </p>
       <h1 className="mt-2 font-heading text-2xl text-text">Party Agent Nomination</h1>
       <p className="mt-1 text-sm text-text-muted">

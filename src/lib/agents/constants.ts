@@ -15,5 +15,5 @@ export const ELECTION_TYPE_LABELS: Record<ElectionType, string> = {
   house_of_assembly: "House of Assembly",
 };
 
-/** Every nomination authority in this build is Oyo State — there is no state column on agent_nominations. */
+/** Every nomination candidate in this build is Oyo State — there is no state column on agent_nominations. */
 export const CONSTITUENCY_STATE = "Oyo State";

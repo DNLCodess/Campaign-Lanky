@@ -8,7 +8,7 @@ import { agentsPath } from "@/lib/agents/routes";
 
 export type AgentActionState = { error?: string };
 
-export async function loginAuthority(
+export async function loginCandidate(
   _prev: AgentActionState,
   formData: FormData,
 ): Promise<AgentActionState> {
@@ -32,13 +32,13 @@ export async function loginAuthority(
   }
 
   const admin = createAdminSupabase();
-  const { data: authority } = await admin
-    .from("nomination_authorities")
+  const { data: candidate } = await admin
+    .from("nomination_candidates")
     .select("id, is_active")
     .eq("id", authData.user.id)
     .single();
 
-  if (!authority || !authority.is_active) {
+  if (!candidate || !candidate.is_active) {
     await supabase.auth.signOut();
     await recordLoginAttempt(ip, email, false);
     return { error: "This account is not authorised for the nomination platform." };
@@ -48,7 +48,7 @@ export async function loginAuthority(
   redirect(agentsPath("/"));
 }
 
-export async function logoutAuthority(): Promise<void> {
+export async function logoutCandidate(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect(agentsPath("/login"));

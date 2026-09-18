@@ -1,32 +1,31 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { createAuthority, type AuthorityActionState } from "@/app/admin/(dashboard)/agent-nominations/authorities/actions";
+import { createCandidate, type CandidateActionState } from "@/app/admin/(dashboard)/agent-nominations/candidates/actions";
 import { ELECTION_TYPES, ELECTION_TYPE_LABELS } from "@/lib/agents/constants";
 import {
   FieldSection,
   TextField,
   SelectField,
-  FileField,
   FormBanner,
   SubmitButton,
   CredentialHandoff,
 } from "@/components/form";
 
-const initial: AuthorityActionState = {};
+const initial: CandidateActionState = {};
 
 const ELECTION_TYPE_OPTIONS = ELECTION_TYPES.map((value) => ({
   value,
   label: ELECTION_TYPE_LABELS[value],
 }));
 
-export function AuthorityForm() {
+export function CandidateForm() {
   const [instance, setInstance] = useState(0);
   return <Form key={instance} onCreated={() => setInstance((n) => n + 1)} />;
 }
 
 function Form({ onCreated }: { onCreated: () => void }) {
-  const [state, formAction, isPending] = useActionState(createAuthority, initial);
+  const [state, formAction, isPending] = useActionState(createCandidate, initial);
   const [electionType, setElectionType] = useState("");
 
   if (state.success && state.plainPassword && state.createdName && state.createdEmail) {
@@ -43,7 +42,7 @@ function Form({ onCreated }: { onCreated: () => void }) {
   return (
     <form action={formAction} className="space-y-6">
       {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
-      <FieldSection step={1} title="Authority details">
+      <FieldSection step={1} title="Candidate details">
         <TextField name="full_name" label="Full name" autoComplete="name" />
         <TextField name="email" label="Email address" type="email" autoComplete="email" />
         <TextField
@@ -60,11 +59,8 @@ function Form({ onCreated }: { onCreated: () => void }) {
           placeholder="Select an election type"
         />
       </FieldSection>
-      <FieldSection step={2} title="Signature">
-        <FileField name="signature" label="Signature PNG" accept="image/png" />
-      </FieldSection>
       <SubmitButton pending={isPending} pendingLabel="Creating…">
-        Create authority
+        Create candidate
       </SubmitButton>
     </form>
   );

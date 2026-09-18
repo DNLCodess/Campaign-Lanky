@@ -32,7 +32,7 @@ function ipKey(ip: string): string {
 /**
  * True if either this IP or this email address has had too many failed
  * agents-platform logins in the window. Fail-open: if the check itself
- * errors we allow the attempt rather than lock every authority out on a
+ * errors we allow the attempt rather than lock every candidate out on a
  * transient DB problem — Supabase Auth's own server-side per-IP rate
  * limiting on signInWithPassword is the backstop when this layer is
  * unavailable.

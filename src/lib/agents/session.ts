@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { ElectionType } from "@/lib/agents/constants";
 
-export type AuthoritySession = {
+export type CandidateSession = {
   id: string;
   email: string;
   full_name: string;
@@ -27,30 +27,30 @@ async function getVerifiedUser(supabase: Awaited<ReturnType<typeof createSupabas
 }
 
 /**
- * Returns the signed-in nomination authority for this request, or null.
+ * Returns the signed-in candidate for this request, or null.
  * Wrapped in React `cache()` so the layout guard and the page guard in the
  * same render share one `auth.getUser()` round trip + one
- * `nomination_authorities` lookup.
+ * `nomination_candidates` lookup.
  */
-export const getAuthoritySession = cache(async (): Promise<AuthoritySession | null> => {
+export const getCandidateSession = cache(async (): Promise<CandidateSession | null> => {
   const supabase = await createSupabaseServerClient();
   const user = await getVerifiedUser(supabase);
   if (!user) return null;
 
   const admin = createAdminSupabase();
-  const { data: authority } = await admin
-    .from("nomination_authorities")
+  const { data: candidate } = await admin
+    .from("nomination_candidates")
     .select("id, email, full_name, office, election_type, slug, is_active")
     .eq("id", user.id)
     .single();
 
-  if (!authority || !authority.is_active) return null;
-  return authority as AuthoritySession;
+  if (!candidate || !candidate.is_active) return null;
+  return candidate as CandidateSession;
 });
 
-/** Guard for an authority-only page — redirects to login if not signed in. */
-export async function requireAuthoritySession(): Promise<AuthoritySession> {
-  const session = await getAuthoritySession();
+/** Guard for a candidate-only page — redirects to login if not signed in. */
+export async function requireCandidateSession(): Promise<CandidateSession> {
+  const session = await getCandidateSession();
   if (!session) redirect("/agents/login");
   return session;
 }

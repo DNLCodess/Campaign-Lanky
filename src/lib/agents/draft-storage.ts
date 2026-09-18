@@ -21,7 +21,7 @@ function draftKey(slug: string): string {
   return `agent-nomination-draft:${DRAFT_VERSION}:${slug}`;
 }
 
-/** Reads a saved draft for this authority's link, or null if there isn't one / it can't be read. */
+/** Reads a saved draft for this candidate's link, or null if there isn't one / it can't be read. */
 export function loadDraft(slug: string): NominationDraftFields | null {
   try {
     const raw = window.localStorage.getItem(draftKey(slug));

@@ -35,16 +35,33 @@ export async function submitNomination(
   if (!slug) return { error: "Missing link identifier." };
 
   const admin = createAdminSupabase();
-  const { data: authority } = await admin
-    .from("nomination_authorities")
-    .select("id, full_name, election_type, signature_storage_path, is_active")
+  const { data: candidate, error: candidateError } = await admin
+    .from("nomination_candidates")
+    .select("id, full_name, election_type, is_active")
     .eq("slug", slug)
     .maybeSingle();
-  if (!authority || !authority.is_active) {
+  if (candidateError) {
+    console.error("[agents] candidate lookup failed for slug", slug, candidateError);
+    return { error: GENERIC_ERROR };
+  }
+  if (!candidate || !candidate.is_active) {
     return { error: "This link is no longer active. Contact the person who shared it with you." };
   }
-  if (!authority.signature_storage_path) {
-    return { error: "This authority has no signature on file yet. Contact them directly." };
+
+  // The Authorised Nominator is a single top party leader, universal across
+  // every candidate — never the candidate whose link this submission came
+  // through. Looked up independently of `candidate` above.
+  const { data: nominator, error: nominatorError } = await admin
+    .from("authorized_nominator")
+    .select("full_name, signature_storage_path")
+    .eq("id", true)
+    .maybeSingle();
+  if (nominatorError) {
+    console.error("[agents] authorized_nominator lookup failed", nominatorError);
+    return { error: GENERIC_ERROR };
+  }
+  if (!nominator) {
+    return { error: "Nominations aren't open yet — the Authorised Nominator hasn't been set up. Contact the administrator." };
   }
 
   const firstName = String(formData.get("first_name") ?? "").trim();
@@ -93,7 +110,7 @@ export async function submitNomination(
   const { data: existingMatches } = await admin
     .from("agent_nominations")
     .select("id")
-    .eq("authority_id", authority.id)
+    .eq("candidate_id", candidate.id)
     .or(`phone.eq.${phone}${email ? `,email.eq.${email}` : ""}`);
   const isPossibleDuplicate = (existingMatches?.length ?? 0) > 0;
 
@@ -120,14 +137,14 @@ export async function submitNomination(
     return { error: "Failed to upload your files. Please try again." };
   }
 
-  const authorityId = authority.id;
+  const candidateId = candidate.id;
 
   async function tryInsert(refId: string) {
     return admin
       .from("agent_nominations")
       .insert({
         id: nominationId,
-        authority_id: authorityId,
+        candidate_id: candidateId,
         first_name: firstName,
         other_names: otherNames || null,
         surname,
@@ -163,7 +180,7 @@ export async function submitNomination(
   let pdfBytes: Uint8Array;
   try {
     pdfBytes = await generateNominationPdf({
-      electionType: authority.election_type as ElectionType,
+      electionType: candidate.election_type as ElectionType,
       formNo,
       firstName,
       otherNames,
@@ -179,8 +196,8 @@ export async function submitNomination(
       pollingUnitName,
       photoBytes,
       signatureBytes,
-      authorityName: authority.full_name,
-      authoritySignatureBytes: await downloadAuthoritySignature(admin, authority.signature_storage_path),
+      authorizedNominatorName: nominator.full_name,
+      authorizedNominatorSignatureBytes: await downloadSignature(admin, nominator.signature_storage_path),
       submissionDate: new Date(),
     });
   } catch (err) {
@@ -188,11 +205,20 @@ export async function submitNomination(
     // The nomination row and source files are already saved; only the
     // rendered PDF is missing. Not rolled back — losing an already-successful
     // submission would be worse than a PDF that can be regenerated later.
-    await admin.from("agent_nomination_files").insert([
+    const { error: fallbackFileRowsError } = await admin.from("agent_nomination_files").insert([
       { nomination_id: insertedId, file_type: "pvc_copy", storage_path: pvcPath },
       { nomination_id: insertedId, file_type: "passport_photo", storage_path: photoPath },
       { nomination_id: insertedId, file_type: "specimen_signature", storage_path: signaturePath },
     ]);
+    if (fallbackFileRowsError) {
+      // Files exist in storage but now have no DB record linking them to
+      // this nomination — logged so it's discoverable, not silently lost.
+      console.error(
+        "[agents] file rows insert failed after PDF-generation failure for nomination",
+        insertedId,
+        fallbackFileRowsError,
+      );
+    }
     return { referenceId };
   }
 
@@ -209,16 +235,21 @@ export async function submitNomination(
   if (!pdfUploadError) {
     fileRows.push({ nomination_id: insertedId, file_type: "generated_pdf", storage_path: pdfPath });
   }
-  await admin.from("agent_nomination_files").insert(fileRows);
+  const { error: fileRowsError } = await admin.from("agent_nomination_files").insert(fileRows);
+  if (fileRowsError) {
+    // Same visibility concern as above — files are in storage, DB just
+    // doesn't know about them yet if this insert failed.
+    console.error("[agents] file rows insert failed for nomination", insertedId, fileRowsError);
+  }
 
   return { referenceId };
 }
 
-async function downloadAuthoritySignature(
+async function downloadSignature(
   admin: ReturnType<typeof createAdminSupabase>,
   storagePath: string,
 ): Promise<Uint8Array> {
   const { data, error } = await admin.storage.from("agent-nominations").download(storagePath);
-  if (error || !data) throw new Error("Could not load authority signature");
+  if (error || !data) throw new Error("Could not load Authorised Nominator signature");
   return new Uint8Array(await data.arrayBuffer());
 }
