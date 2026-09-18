@@ -10,7 +10,9 @@ import {
   isValidFile,
   isValidPhone,
 } from "@/lib/agents/validation";
-import { CONSTITUENCY_STATE, type ElectionType } from "@/lib/agents/constants";
+import { CONSTITUENCY_STATE, MEANS_OF_ID_OPTIONS, type ElectionType } from "@/lib/agents/constants";
+
+const MEANS_OF_ID_VALUES = MEANS_OF_ID_OPTIONS.map((o) => o.value);
 
 export type SubmitNominationState = { error?: string; referenceId?: string };
 
@@ -70,7 +72,7 @@ export async function submitNomination(
   const gender = String(formData.get("gender") ?? "");
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const meansOfId = String(formData.get("means_of_id") ?? "").trim() || "PVC";
+  const meansOfId = String(formData.get("means_of_id") ?? "").trim();
   const lga = String(formData.get("lga") ?? "").trim();
   const ward = Number(formData.get("ward"));
   const pollingUnitCode = String(formData.get("polling_unit_code") ?? "").trim();
@@ -82,6 +84,7 @@ export async function submitNomination(
 
   if (!firstName || !surname) return { error: "First name and surname are required." };
   if (gender !== "male" && gender !== "female") return { error: "Select a gender." };
+  if (!MEANS_OF_ID_VALUES.includes(meansOfId)) return { error: "Select a valid means of ID." };
   if (!isValidPhone(phone)) return { error: "Enter a valid Nigerian phone number." };
   if (!isValidEmail(email)) return { error: "Enter a valid email address." };
   if (!lga) return { error: "Select an LGA." };

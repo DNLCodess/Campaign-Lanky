@@ -17,3 +17,10 @@ export const ELECTION_TYPE_LABELS: Record<ElectionType, string> = {
 
 /** Every nomination candidate in this build is Oyo State — there is no state column on agent_nominations. */
 export const CONSTITUENCY_STATE = "Oyo State";
+
+/** The Notice requires PVC; NIN/BVN are accepted as fallbacks for nominees without one yet. */
+export const MEANS_OF_ID_OPTIONS = [
+  { value: "PVC", label: "PVC (Permanent Voter's Card)" },
+  { value: "NIN", label: "NIN (National Identification Number)" },
+  { value: "BVN", label: "BVN (Bank Verification Number)" },
+];

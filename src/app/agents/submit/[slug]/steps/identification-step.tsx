@@ -1,8 +1,9 @@
 "use client";
 
-import { TextField } from "@/components/form";
+import { SelectField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
 import { ALLOWED_PVC_TYPES, isValidFile } from "@/lib/agents/validation";
+import { MEANS_OF_ID_OPTIONS } from "@/lib/agents/constants";
 
 export function IdentificationStep({
   draft,
@@ -26,12 +27,14 @@ export function IdentificationStep({
 
   return (
     <div className="space-y-4">
-      <TextField
+      <SelectField
         name="means_of_id"
         label="Means of ID"
-        helper="Defaults to PVC, as required by the Notice"
+        helper="PVC is required by the Notice — only use another ID if you don't yet have your PVC"
         value={draft.meansOfId}
         onChange={(v) => onChange({ meansOfId: v })}
+        options={MEANS_OF_ID_OPTIONS}
+        placeholder="Select means of ID"
       />
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-text">Copy of your PVC</label>
