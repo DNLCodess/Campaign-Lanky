@@ -59,12 +59,6 @@ function Form({ onCreated }: { onCreated: () => void }) {
           options={ELECTION_TYPE_OPTIONS}
           placeholder="Select an election type"
         />
-        <TextField
-          name="slug"
-          label="Link slug (optional)"
-          optional
-          helper="Auto-generated from name if left blank"
-        />
       </FieldSection>
       <FieldSection step={2} title="Signature">
         <FileField name="signature" label="Signature PNG" accept="image/png" />

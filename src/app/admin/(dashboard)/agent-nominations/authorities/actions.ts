@@ -35,7 +35,6 @@ export async function createAuthority(
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const office = String(formData.get("office") ?? "").trim();
   const electionType = String(formData.get("election_type") ?? "");
-  const slugInput = String(formData.get("slug") ?? "").trim();
   const signature = formData.get("signature");
 
   if (!fullName) return { error: "Full name is required." };
@@ -52,8 +51,8 @@ export async function createAuthority(
     return { error: "Signature must be a PNG file." };
   }
 
-  const slug = slugInput ? slugify(slugInput) : slugify(fullName);
-  if (!slug) return { error: "Could not derive a slug from the name — set one explicitly." };
+  const slug = slugify(fullName);
+  if (!slug) return { error: "Could not derive a link from that name — use at least one letter or number." };
 
   const admin = createAdminSupabase();
 

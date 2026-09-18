@@ -8,6 +8,7 @@ const NAV: SidebarNavItem[] = [
   { href: "/admin/team-leaders", label: "Team Leaders", icon: "network" },
   { href: "/admin/blog", label: "Blog", icon: "blog" },
   { href: "/admin/team", label: "Team", icon: "people" },
+  { href: "/admin/agent-nominations/authorities", label: "Party Agents", icon: "election" },
 ];
 
 export function AdminSidebar({ email }: { email?: string }) {
