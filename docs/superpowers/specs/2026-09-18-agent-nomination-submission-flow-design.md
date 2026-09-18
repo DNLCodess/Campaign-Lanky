@@ -64,6 +64,7 @@ A read-only component laying out the same fields visually close to the official 
 - Photo file: `image/jpeg`/`image/png`, max 5MB before compression (compressed further client-side before upload).
 - Polling Unit Code: guaranteed correct by construction (chosen from `constituency_geo`, not typed) — no regex needed.
 - Signature: non-empty canvas required to advance past the signature step and to submit.
+- Bot protection (PRD §8): a honeypot field — a hidden `website` input real users never see or fill. If `submitNomination` receives a non-empty value for it, it returns a generic error with no DB writes and no file uploads. No CAPTCHA dependency added for v1; this is the PRD's own "simple CAPTCHA or honeypot field" suggestion, and a honeypot needs no third-party service.
 
 ## File structure (new files, beyond what's listed under Route & page structure above)
 
