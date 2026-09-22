@@ -373,25 +373,41 @@ export function SelectField({
   const disabled = Boolean(disabledReason);
   return (
     <Field label={label} htmlFor={id} optional={optional} helper={helper} error={error}>
-      <select
-        id={id}
-        name={name}
-        required={!optional}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputClass}
-      >
-        <option value="" disabled={!optional && !disabledReason}>
-          {disabledReason ?? placeholder}
-        </option>
-        {!disabled &&
-          options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-      </select>
+      <div className="relative">
+        <select
+          id={id}
+          name={name}
+          required={!optional}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputClass + " appearance-none pr-10"}
+        >
+          <option value="" disabled={!optional && !disabledReason}>
+            {disabledReason ?? placeholder}
+          </option>
+          {!disabled &&
+            options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+        </select>
+        <svg
+          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
     </Field>
   );
 }
