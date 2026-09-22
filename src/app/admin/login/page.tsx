@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { Suspense, useActionState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { login, type LoginState } from "@/app/admin/actions";
 import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components/form";
@@ -8,8 +9,18 @@ import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components
 const initial: LoginState = {};
 
 export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <AdminLoginForm />
+    </Suspense>
+  );
+}
+
+function AdminLoginForm() {
   const [state, formAction, isPending] = useActionState(login, initial);
   const formRef = useRef<HTMLFormElement>(null);
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const submit = () => {
     if (!isPending) formRef.current?.requestSubmit();
   };
@@ -28,6 +39,7 @@ export default function AdminLoginPage() {
         <p className="mt-1 text-sm text-text-muted">Sign in with your campaign team account.</p>
 
         <form ref={formRef} action={formAction} className="mt-6 space-y-4">
+          {next && <input type="hidden" name="next" value={next} />}
           {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
           <TextField
             name="email"

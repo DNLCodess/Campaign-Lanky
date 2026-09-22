@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
@@ -58,6 +59,13 @@ export async function getAdminUser(): Promise<User | null> {
 /** Guard for protected admin pages — redirects to login when not an admin. */
 export async function requireAdmin(): Promise<User> {
   const user = await getAdminUser();
-  if (!user) redirect("/admin/login");
+  if (!user) {
+    const h = await headers();
+    const current = h.get("x-pathname");
+    // Only /admin paths are ever worth returning to, and this doubles as
+    // the open-redirect guard when the login action reads it back.
+    const next = current && current.startsWith("/admin") && current !== "/admin/login" ? current : null;
+    redirect(next ? `/admin/login?next=${encodeURIComponent(next)}` : "/admin/login");
+  }
   return user;
 }

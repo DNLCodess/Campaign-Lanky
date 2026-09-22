@@ -29,7 +29,12 @@ export async function login(
     return { error: "This account is not authorised for admin access." };
   }
 
-  redirect("/admin");
+  // `next` came from the login page's own hidden field, sourced from the
+  // query string requireAdmin() built — validate again here rather than
+  // trusting it, since it still passed through client-controlled form data.
+  const next = String(formData.get("next") ?? "");
+  const isSafeNext = next.startsWith("/admin") && next !== "/admin/login";
+  redirect(isSafeNext ? next : "/admin");
 }
 
 export async function logout(): Promise<void> {

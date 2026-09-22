@@ -40,6 +40,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Carried through to requireAdmin() (via next/headers' headers()) so an
+  // unauthenticated visit to a deep admin page can redirect back to that
+  // same page after login, not just to /admin.
+  request.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
