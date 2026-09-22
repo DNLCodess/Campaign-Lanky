@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckboxField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
 import { CONSTITUENCY_STATE } from "@/lib/agents/constants";
+import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export function PreviewStep({
   draft,
@@ -58,7 +59,7 @@ export function PreviewStep({
           <dd className="text-text">{draft.ward}</dd>
           <dt>Polling Unit</dt>
           <dd className="text-text">
-            {draft.pollingUnitCode} ({draft.pollingUnitName})
+            {formatPollingUnitCode(draft.pollingUnitCode)} ({draft.pollingUnitName})
           </dd>
         </dl>
         <div className="mt-4 flex gap-4">

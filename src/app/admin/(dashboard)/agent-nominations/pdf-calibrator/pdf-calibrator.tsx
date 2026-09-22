@@ -111,6 +111,13 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
     x: 176.8,
     y: 237.3,
   },
+  "textFields.collationAgentDetail": {
+    kind: "text",
+    label: "For Collation Agents (box)",
+    sample: "Polling Unit",
+    x: 350,
+    y: 210,
+  },
   "textFields.attestationName": {
     kind: "text",
     label: "Attestation Name",
@@ -454,16 +461,21 @@ export function PdfCalibrator() {
               );
             }
 
-            // box (photo / signature)
+            // box (photo / signature). pdf-lib's drawImage treats (x,y) as
+            // the BOTTOM-left corner and extends upward by `height` — so the
+            // box's pixel-top edge is at y+height, not y. (Previously this
+            // used `top` directly here, which put the overlay a full
+            // `height` too low on screen relative to the real PDF output.)
             const widthPx = ptToPx(f.width ?? 0);
             const heightPx = ptToPx(f.height ?? 0);
+            const boxTop = yPtToTopPx(f.y + (f.height ?? 0));
             return (
               <div
                 key={id}
                 onPointerDown={onPointerDown(id)}
                 title={f.label}
                 className={`absolute flex cursor-move items-center justify-center bg-green-500/10 text-[10px] text-green-700 ${ring}`}
-                style={{ left, top, width: widthPx, height: heightPx }}
+                style={{ left, top: boxTop, width: widthPx, height: heightPx }}
               >
                 {f.label}
               </div>

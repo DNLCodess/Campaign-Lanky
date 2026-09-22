@@ -17,7 +17,7 @@ export const CHECKBOXES = {
   agentFor: {
     pollingUnit: { x: 193.5, y: 639.9 },
     wardCollation: { x: 278.1, y: 639.9 },
-    lgaCollation: { x: 349.2, y: 639.9 },
+    lgaCollation: { x: 353.57, y: 639.96 },
     stateCollation: { x: 439.0, y: 639.9 },
     nationalCollation: { x: 536.6, y: 639.9 },
     stateConstCollation: { x: 264.6, y: 624.5 },
@@ -31,22 +31,28 @@ export const CHECKBOXES = {
 } as const;
 
 export const TEXT_FIELDS = {
-  formNo: { x: 487.8, y: 601.1 },
+  formNo: { x: 513.7, y: 601.18 },
   firstName: { x: 150.4, y: 568.5 },
   otherNames: { x: 150.4, y: 544.5 },
   surname: { x: 150.4, y: 520.5 },
-  phoneNumber: { x: 150.4, y: 462.9 },
-  emailAddress: { x: 150.4, y: 438.9 },
+  phoneNumber: { x: 151.64, y: 457.21 },
+  emailAddress: { x: 152.48, y: 432 },
   meansOfId: { x: 152.8, y: 395.7 },
-  state: { x: 104.4, y: 308.3 },
-  lga: { x: 319.4, y: 308.3 },
-  registrationArea: { x: 176.8, y: 285.3 },
-  pollingUnitCode: { x: 176.8, y: 260.3 },
-  pollingUnitName: { x: 176.8, y: 237.3 },
-  attestationName: { x: 103.4, y: 153.3 },
-  attestationDate: { x: 415.4, y: 128.3 },
-  authorisedNominatorName: { x: 103.4, y: 57.3 },
-  authorisedNominatorDate: { x: 415.4, y: 32.3 },
+  state: { x: 109.1, y: 304.97 },
+  lga: { x: 334.73, y: 304.09 },
+  registrationArea: { x: 198.85, y: 281.39 },
+  pollingUnitCode: { x: 180.9, y: 258.17 },
+  pollingUnitName: { x: 179.95, y: 233.18 },
+  // The template's "For Collation Agents (Please indicate: Ward/LGA/...)"
+  // box — this platform only nominates Polling Unit Agents, so
+  // pdf-generate.ts always writes "Polling Unit" here, mirroring the
+  // always-checked agentFor.pollingUnit checkbox. Position is an initial
+  // guess pending calibration — nudge it via the PDF calibrator dev tool.
+  collationAgentDetail: { x: 350, y: 210 },
+  attestationName: { x: 113.74, y: 149.27 },
+  attestationDate: { x: 451.83, y: 123.27 },
+  authorisedNominatorName: { x: 114.03, y: 64.57 },
+  authorisedNominatorDate: { x: 453.24, y: 36.47 },
 } as const;
 
 export const PHOTO_BOX = { x: 459.8, y: 484.3, width: 93.1, height: 100.8 } as const;

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { SelectField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
 import type { GeoRow } from "@/lib/portal/geo";
+import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export function LocationStep({
   draft,
@@ -51,7 +52,10 @@ export function LocationStep({
           const pu = pollingUnits.find((p) => p.pu_code === v);
           onChange({ pollingUnitCode: v, pollingUnitName: pu?.pu_name ?? "" });
         }}
-        options={pollingUnits.map((p) => ({ value: p.pu_code, label: `${p.pu_code} (${p.pu_name})` }))}
+        options={pollingUnits.map((p) => ({
+          value: p.pu_code,
+          label: `${formatPollingUnitCode(p.pu_code)} (${p.pu_name})`,
+        }))}
         placeholder="Select polling unit"
         disabledReason={draft.ward ? undefined : "Select a ward first"}
       />

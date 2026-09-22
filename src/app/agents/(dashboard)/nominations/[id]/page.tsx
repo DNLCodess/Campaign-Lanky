@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCandidateSession } from "@/lib/agents/session";
 import { getCandidateNomination, getNominationFiles } from "@/lib/agents/nominations";
 import { agentsPath } from "@/lib/agents/routes";
+import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export default async function NominationDetailPage({
         <Field label="Ward" value={String(nomination.ward)} />
         <Field
           label="Polling Unit"
-          value={`${nomination.polling_unit_code} (${nomination.polling_unit_name})`}
+          value={`${formatPollingUnitCode(nomination.polling_unit_code)} (${nomination.polling_unit_name})`}
         />
       </dl>
 

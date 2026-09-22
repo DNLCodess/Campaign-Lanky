@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCandidateSession } from "@/lib/agents/session";
 import { listCandidateNominations, countCandidateNominations } from "@/lib/agents/nominations";
 import { agentsPath } from "@/lib/agents/routes";
+import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +124,7 @@ export default async function AgentsDashboardPage({
                   </td>
                   <td className="px-4 py-3 align-top">{r.phone}</td>
                   <td className="px-4 py-3 align-top">
-                    {r.polling_unit_code} ({r.polling_unit_name})
+                    {formatPollingUnitCode(r.polling_unit_code)} ({r.polling_unit_name})
                   </td>
                   <td className="px-4 py-3 align-top">{when(r.created_at)}</td>
                   <td className="px-4 py-3 align-top text-right">
@@ -158,7 +159,7 @@ export default async function AgentsDashboardPage({
               <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3 text-xs text-text-muted">
                 <p>{r.phone}</p>
                 <p>
-                  {r.polling_unit_code} ({r.polling_unit_name})
+                  {formatPollingUnitCode(r.polling_unit_code)} ({r.polling_unit_name})
                 </p>
                 <p>{when(r.created_at)}</p>
               </div>

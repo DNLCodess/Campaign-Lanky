@@ -5,6 +5,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { CHECKBOXES, TEXT_FIELDS, PHOTO_BOX, SIGNATURE_BOXES } from "@/lib/agents/pdf-template/form-template";
 import type { ElectionType } from "@/lib/agents/constants";
+import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export type GeneratePdfInput = {
   electionType: ElectionType;
@@ -90,11 +91,23 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   const page = doc.getPages()[0];
   const fontBytes = await readFile(FONT_PATH);
   const font = await doc.embedFont(fontBytes);
-  const fontSize = 10;
+  const fontSize = 12;
 
-  function text(value: string, point: { x: number; y: number }) {
+  // `maxWidth` (pt): the printed box a value must stay inside. Most fields
+  // are short/bounded enough that this never engages (matches the sizing
+  // already verified against real submissions), but a long polling unit
+  // name at this larger font size was overflowing its box — this shrinks
+  // that one value (and anything else long) down to fit, the same way
+  // embedded images are already scaled to fit their boxes, rather than
+  // drawing text off the edge of the printed line.
+  function text(value: string, point: { x: number; y: number }, maxWidth?: number) {
     if (!value) return;
-    page.drawText(value, { x: point.x, y: point.y, size: fontSize, font, color: rgb(0, 0, 0) });
+    let size = fontSize;
+    if (maxWidth) {
+      const width = font.widthOfTextAtSize(value, size);
+      if (width > maxWidth) size = Math.max(6, size * (maxWidth / width));
+    }
+    page.drawText(value, { x: point.x, y: point.y, size, font, color: rgb(0, 0, 0) });
   }
   function check(point: { x: number; y: number }) {
     // CHECKBOXES coordinates are each box's own center (measured directly
@@ -130,23 +143,27 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   check(CHECKBOXES.gender[input.gender]);
 
   text(String(input.formNo), TEXT_FIELDS.formNo);
-  text(input.firstName, TEXT_FIELDS.firstName);
-  text(input.otherNames, TEXT_FIELDS.otherNames);
-  text(input.surname, TEXT_FIELDS.surname);
-  text(input.phone, TEXT_FIELDS.phoneNumber);
-  text(input.email, TEXT_FIELDS.emailAddress);
-  text(input.meansOfId, TEXT_FIELDS.meansOfId);
-  text(input.state, TEXT_FIELDS.state);
-  text(input.lga, TEXT_FIELDS.lga);
+  text(input.firstName, TEXT_FIELDS.firstName, 295);
+  text(input.otherNames, TEXT_FIELDS.otherNames, 295);
+  text(input.surname, TEXT_FIELDS.surname, 295);
+  text(input.phone, TEXT_FIELDS.phoneNumber, 400);
+  text(input.email, TEXT_FIELDS.emailAddress, 400);
+  text(input.meansOfId, TEXT_FIELDS.meansOfId, 400);
+  text(input.state, TEXT_FIELDS.state, 180);
+  text(input.lga, TEXT_FIELDS.lga, 250);
   text(String(input.ward), TEXT_FIELDS.registrationArea);
-  text(input.pollingUnitCode, TEXT_FIELDS.pollingUnitCode);
-  text(input.pollingUnitName, TEXT_FIELDS.pollingUnitName);
+  text(formatPollingUnitCode(input.pollingUnitCode), TEXT_FIELDS.pollingUnitCode, 250);
+  text(input.pollingUnitName, TEXT_FIELDS.pollingUnitName, 400);
+  // This platform only ever nominates Polling Unit Agents (the checkbox
+  // above is always ticked, never a collation role), so this is always the
+  // same fixed value — not sourced from submission data.
+  text("Polling Unit", TEXT_FIELDS.collationAgentDetail);
 
   const fullName = [input.firstName, input.otherNames, input.surname].filter(Boolean).join(" ");
   const dateStr = formatDate(input.submissionDate);
-  text(fullName, TEXT_FIELDS.attestationName);
+  text(fullName, TEXT_FIELDS.attestationName, 300);
   text(dateStr, TEXT_FIELDS.attestationDate);
-  text(input.authorizedNominatorName, TEXT_FIELDS.authorisedNominatorName);
+  text(input.authorizedNominatorName, TEXT_FIELDS.authorisedNominatorName, 300);
   text(dateStr, TEXT_FIELDS.authorisedNominatorDate);
 
   await image(input.photoBytes, PHOTO_BOX);
