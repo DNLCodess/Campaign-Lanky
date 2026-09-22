@@ -24,26 +24,32 @@ const AGENTS_HOSTS = ["agents.votelanky.com", "agents.localhost"];
 export async function proxy(request: NextRequest) {
   const hostname = (request.headers.get("host") ?? "").split(":")[0];
 
+  // Carried through to requireAdmin()/requireCandidateSession() (via
+  // next/headers' headers()) so an unauthenticated visit to a deep page can
+  // redirect back to that same page after login, not just to a bare
+  // dashboard root. Captured *before* any rewrite below, so its value is
+  // always the browser-facing path (bare on the real agents/portal hosts,
+  // /agents- or /portal-prefixed in local dev where there's no subdomain
+  // rewrite) — exactly what agentsPath()-style links already produce, so it
+  // can be handed straight back to redirect() without translation.
+  request.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
+
   if (PORTAL_HOSTS.includes(hostname) && !request.nextUrl.pathname.startsWith("/portal")) {
     const url = request.nextUrl.clone();
     url.pathname = `/portal${request.nextUrl.pathname}`;
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, { request });
   }
 
   if (AGENTS_HOSTS.includes(hostname) && !request.nextUrl.pathname.startsWith("/agents")) {
     const url = request.nextUrl.clone();
     url.pathname = `/agents${request.nextUrl.pathname}`;
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, { request });
   }
 
   if (!request.nextUrl.pathname.startsWith("/admin")) {
-    return NextResponse.next();
+    return NextResponse.next({ request });
   }
 
-  // Carried through to requireAdmin() (via next/headers' headers()) so an
-  // unauthenticated visit to a deep admin page can redirect back to that
-  // same page after login, not just to /admin.
-  request.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

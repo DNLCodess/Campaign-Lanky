@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { getClientIp, isLoginRateLimited, recordLoginAttempt } from "@/lib/agents/rate-limit";
-import { agentsPath } from "@/lib/agents/routes";
+import { agentsPath, safeAgentsNext } from "@/lib/agents/routes";
 
 export type AgentActionState = { error?: string };
 
@@ -45,7 +45,13 @@ export async function loginCandidate(
   }
 
   await recordLoginAttempt(ip, email, true);
-  redirect(agentsPath("/"));
+
+  // `next` came from the login page's own hidden field, sourced from the
+  // query string requireCandidateSession() built — validate again here
+  // rather than trusting it, since it still passed through client-controlled
+  // form data.
+  const next = safeAgentsNext(String(formData.get("next") ?? ""));
+  redirect(next ?? agentsPath("/"));
 }
 
 export async function logoutCandidate(): Promise<void> {

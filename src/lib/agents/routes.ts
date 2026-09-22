@@ -22,3 +22,18 @@ export const AGENTS_BASE = process.env.NEXT_PUBLIC_AGENTS_BASE ?? "";
 export function agentsPath(path: string): string {
   return `${AGENTS_BASE}${path}`;
 }
+
+/**
+ * Validates a `?next=` redirect target before it's used (by
+ * requireCandidateSession()'s login redirect, and again by loginCandidate()
+ * before honouring it): must be a same-origin relative path, not the login
+ * page itself. The leading-`//` check matters even though `next.startsWith`
+ * elsewhere in this codebase gets away without it — unlike a fixed-prefix
+ * check (e.g. "/admin"), a bare-path check here has nothing to rule out a
+ * protocol-relative "//evil.com" value, which browsers resolve to a
+ * different host.
+ */
+export function safeAgentsNext(next: string | null | undefined): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next === agentsPath("/login") ? null : next;
+}

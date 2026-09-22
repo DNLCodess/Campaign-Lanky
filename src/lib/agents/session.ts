@@ -1,9 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/auth-server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { ElectionType } from "@/lib/agents/constants";
+import { agentsPath, safeAgentsNext } from "@/lib/agents/routes";
 
 export type CandidateSession = {
   id: string;
@@ -51,7 +53,11 @@ export const getCandidateSession = cache(async (): Promise<CandidateSession | nu
 /** Guard for a candidate-only page — redirects to login if not signed in. */
 export async function requireCandidateSession(): Promise<CandidateSession> {
   const session = await getCandidateSession();
-  if (!session) redirect("/agents/login");
+  if (!session) {
+    const h = await headers();
+    const next = safeAgentsNext(h.get("x-pathname"));
+    redirect(next ? `${agentsPath("/login")}?next=${encodeURIComponent(next)}` : agentsPath("/login"));
+  }
   return session;
 }
 
