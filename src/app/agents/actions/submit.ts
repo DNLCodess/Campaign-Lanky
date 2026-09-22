@@ -199,6 +199,8 @@ export async function submitNomination(
       pollingUnitName,
       photoBytes,
       signatureBytes,
+      idFileBytes: pvcBytes,
+      idFileContentType: pvcFile.type as "image/jpeg" | "image/png" | "application/pdf",
       authorizedNominatorName: nominator.full_name,
       authorizedNominatorSignatureBytes: await downloadSignature(admin, nominator.signature_storage_path),
       submissionDate: new Date(),
