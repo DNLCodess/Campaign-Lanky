@@ -76,7 +76,7 @@ export function NominationWizard({
   }, [actionState.referenceId, slug]);
 
   if (actionState.referenceId) {
-    return <Confirmation />;
+    return <Confirmation candidateOffice={candidateOffice} />;
   }
 
   const step: Step = STEPS[stepIndex];
