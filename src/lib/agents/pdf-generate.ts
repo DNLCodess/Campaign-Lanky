@@ -91,7 +91,7 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   const page = doc.getPages()[0];
   const fontBytes = await readFile(FONT_PATH);
   const font = await doc.embedFont(fontBytes);
-  const fontSize = 12;
+  const fontSize = 10;
 
   // `maxWidth` (pt): the printed box a value must stay inside. Most fields
   // are short/bounded enough that this never engages (matches the sizing
