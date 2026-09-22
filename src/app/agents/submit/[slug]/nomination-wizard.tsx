@@ -76,7 +76,7 @@ export function NominationWizard({
   }, [actionState.referenceId, slug]);
 
   if (actionState.referenceId) {
-    return <Confirmation referenceId={actionState.referenceId} />;
+    return <Confirmation />;
   }
 
   const step: Step = STEPS[stepIndex];
