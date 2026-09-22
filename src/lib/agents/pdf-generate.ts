@@ -1,7 +1,8 @@
 import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { CHECKBOXES, TEXT_FIELDS, PHOTO_BOX, SIGNATURE_BOXES } from "@/lib/agents/pdf-template/form-template";
 import type { ElectionType } from "@/lib/agents/constants";
 
@@ -33,6 +34,15 @@ const TEMPLATE_PATH = path.join(
   process.cwd(),
   "src/lib/agents/pdf-template/party-agent-nomination-form.pdf",
 );
+
+// The official Notice template's pre-printed text is set in Calibri
+// (confirmed via `pdffonts` on the source PDF). Calibri itself is a
+// Microsoft-licensed font we can't redistribute, so filled-in text uses
+// Carlito — a free, metrically-compatible substitute for Calibri (the same
+// one LibreOffice/Linux use as a drop-in Calibri replacement) — so typed
+// values visually match the form's own labels instead of standing out in a
+// different font family.
+const FONT_PATH = path.join(process.cwd(), "src/lib/agents/pdf-template/fonts/Carlito-Regular.ttf");
 
 /** ElectionType values are snake_case; CHECKBOXES.electionType keys are camelCase. */
 const ELECTION_TYPE_CHECKBOX_KEY: Record<ElectionType, keyof typeof CHECKBOXES.electionType> = {
@@ -76,8 +86,10 @@ async function appendIdPage(
 export async function generateNominationPdf(input: GeneratePdfInput): Promise<Uint8Array> {
   const templateBytes = await readFile(TEMPLATE_PATH);
   const doc = await PDFDocument.load(templateBytes);
+  doc.registerFontkit(fontkit);
   const page = doc.getPages()[0];
-  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBytes = await readFile(FONT_PATH);
+  const font = await doc.embedFont(fontBytes);
   const fontSize = 10;
 
   function text(value: string, point: { x: number; y: number }) {
@@ -85,7 +97,21 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
     page.drawText(value, { x: point.x, y: point.y, size: fontSize, font, color: rgb(0, 0, 0) });
   }
   function check(point: { x: number; y: number }) {
-    page.drawText("X", { x: point.x + 1, y: point.y, size: fontSize, font, color: rgb(0, 0, 0) });
+    // CHECKBOXES coordinates are each box's own center (measured directly
+    // off the template). drawText positions a glyph's baseline-left corner,
+    // not its visual center, so without this the "X" renders shifted up and
+    // right of the box it's meant to mark. Center the glyph on the point
+    // instead: half its advance width horizontally, half its cap-height-ish
+    // ascent vertically.
+    const glyphWidth = font.widthOfTextAtSize("X", fontSize);
+    const glyphHeight = font.heightAtSize(fontSize, { descender: false });
+    page.drawText("X", {
+      x: point.x - glyphWidth / 2,
+      y: point.y - glyphHeight / 2,
+      size: fontSize,
+      font,
+      color: rgb(0, 0, 0),
+    });
   }
   async function image(bytes: Uint8Array, box: { x: number; y: number; width: number; height: number }) {
     const isPng = bytes[0] === 0x89;

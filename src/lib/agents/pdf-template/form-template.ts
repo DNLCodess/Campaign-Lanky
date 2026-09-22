@@ -1,26 +1,32 @@
 export const FORM_PAGE = { widthPt: 595.3, heightPt: 841.9 };
 
+// Every checkbox coordinate below is the checkbox square's own center,
+// re-measured directly off the blank template via connected-component
+// detection (each box's actual pixel bounding box, converted back to PDF
+// points) rather than hand-estimated. Paired with pdf-generate.ts's check()
+// centering the "X" glyph on that point (not drawing it baseline-left from
+// it), the mark lands inside the box instead of floating above-right of it.
 export const CHECKBOXES = {
   electionType: {
-    presidential: { x: 196.3, y: 655.7 },
-    governorship: { x: 275.0, y: 655.7 },
-    senatorial: { x: 343.2, y: 655.7 },
-    houseOfReps: { x: 433.9, y: 655.7 },
-    houseOfAssembly: { x: 546.2, y: 655.7 },
+    presidential: { x: 193.5, y: 654.9 },
+    governorship: { x: 272.3, y: 654.9 },
+    senatorial: { x: 343.3, y: 654.9 },
+    houseOfReps: { x: 433.1, y: 654.9 },
+    houseOfAssembly: { x: 545.8, y: 654.9 },
   },
   agentFor: {
-    pollingUnit: { x: 196.3, y: 638.9 },
-    wardCollation: { x: 277.9, y: 638.9 },
-    lgaCollation: { x: 353.3, y: 638.9 },
-    stateCollation: { x: 438.7, y: 638.9 },
-    nationalCollation: { x: 541.9, y: 638.9 },
-    stateConstCollation: { x: 265.0, y: 624.0 },
-    fedConstCollation: { x: 406.1, y: 624.0 },
-    senDistCollation: { x: 541.4, y: 624.0 },
+    pollingUnit: { x: 193.5, y: 639.9 },
+    wardCollation: { x: 278.1, y: 639.9 },
+    lgaCollation: { x: 349.2, y: 639.9 },
+    stateCollation: { x: 439.0, y: 639.9 },
+    nationalCollation: { x: 536.6, y: 639.9 },
+    stateConstCollation: { x: 264.6, y: 624.5 },
+    fedConstCollation: { x: 406.4, y: 624.5 },
+    senDistCollation: { x: 540.9, y: 624.5 },
   },
   gender: {
-    male: { x: 257.8, y: 501.1 },
-    female: { x: 361.0, y: 501.1 },
+    male: { x: 258.8, y: 501.0 },
+    female: { x: 363.1, y: 501.0 },
   },
 } as const;
 
