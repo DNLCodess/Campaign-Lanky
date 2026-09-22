@@ -30,7 +30,7 @@ export function IdentificationStep({
       <SelectField
         name="means_of_id"
         label="Means of ID"
-        helper="PVC is required by the Notice — only use another ID if you don't yet have your PVC"
+        helper="PVC is required by the Notice. Only use another ID if you don't yet have your PVC"
         value={draft.meansOfId}
         onChange={(v) => onChange({ meansOfId: v })}
         options={MEANS_OF_ID_OPTIONS}

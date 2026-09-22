@@ -63,7 +63,7 @@ export async function submitNomination(
     return { error: GENERIC_ERROR };
   }
   if (!nominator) {
-    return { error: "Nominations aren't open yet — the Authorised Nominator hasn't been set up. Contact the administrator." };
+    return { error: "Nominations aren't open yet. The Authorised Nominator hasn't been set up. Contact the administrator." };
   }
 
   const firstName = String(formData.get("first_name") ?? "").trim();

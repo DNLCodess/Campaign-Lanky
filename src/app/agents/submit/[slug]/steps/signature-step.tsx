@@ -13,7 +13,7 @@ export function SignatureStep({
     <div className="space-y-3">
       {signatureDataUrl && (
         <p className="text-xs text-accent">
-          You&apos;ve already signed. The box below is blank until you draw again — only redraw if you want to
+          You&apos;ve already signed. The box below is blank until you draw again; only redraw if you want to
           change your signature.
         </p>
       )}

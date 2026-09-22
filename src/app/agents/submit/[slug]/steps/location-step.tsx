@@ -51,7 +51,7 @@ export function LocationStep({
           const pu = pollingUnits.find((p) => p.pu_code === v);
           onChange({ pollingUnitCode: v, pollingUnitName: pu?.pu_name ?? "" });
         }}
-        options={pollingUnits.map((p) => ({ value: p.pu_code, label: `${p.pu_code} — ${p.pu_name}` }))}
+        options={pollingUnits.map((p) => ({ value: p.pu_code, label: `${p.pu_code} (${p.pu_name})` }))}
         placeholder="Select polling unit"
         disabledReason={draft.ward ? undefined : "Select a ward first"}
       />

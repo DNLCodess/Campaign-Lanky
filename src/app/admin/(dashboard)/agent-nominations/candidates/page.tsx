@@ -50,7 +50,7 @@ export default async function AgentNominationCandidatesPage() {
               <p className="font-medium text-text">{c.full_name}</p>
               <p className="text-sm text-text-muted">{c.email}</p>
               <p className="mt-1 text-sm text-text-muted">
-                {c.office} — {ELECTION_TYPE_LABELS[c.election_type as ElectionType]}
+                {c.office} ({ELECTION_TYPE_LABELS[c.election_type as ElectionType]})
               </p>
               <p className="mt-1 font-mono text-xs text-text-muted">
                 /agents/submit/{c.slug}

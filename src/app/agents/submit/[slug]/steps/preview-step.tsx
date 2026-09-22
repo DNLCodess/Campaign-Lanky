@@ -21,8 +21,8 @@ export function PreviewStep({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // Genuine external-system sync (Blob URL lifecycle), not derivable state
-    // — createObjectURL/revokeObjectURL must pair inside an effect.
+    // Genuine external-system sync (Blob URL lifecycle), not derivable state:
+    // createObjectURL/revokeObjectURL must pair inside an effect.
     if (!photoFile) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoUrl(null);
@@ -38,7 +38,7 @@ export function PreviewStep({
   return (
     <div className="space-y-5">
       <div className="rounded-brand border border-border bg-surface/40 p-4 text-sm">
-        <p className="font-medium text-text">{electionTypeLabel} — Polling Unit Agent</p>
+        <p className="font-medium text-text">{electionTypeLabel}: Polling Unit Agent</p>
         <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-text-muted">
           <dt>Name</dt>
           <dd className="text-text">{fullName}</dd>
@@ -47,7 +47,7 @@ export function PreviewStep({
           <dt>Phone</dt>
           <dd className="text-text">{draft.phone}</dd>
           <dt>Email</dt>
-          <dd className="text-text">{draft.email || "—"}</dd>
+          <dd className="text-text">{draft.email || "Not provided"}</dd>
           <dt>Means of ID</dt>
           <dd className="text-text">{draft.meansOfId}</dd>
           <dt>State</dt>
@@ -58,7 +58,7 @@ export function PreviewStep({
           <dd className="text-text">{draft.ward}</dd>
           <dt>Polling Unit</dt>
           <dd className="text-text">
-            {draft.pollingUnitCode} — {draft.pollingUnitName}
+            {draft.pollingUnitCode} ({draft.pollingUnitName})
           </dd>
         </dl>
         <div className="mt-4 flex gap-4">

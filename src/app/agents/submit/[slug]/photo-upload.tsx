@@ -77,7 +77,7 @@ export function PhotoUpload({
       ctx.drawImage(bitmap, 0, 0);
       if (!checkRedBackground(canvas)) {
         setWarning(
-          "Background does not appear red — the Notice requires a red-background photo. You can still submit; an admin will review it.",
+          "Background does not appear red. The Notice requires a red-background photo. You can still submit; an admin will review it.",
         );
       }
     }

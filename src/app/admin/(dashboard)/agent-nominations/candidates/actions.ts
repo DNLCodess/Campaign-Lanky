@@ -41,7 +41,7 @@ export async function createCandidate(
   }
 
   const slug = slugify(fullName);
-  if (!slug) return { error: "Could not derive a link from that name — use at least one letter or number." };
+  if (!slug) return { error: "Could not derive a link from that name. Use at least one letter or number." };
 
   const admin = createAdminSupabase();
 

@@ -131,7 +131,7 @@ export function NominationWizard({
       return;
     }
     if (!pvcFile || !photoFile || !signatureDataUrl) {
-      setStepError("Something is missing — please go back and check every step.");
+      setStepError("Something is missing. Please go back and check every step.");
       return;
     }
     const signatureBlob = await (await fetch(signatureDataUrl)).blob();
@@ -165,7 +165,7 @@ export function NominationWizard({
   return (
     <div className="mx-auto max-w-lg px-5 py-10">
       <p className="text-xs font-medium uppercase tracking-wide text-accent">
-        {electionTypeLabel} — {candidateOffice}
+        {electionTypeLabel} for {candidateOffice}
       </p>
       <h1 className="mt-2 font-heading text-2xl text-text">Party Agent Nomination</h1>
       <p className="mt-1 text-sm text-text-muted">

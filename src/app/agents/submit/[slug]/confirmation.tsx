@@ -1,6 +1,6 @@
 // The reference number is still generated and stored on every nomination
 // (visible to the candidate in their dashboard if it's ever needed), but not
-// shown here — surfacing it to the nominee added a code they had no use for
+// shown here: surfacing it to the nominee added a code they had no use for
 // and only invited confusion.
 export function Confirmation({ candidateOffice }: { candidateOffice: string }) {
   return (
@@ -19,7 +19,7 @@ export function Confirmation({ candidateOffice }: { candidateOffice: string }) {
 
       <h1 className="mt-6 font-heading text-2xl text-text">Submission received</h1>
       <p className="mt-3 text-sm text-text-muted">
-        Thank you — your nomination as a Polling Unit Agent for {candidateOffice} has been submitted
+        Thank you. Your nomination as a Polling Unit Agent for {candidateOffice} has been submitted
         successfully.
       </p>
 
@@ -27,7 +27,7 @@ export function Confirmation({ candidateOffice }: { candidateOffice: string }) {
         <p className="font-medium text-text">What happens next</p>
         <ul className="mt-2 list-disc space-y-1.5 pl-4">
           <li>Your form has been generated with your details, photo, ID, and signature attached.</li>
-          <li>No further action is needed from you — the candidate&apos;s team has your submission.</li>
+          <li>No further action is needed from you. The candidate&apos;s team has your submission.</li>
           <li>If any detail was entered incorrectly, contact the person who shared this link with you.</li>
         </ul>
       </div>

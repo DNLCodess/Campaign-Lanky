@@ -56,7 +56,7 @@ export default async function NominationDetailPage({
         </p>
         {nomination.is_possible_duplicate && (
           <span className="mt-2 inline-block rounded-full bg-yellow-500/15 px-2.5 py-1 text-xs text-yellow-300">
-            Possible duplicate — matches an existing phone or email under this candidacy
+            Possible duplicate: matches an existing phone or email under this candidacy
           </span>
         )}
       </header>
@@ -64,13 +64,13 @@ export default async function NominationDetailPage({
       <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
         <Field label="Gender" value={nomination.gender === "male" ? "Male" : "Female"} />
         <Field label="Phone" value={nomination.phone} />
-        <Field label="Email" value={nomination.email ?? "—"} />
+        <Field label="Email" value={nomination.email ?? "Not provided"} />
         <Field label="Means of ID" value={nomination.means_of_id} />
         <Field label="LGA" value={nomination.lga} />
         <Field label="Ward" value={String(nomination.ward)} />
         <Field
           label="Polling Unit"
-          value={`${nomination.polling_unit_code} — ${nomination.polling_unit_name}`}
+          value={`${nomination.polling_unit_code} (${nomination.polling_unit_name})`}
         />
       </dl>
 
