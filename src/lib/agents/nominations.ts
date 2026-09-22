@@ -124,3 +124,13 @@ export async function getNominationFiles(
     }),
   );
 }
+
+/** True total of a candidate's nominations, ignoring any search/duplicate filter — used to decide whether to show export/bulk actions. */
+export async function countCandidateNominations(candidateId: string): Promise<number> {
+  const admin = createAdminSupabase();
+  const { count } = await admin
+    .from("agent_nominations")
+    .select("id", { count: "exact", head: true })
+    .eq("candidate_id", candidateId);
+  return count ?? 0;
+}

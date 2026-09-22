@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireCandidateSession } from "@/lib/agents/session";
-import { listCandidateNominations } from "@/lib/agents/nominations";
+import { listCandidateNominations, countCandidateNominations } from "@/lib/agents/nominations";
 import { agentsPath } from "@/lib/agents/routes";
 
 export const dynamic = "force-dynamic";
@@ -40,12 +40,23 @@ export default async function AgentsDashboardPage({
     pageSize: PAGE_SIZE,
   });
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const hasAnyNominations = (await countCandidateNominations(session.id)) > 0;
 
   return (
     <div>
-      <header className="border-b border-border/60 pb-6">
-        <h1 className="font-heading text-2xl text-text">Nominations</h1>
-        <p className="text-sm text-text-muted">Polling Unit Agents submitted under your candidacy.</p>
+      <header className="flex flex-col gap-3 border-b border-border/60 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl text-text">Nominations</h1>
+          <p className="text-sm text-text-muted">Polling Unit Agents submitted under your candidacy.</p>
+        </div>
+        {hasAnyNominations && (
+          <a
+            href={agentsPath("/export")}
+            className="shrink-0 rounded-brand border border-border px-3.5 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+          >
+            Export all as ZIP
+          </a>
+        )}
       </header>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
