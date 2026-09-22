@@ -27,7 +27,7 @@
 
 **Interfaces:**
 - Consumes: `createAdminSupabase` from `@/lib/supabase/admin`; `sanitizeSearch` from `@/lib/admin-tables` (generic, reused as-is — not `searchExpression`, which is typed to that file's own `AdminTableKey` union and doesn't include `agent_nominations`).
-- Produces: `type NominationListItem`, `type NominationDetail`, `type NominationFile`, `listCandidateNominations(candidateId: string, options: { q?: string; duplicatesOnly?: boolean; page: number; pageSize: number }): Promise<{ rows: NominationListItem[]; total: number }>`, `getCandidateNomination(candidateId: string, nominationId: string): Promise<NominationDetail | null>`, `getNominationFiles(nominationId: string): Promise<NominationFile[]>` — consumed by Task 2's list page and Task 3's detail page.
+- Produces: `type NominationListItem`, `type NominationDetail`, `type NominationFile`, `listCandidateNominations(candidateId: string, options: { q?: string; duplicatesOnly?: boolean; page: number; pageSize: number }): Promise<{ rows: NominationListItem[]; total: number }>`, `getCandidateNomination(candidateId: string, nominationId: string): Promise<NominationDetail | null>`, `getNominationFiles(candidateId: string, nominationId: string): Promise<NominationFile[]>` — consumed by Task 3's detail page. Takes `candidateId` and re-verifies ownership itself rather than trusting the caller already checked (a post-commit security review during execution of this plan caught the original `nominationId`-only signature as an IDOR-shaped gap — the one call site was safe in practice, but the function wasn't safe to call on its own; this block reflects the corrected signature, not the plan's original draft).
 
 - [ ] **Step 1: Write nominations.ts**
 
@@ -124,9 +124,25 @@ export async function getCandidateNomination(
   return (data as NominationDetail) ?? null;
 }
 
-/** Signed URLs (1 hour) for every file on record for a nomination. */
-export async function getNominationFiles(nominationId: string): Promise<NominationFile[]> {
+/**
+ * Signed URLs (1 hour) for every file on record for a nomination.
+ * Takes candidateId and re-verifies ownership itself (not just trusting the
+ * caller already checked) — this function must be safe to call on its own,
+ * not only safe because the one current call site happens to check first.
+ */
+export async function getNominationFiles(
+  candidateId: string,
+  nominationId: string,
+): Promise<NominationFile[]> {
   const admin = createAdminSupabase();
+  const { data: owned } = await admin
+    .from("agent_nominations")
+    .select("id")
+    .eq("id", nominationId)
+    .eq("candidate_id", candidateId)
+    .maybeSingle();
+  if (!owned) return [];
+
   const { data: files } = await admin
     .from("agent_nomination_files")
     .select("file_type, storage_path")
@@ -482,7 +498,7 @@ export default async function NominationDetailPage({
     );
   }
 
-  const files = await getNominationFiles(nomination.id);
+  const files = await getNominationFiles(session.id, nomination.id);
   const fullName = [nomination.first_name, nomination.other_names, nomination.surname]
     .filter(Boolean)
     .join(" ");
@@ -592,7 +608,7 @@ Expected: succeeds.
 
 - [ ] **Step 3: Scripted cross-candidate isolation check**
 
-This is the one property that must be verified against the real database, not just read off the code: that `getCandidateNomination`'s `.eq("candidate_id", candidateId)` actually excludes another candidate's row, not just that the UI happens to link correctly.
+This is the one property that must be verified against the real database, not just read off the code: that `getCandidateNomination`'s and `getNominationFiles`'s `.eq("candidate_id", candidateId)` scoping actually excludes another candidate's row and files, not just that the UI happens to link correctly.
 
 `src/lib/agents/nominations.ts` has `import "server-only"` at the top, which throws under plain Node/`tsx` (it's a Next.js build-time virtual module, not a real package — this bit Sub-project 2 the same way). Before running the script below, create a local no-op stub so the import resolves (never committed — `node_modules` is gitignored):
 
@@ -606,7 +622,7 @@ Then write `verify-candidate-isolation-scratch.mjs` **in the project root** (not
 
 ```js
 import { createClient } from "@supabase/supabase-js";
-import { getCandidateNomination } from "./src/lib/agents/nominations.ts";
+import { getCandidateNomination, getNominationFiles } from "./src/lib/agents/nominations.ts";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -638,13 +654,24 @@ const { data: nomination } = await admin
   })
   .select("id")
   .single();
+await admin.from("agent_nomination_files").insert({
+  nomination_id: nomination.id,
+  file_type: "pvc_copy",
+  storage_path: `nominations/${nomination.id}/pvc.jpg`,
+});
 
 const asOwner = await getCandidateNomination(userA.user.id, nomination.id);
 const asOther = await getCandidateNomination(userB.user.id, nomination.id);
-console.log("as owner (expect non-null):", asOwner ? "FOUND" : "NULL");
-console.log("as other candidate (expect NULL):", asOther ? "FOUND — BUG" : "NULL — correct");
+console.log("nomination as owner (expect non-null):", asOwner ? "FOUND" : "NULL");
+console.log("nomination as other candidate (expect NULL):", asOther ? "FOUND — BUG" : "NULL — correct");
+
+const filesAsOwner = await getNominationFiles(userA.user.id, nomination.id);
+const filesAsOther = await getNominationFiles(userB.user.id, nomination.id);
+console.log("files as owner (expect 1 row):", filesAsOwner.length);
+console.log("files as other candidate (expect 0 rows):", filesAsOther.length, filesAsOther.length > 0 ? "— BUG" : "— correct");
 
 // Cleanup
+await admin.from("agent_nomination_files").delete().eq("nomination_id", nomination.id);
 await admin.from("agent_nominations").delete().eq("id", nomination.id);
 await admin.from("nomination_candidates").delete().in("id", [userA.user.id, userB.user.id]);
 await admin.auth.admin.deleteUser(userA.user.id);
@@ -652,7 +679,7 @@ await admin.auth.admin.deleteUser(userB.user.id);
 ```
 
 Run: `npx tsx --env-file=.env.local verify-candidate-isolation-scratch.mjs`, then delete the scratch file (`rm verify-candidate-isolation-scratch.mjs`) — it's a one-off check, not permanent test code.
-Expected output: `as owner (expect non-null): FOUND` and `as other candidate (expect NULL): NULL — correct`. If the second line says `FOUND — BUG`, stop — that means `getCandidateNomination` is leaking another candidate's nomination, which is a real security bug, not a test artifact to explain away.
+Expected output: `nomination as owner (expect non-null): FOUND`, `nomination as other candidate (expect NULL): NULL — correct`, `files as owner (expect 1 row): 1`, and `files as other candidate (expect 0 rows): 0 — correct`. If either "other candidate" line reports a find, stop — that's a real cross-candidate data leak, not a test artifact to explain away. (This script already includes the fix for a real IDOR a post-commit security review caught during execution of this plan: `getNominationFiles` originally took only `nominationId`, with no ownership check of its own — see the note on its signature above.)
 
 - [ ] **Step 4: Manual smoke test**
 

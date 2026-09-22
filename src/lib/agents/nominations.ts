@@ -90,9 +90,25 @@ export async function getCandidateNomination(
   return (data as NominationDetail) ?? null;
 }
 
-/** Signed URLs (1 hour) for every file on record for a nomination. */
-export async function getNominationFiles(nominationId: string): Promise<NominationFile[]> {
+/**
+ * Signed URLs (1 hour) for every file on record for a nomination.
+ * Takes candidateId and re-verifies ownership itself (not just trusting the
+ * caller already checked) — this function must be safe to call on its own,
+ * not only safe because the one current call site happens to check first.
+ */
+export async function getNominationFiles(
+  candidateId: string,
+  nominationId: string,
+): Promise<NominationFile[]> {
   const admin = createAdminSupabase();
+  const { data: owned } = await admin
+    .from("agent_nominations")
+    .select("id")
+    .eq("id", nominationId)
+    .eq("candidate_id", candidateId)
+    .maybeSingle();
+  if (!owned) return [];
+
   const { data: files } = await admin
     .from("agent_nomination_files")
     .select("file_type, storage_path")

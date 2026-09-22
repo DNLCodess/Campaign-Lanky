@@ -37,7 +37,7 @@ export default async function NominationDetailPage({
     );
   }
 
-  const files = await getNominationFiles(nomination.id);
+  const files = await getNominationFiles(session.id, nomination.id);
   const fullName = [nomination.first_name, nomination.other_names, nomination.surname]
     .filter(Boolean)
     .join(" ");
