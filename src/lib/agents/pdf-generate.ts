@@ -22,6 +22,8 @@ export type GeneratePdfInput = {
   pollingUnitName: string;
   photoBytes: Uint8Array;
   signatureBytes: Uint8Array;
+  idFileBytes: Uint8Array;
+  idFileContentType: "image/jpeg" | "image/png" | "application/pdf";
   authorizedNominatorName: string;
   authorizedNominatorSignatureBytes: Uint8Array;
   submissionDate: Date;
@@ -45,6 +47,29 @@ function formatDate(d: Date): string {
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+/**
+ * Appends the nominee's uploaded means-of-ID document as a new final page.
+ * Images are embedded and drawn full-page (same technique as the existing
+ * photo/signature boxes). A PDF upload has only its first page copied in —
+ * multi-page ID scans (e.g. front+back) are capped at page 1 by design.
+ */
+async function appendIdPage(
+  doc: PDFDocument,
+  bytes: Uint8Array,
+  contentType: "image/jpeg" | "image/png" | "application/pdf",
+): Promise<void> {
+  if (contentType === "application/pdf") {
+    const idDoc = await PDFDocument.load(bytes);
+    const [copiedPage] = await doc.copyPages(idDoc, [0]);
+    doc.addPage(copiedPage);
+    return;
+  }
+
+  const embedded = contentType === "image/png" ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+  const page = doc.addPage([embedded.width, embedded.height]);
+  page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
 }
 
 /** Generates the pixel-mapped Party Agent Nomination Form PDF for one submission. */
@@ -102,6 +127,8 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   await image(input.signatureBytes, SIGNATURE_BOXES.specimen);
   await image(input.signatureBytes, SIGNATURE_BOXES.attestation);
   await image(input.authorizedNominatorSignatureBytes, SIGNATURE_BOXES.authorisedNominator);
+
+  await appendIdPage(doc, input.idFileBytes, input.idFileContentType);
 
   return doc.save();
 }
