@@ -114,7 +114,7 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "textFields.collationAgentDetail": {
     kind: "text",
     label: "For Collation Agents (box)",
-    sample: "Polling Unit",
+    sample: "Ward 7",
     x: 350,
     y: 210,
   },

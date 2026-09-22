@@ -154,10 +154,11 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   text(String(input.ward), TEXT_FIELDS.registrationArea);
   text(formatPollingUnitCode(input.pollingUnitCode), TEXT_FIELDS.pollingUnitCode, 250);
   text(input.pollingUnitName, TEXT_FIELDS.pollingUnitName, 400);
-  // This platform only ever nominates Polling Unit Agents (the checkbox
-  // above is always ticked, never a collation role), so this is always the
-  // same fixed value — not sourced from submission data.
-  text("Polling Unit", TEXT_FIELDS.collationAgentDetail);
+  // The template's own instruction here only lists Ward/LGA/STATE/National/
+  // State Constituency/Federal Constituency/Senatorial District — "Polling
+  // Unit" isn't one of them. Results collate upward from a Polling Unit
+  // Agent through their Ward, so this indicates the nominee's own ward.
+  text(`Ward ${input.ward}`, TEXT_FIELDS.collationAgentDetail, 200);
 
   const fullName = [input.firstName, input.otherNames, input.surname].filter(Boolean).join(" ");
   const dateStr = formatDate(input.submissionDate);
