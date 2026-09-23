@@ -27,13 +27,25 @@ export function agentsPath(path: string): string {
  * Validates a `?next=` redirect target before it's used (by
  * requireCandidateSession()'s login redirect, and again by loginCandidate()
  * before honouring it): must be a same-origin relative path, not the login
- * page itself. The leading-`//` check matters even though `next.startsWith`
- * elsewhere in this codebase gets away without it — unlike a fixed-prefix
- * check (e.g. "/admin"), a bare-path check here has nothing to rule out a
- * protocol-relative "//evil.com" value, which browsers resolve to a
- * different host.
+ * page itself.
+ *
+ * Unlike a fixed-prefix check (e.g. "/admin"), a bare-path check has nothing
+ * to rule out values a browser will reinterpret as a different host, and a
+ * simple `startsWith("//")` isn't enough: browsers treat "\" as "/" and strip
+ * tabs/newlines when parsing a URL, so "/\evil.com" and "/\t/evil.com" both
+ * become "//evil.com". So instead of pattern-matching known tricks, this
+ * resolves the value the way a browser would and requires it to stay on the
+ * same origin — plus rejects backslashes and control characters outright,
+ * since no legitimate agents route contains them.
  */
 export function safeAgentsNext(next: string | null | undefined): string | null {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  if (!next || !next.startsWith("/")) return null;
+  if (/[\\\u0000- \u007f]/.test(next)) return null;
+  try {
+    const base = "http://agents.invalid";
+    if (new URL(next, base).origin !== base) return null;
+  } catch {
+    return null;
+  }
   return next === agentsPath("/login") ? null : next;
 }
