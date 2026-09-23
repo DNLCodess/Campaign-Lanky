@@ -56,6 +56,27 @@ export const TEXT_FIELDS = {
   authorisedNominatorDate: { x: 415.51, y: 36.74 },
 } as const;
 
+// The printed box width (pt) each value must stay inside, for pdf-generate.ts's
+// shrink-to-fit. Single source of truth: the PDF calibrator dev tool reads
+// this too, so its preview shrinks long values the same way the real PDF
+// does instead of just showing them overflow. A field with no entry here is
+// short/bounded enough (a date, a ward number, a dropdown value) that it
+// never needs shrinking.
+export const TEXT_FIELD_MAX_WIDTHS: Partial<Record<keyof typeof TEXT_FIELDS, number>> = {
+  firstName: 295,
+  otherNames: 295,
+  surname: 295,
+  phoneNumber: 400,
+  emailAddress: 400,
+  meansOfId: 400,
+  state: 180,
+  lga: 250,
+  pollingUnitCode: 250,
+  pollingUnitName: 400,
+  attestationName: 300,
+  authorisedNominatorName: 300,
+};
+
 export const PHOTO_BOX = { x: 459.8, y: 484.3, width: 93.1, height: 100.8 } as const;
 
 export const SIGNATURE_BOXES = {

@@ -15,9 +15,16 @@
  * anchor (a tight-line-height box bottom-aligned near the point), not an
  * exact reproduction of pdf-lib's font-metrics baseline — close enough to
  * calibrate by eye, with the real generated PDF as the final check.
+ *
+ * Long-value handling mirrors pdf-generate.ts's shrink-to-fit (same
+ * TEXT_FIELD_MAX_WIDTHS, same proportional-shrink-with-a-6pt-floor formula),
+ * measured via Canvas2D's measureText with the same Carlito font — close
+ * enough to preview by eye, not a pixel-exact reproduction of pdf-lib's own
+ * font-metrics measurement.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TEXT_FIELD_MAX_WIDTHS } from "@/lib/agents/pdf-template/form-template";
 
 const PAGE_W_PT = 595.3;
 const PAGE_H_PT = 841.9;
@@ -81,22 +88,63 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "checkboxes.gender.male": { kind: "checkbox", label: "Gender: Male", x: 258.8, y: 501.0 },
   "checkboxes.gender.female": { kind: "checkbox", label: "Gender: Female", x: 363.1, y: 501.0 },
 
+  // Sample values are deliberately real-world worst cases, not typical
+  // ones: the longest actual polling unit name in constituency_geo (90
+  // chars), the longest actual LGA name, phone/email/name values at the
+  // exact validation caps from src/lib/agents/validation.ts (MAX_NAME_LENGTH
+  // / MAX_EMAIL_LENGTH / MAX_FULL_NAME_LENGTH), and a title-heavy Authorised
+  // Nominator name — so what you see here previews the worst a real
+  // generated PDF will ever actually show, not just a short happy-path
+  // example. Long-value shrink-to-fit isn't replicated in this preview
+  // (pdf-generate.ts's font-metrics-based shrink can't be reproduced
+  // pixel-exactly with CSS) — verify final sizing against a real generated
+  // PDF, not this overlay.
   "textFields.formNo": { kind: "text", label: "Form No.", sample: "9", x: 487.8, y: 601.1 },
-  "textFields.firstName": { kind: "text", label: "First Name", sample: "Test Nom", x: 150.4, y: 568.5 },
-  "textFields.otherNames": { kind: "text", label: "Other Names", sample: "Middle", x: 150.4, y: 544.5 },
-  "textFields.surname": { kind: "text", label: "Surname", sample: "Surname", x: 150.4, y: 520.5 },
-  "textFields.phoneNumber": { kind: "text", label: "Phone Number", sample: "08012345678", x: 150.4, y: 459.88 },
+  "textFields.firstName": {
+    kind: "text",
+    label: "First Name",
+    sample: "Oluwaseunfunmilayoadewale", // 25 chars — part of the 76-char combined worst case below
+    x: 150.4,
+    y: 568.5,
+  },
+  "textFields.otherNames": {
+    kind: "text",
+    label: "Other Names",
+    sample: "Ayodejioluwatobilobaakin", // 24 chars
+    x: 150.4,
+    y: 544.5,
+  },
+  "textFields.surname": {
+    kind: "text",
+    label: "Surname",
+    sample: "Adebayoogunlesiolatunjide", // 25 chars
+    x: 150.4,
+    y: 520.5,
+  },
+  "textFields.phoneNumber": {
+    kind: "text",
+    label: "Phone Number",
+    sample: "+2348012345678", // longest valid form the phone regex accepts (14 chars)
+    x: 150.4,
+    y: 459.88,
+  },
   "textFields.emailAddress": {
     kind: "text",
     label: "Email Address",
-    sample: "testnom@gmail.com",
+    sample: "oluwaseunfunmilayo.adewale.ayodejioluwatobiloba@gmail.com", // realistic long, 57 of 100 allowed chars
     x: 148.81,
     y: 433.12,
   },
   "textFields.meansOfId": { kind: "text", label: "Means of ID", sample: "PVC", x: 152.8, y: 395.7 },
   "textFields.state": { kind: "text", label: "State", sample: "Oyo State", x: 104.4, y: 308.3 },
-  "textFields.lga": { kind: "text", label: "LGA", sample: "Ibadan North-West", x: 326.02, y: 305.99 },
-  "textFields.registrationArea": { kind: "text", label: "Registration Area", sample: "7", x: 177.49, y: 282.06 },
+  "textFields.lga": {
+    kind: "text",
+    label: "LGA",
+    sample: "Ibadan South-West", // longest real LGA name in constituency_geo (tied with Ibadan North-West)
+    x: 326.02,
+    y: 305.99,
+  },
+  "textFields.registrationArea": { kind: "text", label: "Registration Area", sample: "99", x: 177.49, y: 282.06 },
   "textFields.pollingUnitCode": {
     kind: "text",
     label: "Polling Unit Code",
@@ -107,21 +155,28 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "textFields.pollingUnitName": {
     kind: "text",
     label: "Polling Unit Name",
-    sample: "IN FRONT OF QUEENS CINEMA, EKOTEDO I",
+    // The actual longest pu_name in constituency_geo (90 chars) — real
+    // polling unit names are DB-sourced (picked from a dropdown), not
+    // nominee-typed, so this is the true ceiling, not a synthetic one.
+    sample: "OPEN SPACE INFRONT OF SUNSHINE DIAMOND SCHOOL, FIRST POWERLINE, MECHANIC VILLAGE JUNCTION.",
     x: 176.07,
     y: 234.55,
   },
   "textFields.collationAgentDetail": {
     kind: "text",
     label: "For Collation Agents (box)",
-    sample: "Ward 7",
+    sample: "Ward 99",
     x: 350,
     y: 210,
   },
   "textFields.attestationName": {
     kind: "text",
     label: "Attestation Name",
-    sample: "Test Nom Surname",
+    // pdf-generate.ts draws this as firstName+otherNames+surname joined —
+    // same three values as above, joined the same way (76 chars, under the
+    // 80-char MAX_FULL_NAME_LENGTH cap that exists specifically because this
+    // combined box is narrower than any one of the three individually).
+    sample: "Oluwaseunfunmilayoadewale Ayodejioluwatobilobaakin Adebayoogunlesiolatunjide",
     x: 103.4,
     y: 153.3,
   },
@@ -135,7 +190,9 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "textFields.authorisedNominatorName": {
     kind: "text",
     label: "Authorised Nominator Name",
-    sample: "Atayese Tunji Sadiq (FCA)",
+    // Admin-set, not length-capped — a title-heavy real name is the
+    // realistic worst case here, not an arbitrary long string.
+    sample: "Chief (Dr.) Atayese Oluwatunji Babatunde Sadiq-Adewumi (FCA, FCIB, MNIM)",
     x: 103.18,
     y: 65.74,
   },
@@ -198,6 +255,30 @@ function pxToPt(px: number): number {
 }
 function yPtToTopPx(yPt: number): number {
   return (PAGE_H_PT - yPt) * SCALE;
+}
+
+// A fresh <canvas> per call, never persisted (module-level, no component
+// state or refs involved) — measureText is a pure, synchronous computation,
+// so this is safe to call directly during render, unlike the ref-based
+// approach React's stricter ref rules now disallow. Mirrors pdf-generate.ts's
+// text() shrink-to-fit: same TEXT_FIELD_MAX_WIDTHS, same
+// proportional-shrink-with-a-6pt-floor formula, measured with the same
+// Carlito font instead of pdf-lib's own font-metrics (close enough to
+// preview by eye — the real generated PDF is still the final check).
+function fitFontSizePx(sample: string, fieldKey: string, fontSizePx: number, fontFamily: string): number {
+  const maxWidthPt = TEXT_FIELD_MAX_WIDTHS[fieldKey as keyof typeof TEXT_FIELD_MAX_WIDTHS];
+  if (!maxWidthPt || !sample) return fontSizePx;
+  // This "use client" component still renders once server-side (SSR/RSC)
+  // before hydration takes over, where `document` doesn't exist — without
+  // this guard that initial pass crashes the whole page with a 500.
+  if (typeof document === "undefined") return fontSizePx;
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return fontSizePx;
+  ctx.font = `${fontSizePx}px ${fontFamily}`;
+  const measuredPx = ctx.measureText(sample).width;
+  const maxWidthPx = ptToPx(maxWidthPt);
+  if (measuredPx <= maxWidthPx) return fontSizePx;
+  return Math.max(ptToPx(6), fontSizePx * (maxWidthPx / measuredPx));
 }
 
 function buildExport(fields: Record<string, FieldState>, fontSize: number, fontFamily: string): string {
@@ -515,13 +596,21 @@ export function PdfCalibrator() {
             }
 
             if (f.kind === "text") {
-              const fontSizePx = ptToPx(fontSize);
+              const baseFontSizePx = ptToPx(fontSize);
+              const fieldKey = id.replace("textFields.", "");
+              // Only shrink once hydrated: the server render can't measure text
+              // (no `document`), so applying it on the first client render
+              // too would make client and server HTML disagree and trip a
+              // hydration mismatch.
+              const fontSizePx =
+                hydrated && f.sample ? fitFontSizePx(f.sample, fieldKey, baseFontSizePx, fontFamily) : baseFontSizePx;
+              const shrunk = fontSizePx < baseFontSizePx - 0.01;
               return (
                 <div
                   key={id}
                   onPointerDown={onPointerDown(id)}
-                  title={f.label}
-                  className={`absolute cursor-move whitespace-nowrap bg-blue-500/10 ${ring}`}
+                  title={shrunk ? `${f.label} (shrunk to fit — see title)` : f.label}
+                  className={`absolute cursor-move whitespace-nowrap ${shrunk ? "bg-amber-500/15" : "bg-blue-500/10"} ${ring}`}
                   style={{
                     left,
                     top: top - fontSizePx,
@@ -529,7 +618,7 @@ export function PdfCalibrator() {
                     lineHeight: `${fontSizePx}px`,
                     fontSize: fontSizePx,
                     fontFamily,
-                    color: "blue",
+                    color: shrunk ? "#b45309" : "blue",
                   }}
                 >
                   {f.sample}

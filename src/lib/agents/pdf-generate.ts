@@ -3,7 +3,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import { CHECKBOXES, TEXT_FIELDS, PHOTO_BOX, SIGNATURE_BOXES } from "@/lib/agents/pdf-template/form-template";
+import {
+  CHECKBOXES,
+  TEXT_FIELDS,
+  TEXT_FIELD_MAX_WIDTHS,
+  PHOTO_BOX,
+  SIGNATURE_BOXES,
+} from "@/lib/agents/pdf-template/form-template";
 import type { ElectionType } from "@/lib/agents/constants";
 import { formatPollingUnitCode } from "@/lib/agents/format";
 
@@ -143,17 +149,17 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   check(CHECKBOXES.gender[input.gender]);
 
   text(String(input.formNo), TEXT_FIELDS.formNo);
-  text(input.firstName, TEXT_FIELDS.firstName, 295);
-  text(input.otherNames, TEXT_FIELDS.otherNames, 295);
-  text(input.surname, TEXT_FIELDS.surname, 295);
-  text(input.phone, TEXT_FIELDS.phoneNumber, 400);
-  text(input.email, TEXT_FIELDS.emailAddress, 400);
-  text(input.meansOfId, TEXT_FIELDS.meansOfId, 400);
-  text(input.state, TEXT_FIELDS.state, 180);
-  text(input.lga, TEXT_FIELDS.lga, 250);
+  text(input.firstName, TEXT_FIELDS.firstName, TEXT_FIELD_MAX_WIDTHS.firstName);
+  text(input.otherNames, TEXT_FIELDS.otherNames, TEXT_FIELD_MAX_WIDTHS.otherNames);
+  text(input.surname, TEXT_FIELDS.surname, TEXT_FIELD_MAX_WIDTHS.surname);
+  text(input.phone, TEXT_FIELDS.phoneNumber, TEXT_FIELD_MAX_WIDTHS.phoneNumber);
+  text(input.email, TEXT_FIELDS.emailAddress, TEXT_FIELD_MAX_WIDTHS.emailAddress);
+  text(input.meansOfId, TEXT_FIELDS.meansOfId, TEXT_FIELD_MAX_WIDTHS.meansOfId);
+  text(input.state, TEXT_FIELDS.state, TEXT_FIELD_MAX_WIDTHS.state);
+  text(input.lga, TEXT_FIELDS.lga, TEXT_FIELD_MAX_WIDTHS.lga);
   text(String(input.ward), TEXT_FIELDS.registrationArea);
-  text(formatPollingUnitCode(input.pollingUnitCode), TEXT_FIELDS.pollingUnitCode, 250);
-  text(input.pollingUnitName, TEXT_FIELDS.pollingUnitName, 400);
+  text(formatPollingUnitCode(input.pollingUnitCode), TEXT_FIELDS.pollingUnitCode, TEXT_FIELD_MAX_WIDTHS.pollingUnitCode);
+  text(input.pollingUnitName, TEXT_FIELDS.pollingUnitName, TEXT_FIELD_MAX_WIDTHS.pollingUnitName);
   // The template's own instruction here only lists Ward/LGA/STATE/National/
   // State Constituency/Federal Constituency/Senatorial District — "Polling
   // Unit" isn't one of them. Results collate upward from a Polling Unit
@@ -162,9 +168,9 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
 
   const fullName = [input.firstName, input.otherNames, input.surname].filter(Boolean).join(" ");
   const dateStr = formatDate(input.submissionDate);
-  text(fullName, TEXT_FIELDS.attestationName, 300);
+  text(fullName, TEXT_FIELDS.attestationName, TEXT_FIELD_MAX_WIDTHS.attestationName);
   text(dateStr, TEXT_FIELDS.attestationDate);
-  text(input.authorizedNominatorName, TEXT_FIELDS.authorisedNominatorName, 300);
+  text(input.authorizedNominatorName, TEXT_FIELDS.authorisedNominatorName, TEXT_FIELD_MAX_WIDTHS.authorisedNominatorName);
   text(dateStr, TEXT_FIELDS.authorisedNominatorDate);
 
   await image(input.photoBytes, PHOTO_BOX);
