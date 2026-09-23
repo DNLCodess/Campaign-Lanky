@@ -9,6 +9,9 @@ import {
   isValidEmail,
   isValidFile,
   isValidPhone,
+  MAX_EMAIL_LENGTH,
+  MAX_FULL_NAME_LENGTH,
+  MAX_NAME_LENGTH,
 } from "@/lib/agents/validation";
 import { CONSTITUENCY_STATE, MEANS_OF_ID_OPTIONS, type ElectionType } from "@/lib/agents/constants";
 
@@ -83,10 +86,20 @@ export async function submitNomination(
   const signatureFile = formData.get("signature_file");
 
   if (!firstName || !surname) return { error: "First name and surname are required." };
+  if (firstName.length > MAX_NAME_LENGTH || otherNames.length > MAX_NAME_LENGTH || surname.length > MAX_NAME_LENGTH) {
+    return { error: `Names must be ${MAX_NAME_LENGTH} characters or fewer.` };
+  }
+  // generateNominationPdf draws these three joined as one attestation-name
+  // value — individually-capped fields can still combine past what that
+  // box's shrink-to-fit can save. Same join as fullName there.
+  if ([firstName, otherNames, surname].filter(Boolean).join(" ").length > MAX_FULL_NAME_LENGTH) {
+    return { error: "Full name is too long. Please shorten it." };
+  }
   if (gender !== "male" && gender !== "female") return { error: "Select a gender." };
   if (!MEANS_OF_ID_VALUES.includes(meansOfId)) return { error: "Select a valid means of ID." };
   if (!isValidPhone(phone)) return { error: "Enter a valid Nigerian phone number." };
   if (!isValidEmail(email)) return { error: "Enter a valid email address." };
+  if (email.length > MAX_EMAIL_LENGTH) return { error: `Email must be ${MAX_EMAIL_LENGTH} characters or fewer.` };
   if (!lga) return { error: "Select an LGA." };
   if (!ward || ward < 1) return { error: "Select a ward." };
   if (!pollingUnitCode || !pollingUnitName) return { error: "Select a polling unit." };

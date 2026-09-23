@@ -2,6 +2,7 @@
 
 import { TextField, SelectField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
+import { MAX_NAME_LENGTH } from "@/lib/agents/validation";
 
 const GENDER_OPTIONS = [
   { value: "male", label: "Male" },
@@ -23,6 +24,7 @@ export function BioStep({
         autoFocus
         value={draft.firstName}
         onChange={(v) => onChange({ firstName: v })}
+        maxLength={MAX_NAME_LENGTH}
       />
       <TextField
         name="other_names"
@@ -30,12 +32,14 @@ export function BioStep({
         optional
         value={draft.otherNames}
         onChange={(v) => onChange({ otherNames: v })}
+        maxLength={MAX_NAME_LENGTH}
       />
       <TextField
         name="surname"
         label="Surname"
         value={draft.surname}
         onChange={(v) => onChange({ surname: v })}
+        maxLength={MAX_NAME_LENGTH}
       />
       <SelectField
         name="gender"

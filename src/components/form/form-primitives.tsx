@@ -85,6 +85,7 @@ export function TextField({
   defaultValue,
   onChange,
   onEnter,
+  maxLength,
 }: {
   name: string;
   label: string;
@@ -99,6 +100,7 @@ export function TextField({
   defaultValue?: string;
   onChange?: (value: string) => void;
   onEnter?: () => void;
+  maxLength?: number;
 }) {
   const id = useId();
   return (
@@ -111,6 +113,7 @@ export function TextField({
         autoFocus={autoFocus}
         autoComplete={autoComplete}
         inputMode={inputMode}
+        maxLength={maxLength}
         value={onChange ? (value ?? "") : undefined}
         defaultValue={onChange ? undefined : defaultValue}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}

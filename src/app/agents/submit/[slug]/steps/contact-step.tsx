@@ -2,6 +2,7 @@
 
 import { TextField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
+import { MAX_EMAIL_LENGTH } from "@/lib/agents/validation";
 
 export function ContactStep({
   draft,
@@ -29,6 +30,7 @@ export function ContactStep({
         optional
         value={draft.email}
         onChange={(v) => onChange({ email: v })}
+        maxLength={MAX_EMAIL_LENGTH}
       />
     </div>
   );

@@ -100,7 +100,7 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "textFields.pollingUnitCode": {
     kind: "text",
     label: "Polling Unit Code",
-    sample: "30-08-07-007",
+    sample: "30/08/07/007",
     x: 177.29,
     y: 256.55,
   },
