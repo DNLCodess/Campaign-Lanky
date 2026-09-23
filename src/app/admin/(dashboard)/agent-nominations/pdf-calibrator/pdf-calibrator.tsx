@@ -17,7 +17,7 @@
  * calibrate by eye, with the real generated PDF as the final check.
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const PAGE_W_PT = 595.3;
 const PAGE_H_PT = 841.9;
@@ -52,7 +52,7 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   },
   "checkboxes.agentFor.pollingUnit": { kind: "checkbox", label: "Agent for: Polling Unit", x: 193.5, y: 639.9 },
   "checkboxes.agentFor.wardCollation": { kind: "checkbox", label: "Agent for: Ward Collation", x: 278.1, y: 639.9 },
-  "checkboxes.agentFor.lgaCollation": { kind: "checkbox", label: "Agent for: LGA Collation", x: 349.2, y: 639.9 },
+  "checkboxes.agentFor.lgaCollation": { kind: "checkbox", label: "Agent for: LGA Collation", x: 353.14, y: 640.64 },
   "checkboxes.agentFor.stateCollation": { kind: "checkbox", label: "Agent for: State Collation", x: 439.0, y: 639.9 },
   "checkboxes.agentFor.nationalCollation": {
     kind: "checkbox",
@@ -85,31 +85,31 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "textFields.firstName": { kind: "text", label: "First Name", sample: "Test Nom", x: 150.4, y: 568.5 },
   "textFields.otherNames": { kind: "text", label: "Other Names", sample: "Middle", x: 150.4, y: 544.5 },
   "textFields.surname": { kind: "text", label: "Surname", sample: "Surname", x: 150.4, y: 520.5 },
-  "textFields.phoneNumber": { kind: "text", label: "Phone Number", sample: "08012345678", x: 150.4, y: 462.9 },
+  "textFields.phoneNumber": { kind: "text", label: "Phone Number", sample: "08012345678", x: 150.4, y: 459.88 },
   "textFields.emailAddress": {
     kind: "text",
     label: "Email Address",
     sample: "testnom@gmail.com",
-    x: 150.4,
-    y: 438.9,
+    x: 148.81,
+    y: 433.12,
   },
   "textFields.meansOfId": { kind: "text", label: "Means of ID", sample: "PVC", x: 152.8, y: 395.7 },
   "textFields.state": { kind: "text", label: "State", sample: "Oyo State", x: 104.4, y: 308.3 },
-  "textFields.lga": { kind: "text", label: "LGA", sample: "Ibadan North-West", x: 319.4, y: 308.3 },
-  "textFields.registrationArea": { kind: "text", label: "Registration Area", sample: "7", x: 176.8, y: 285.3 },
+  "textFields.lga": { kind: "text", label: "LGA", sample: "Ibadan North-West", x: 326.02, y: 305.99 },
+  "textFields.registrationArea": { kind: "text", label: "Registration Area", sample: "7", x: 177.49, y: 282.06 },
   "textFields.pollingUnitCode": {
     kind: "text",
     label: "Polling Unit Code",
     sample: "30-08-07-007",
-    x: 176.8,
-    y: 260.3,
+    x: 177.29,
+    y: 256.55,
   },
   "textFields.pollingUnitName": {
     kind: "text",
     label: "Polling Unit Name",
     sample: "IN FRONT OF QUEENS CINEMA, EKOTEDO I",
-    x: 176.8,
-    y: 237.3,
+    x: 176.07,
+    y: 234.55,
   },
   "textFields.collationAgentDetail": {
     kind: "text",
@@ -130,21 +130,21 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
     label: "Attestation Date",
     sample: "22/09/2026",
     x: 415.4,
-    y: 128.3,
+    y: 123.24,
   },
   "textFields.authorisedNominatorName": {
     kind: "text",
     label: "Authorised Nominator Name",
     sample: "Atayese Tunji Sadiq (FCA)",
-    x: 103.4,
-    y: 57.3,
+    x: 103.18,
+    y: 65.74,
   },
   "textFields.authorisedNominatorDate": {
     kind: "text",
     label: "Authorised Nominator Date",
     sample: "22/09/2026",
-    x: 415.4,
-    y: 32.3,
+    x: 415.51,
+    y: 36.74,
   },
 
   photoBox: { kind: "box", label: "Photo", x: 459.8, y: 484.3, width: 93.1, height: 100.8 },
@@ -167,8 +167,8 @@ const INITIAL_FIELDS: Record<string, FieldState> = {
   "signatureBoxes.authorisedNominator": {
     kind: "box",
     label: "Signature: Authorised Nominator",
-    x: 98.4,
-    y: 15.3,
+    x: 97.79,
+    y: 18.28,
     width: 223.2,
     height: 25.9,
   },
@@ -272,6 +272,37 @@ ${sig("authorisedNominator")}
 `;
 }
 
+// Persisted across page loads in this browser only — otherwise every visit
+// (or an accidental refresh mid-drag) silently reset back to INITIAL_FIELDS,
+// making it look like nothing was ever saved. This is a convenience cache on
+// top of that, not a replacement for it: "Copy config" + applying it to
+// form-template.ts is still the only durable save.
+const STORAGE_KEY = "pdf-calibrator-state:v1";
+
+type PersistedState = {
+  fields: Record<string, FieldState>;
+  fontSize: number;
+  fontFamily: "Carlito" | "Helvetica, Arial, sans-serif";
+};
+
+function loadPersisted(): PersistedState | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedState;
+  } catch {
+    return null;
+  }
+}
+
+function savePersisted(state: PersistedState): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // best-effort only (private browsing, quota, etc) — losing the cache isn't fatal
+  }
+}
+
 export function PdfCalibrator() {
   const [fields, setFields] = useState<Record<string, FieldState>>(INITIAL_FIELDS);
   const [fontSize, setFontSize] = useState(10);
@@ -279,13 +310,45 @@ export function PdfCalibrator() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const [exportText, setExportText] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ id: string; startPx: number; startPy: number; origX: number; origY: number } | null>(
     null,
   );
 
+  useEffect(() => {
+    // Restore whatever was left mid-calibration in this browser, falling
+    // back to (and merging in any new fields not present in) the file's own
+    // current values. Deferred to an effect, not a lazy useState
+    // initializer, so server-rendered HTML and the first client render
+    // match (no window during SSR).
+    const saved = loadPersisted();
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFields((prev) => ({ ...prev, ...saved.fields }));
+      setFontSize(saved.fontSize);
+      setFontFamily(saved.fontFamily);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) savePersisted({ fields, fontSize, fontFamily });
+  }, [fields, fontSize, fontFamily, hydrated]);
+
   const updateField = useCallback((id: string, patch: Partial<FieldState>) => {
     setFields((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  }, []);
+
+  const resetToFileDefaults = useCallback(() => {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // best-effort only
+    }
+    setFields(INITIAL_FIELDS);
+    setFontSize(10);
+    setFontFamily("Carlito");
   }, []);
 
   const onPointerDown = useCallback(
@@ -371,12 +434,25 @@ export function PdfCalibrator() {
         </label>
         <button
           type="button"
+          onClick={resetToFileDefaults}
+          title="Discard anything not yet applied and reload the values currently live in form-template.ts"
+          className="ml-auto rounded-brand border border-border px-4 py-2 text-sm text-text-muted transition-colors hover:border-accent hover:text-text"
+        >
+          Reset to file defaults
+        </button>
+        <button
+          type="button"
           onClick={handleCopy}
-          className="ml-auto rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="rounded-brand bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           {copyStatus === "copied" ? "Copied!" : copyStatus === "failed" ? "Copy failed, see below" : "Copy config"}
         </button>
       </div>
+      <p className="mt-2 text-xs text-text-muted">
+        Every field&apos;s x/y is auto-saved in this browser as you work, so a refresh won&apos;t lose progress
+        &mdash; but that&apos;s only a local cache. Applying a copied config to form-template.ts is the only real
+        save.
+      </p>
 
       {exportText && (
         <div className="mt-3">
