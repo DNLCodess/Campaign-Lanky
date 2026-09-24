@@ -1,5 +1,6 @@
 "use client";
 
+import { LankyMark } from "@/components/brand/lanky-mark";
 import { useActionState, useRef } from "react";
 import { loginCandidate, type AgentActionState } from "@/app/agents/actions/auth";
 import { TextField, PasswordField, FormBanner, SubmitButton } from "@/components/form";
@@ -14,37 +15,47 @@ export function LoginForm({ next }: { next: string | null }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm rounded-brand border border-border bg-surface/70 p-8 shadow-2xl shadow-black/40">
-        <p className="text-xs font-medium uppercase tracking-wide text-accent">
-          Party Agent Nominations
-        </p>
-        <h1 className="mt-2 font-heading text-2xl text-text">Sign in</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Review nominations submitted under your candidacy.
-        </p>
+    <div className="flex min-h-screen flex-col items-center justify-center px-5 py-12">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center text-center">
+          <LankyMark className="h-12 w-12" title="Lanky" />
+          <h1 className="mt-5 font-heading text-2xl text-text">
+            Sign in to Party Agent Nominations
+          </h1>
+          <p className="mt-2 text-sm text-text-muted">
+            Use the email and password your campaign coordinator sent you.
+          </p>
+        </div>
 
-        <form ref={formRef} action={formAction} className="mt-6 space-y-4">
-          {next && <input type="hidden" name="next" value={next} />}
-          {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
-          <TextField
-            name="email"
-            label="Email address"
-            type="email"
-            autoComplete="email"
-            autoFocus
-            onEnter={submit}
-          />
-          <PasswordField
-            name="password"
-            label="Password"
-            autoComplete="current-password"
-            onEnter={submit}
-          />
-          <SubmitButton pending={isPending} pendingLabel="Signing in…" fullWidth>
-            Sign in
-          </SubmitButton>
-        </form>
+        <div className="mt-8 rounded-brand border border-border bg-surface/60 p-6 sm:p-7">
+          <form ref={formRef} action={formAction} className="space-y-4">
+            {next && <input type="hidden" name="next" value={next} />}
+            {state.error && <FormBanner tone="error">{state.error}</FormBanner>}
+            <TextField
+              name="email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              autoFocus
+              onEnter={submit}
+            />
+            <PasswordField
+              name="password"
+              label="Password"
+              autoComplete="current-password"
+              onEnter={submit}
+            />
+            <div className="pt-1">
+              <SubmitButton pending={isPending} pendingLabel="Signing in…" fullWidth>
+                Sign in
+              </SubmitButton>
+            </div>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-sm text-text-muted">
+          Can’t sign in? Ask the campaign team who set up your account to send new details.
+        </p>
       </div>
     </div>
   );
