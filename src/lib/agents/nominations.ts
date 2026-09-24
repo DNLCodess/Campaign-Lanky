@@ -10,11 +10,14 @@ export type NominationListItem = {
   other_names: string | null;
   surname: string;
   phone: string;
+  ward: number;
   polling_unit_code: string;
   polling_unit_name: string;
   is_possible_duplicate: boolean;
   created_at: string;
 };
+
+export type NominationSort = "newest" | "oldest" | "name" | "unit";
 
 export type NominationDetail = {
   id: string;
@@ -47,18 +50,39 @@ const SEARCH_COLUMNS = ["first_name", "other_names", "surname", "phone", "email"
 /** Paginated, searchable list of one candidate's own nominations, newest first. */
 export async function listCandidateNominations(
   candidateId: string,
-  options: { q?: string; duplicatesOnly?: boolean; page: number; pageSize: number },
+  options: {
+    q?: string;
+    duplicatesOnly?: boolean;
+    ward?: number;
+    sort?: NominationSort;
+    page: number;
+    pageSize: number;
+  },
 ): Promise<{ rows: NominationListItem[]; total: number }> {
   const admin = createAdminSupabase();
   let query = admin
     .from("agent_nominations")
     .select(
-      "id, form_no, reference_id, first_name, other_names, surname, phone, polling_unit_code, polling_unit_name, is_possible_duplicate, created_at",
+      "id, form_no, reference_id, first_name, other_names, surname, phone, ward, polling_unit_code, polling_unit_name, is_possible_duplicate, created_at",
       { count: "exact" },
     )
     .eq("candidate_id", candidateId)
-    .order("created_at", { ascending: false })
     .range((options.page - 1) * options.pageSize, options.page * options.pageSize - 1);
+
+  switch (options.sort) {
+    case "oldest":
+      query = query.order("created_at", { ascending: true });
+      break;
+    case "name":
+      query = query.order("surname", { ascending: true }).order("first_name", { ascending: true });
+      break;
+    case "unit":
+      query = query.order("polling_unit_code", { ascending: true });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false });
+  }
+  if (options.ward !== undefined) query = query.eq("ward", options.ward);
 
   const q = sanitizeSearch(options.q ?? "");
   if (q) {
@@ -133,4 +157,28 @@ export async function countCandidateNominations(candidateId: string): Promise<nu
     .select("id", { count: "exact", head: true })
     .eq("candidate_id", candidateId);
   return count ?? 0;
+}
+
+export type NominationStats = {
+  total: number;
+  duplicates: number;
+  pollingUnits: number;
+  wards: number[];
+};
+
+/** Whole-candidacy numbers for the summary strip and ward filter, ignoring any active search/filter. */
+export async function getCandidateNominationStats(candidateId: string): Promise<NominationStats> {
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("agent_nominations")
+    .select("ward, polling_unit_code, is_possible_duplicate")
+    .eq("candidate_id", candidateId)
+    .range(0, 9999);
+  const rows = data ?? [];
+  return {
+    total: rows.length,
+    duplicates: rows.filter((r) => r.is_possible_duplicate).length,
+    pollingUnits: new Set(rows.map((r) => r.polling_unit_code)).size,
+    wards: Array.from(new Set(rows.map((r) => r.ward as number))).sort((a, b) => a - b),
+  };
 }
