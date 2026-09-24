@@ -11,6 +11,7 @@ export type CandidateActionState = {
   success?: string;
   createdName?: string;
   createdEmail?: string;
+  createdSlug?: string;
   plainPassword?: string;
 };
 
@@ -83,6 +84,7 @@ export async function createCandidate(
     success: `Candidate account created for ${fullName}.`,
     createdName: fullName,
     createdEmail: email,
+    createdSlug: slug,
     plainPassword,
   };
 }
