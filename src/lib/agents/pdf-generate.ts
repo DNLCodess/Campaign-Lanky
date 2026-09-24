@@ -1,7 +1,8 @@
 import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, PDFPage, rgb } from "pdf-lib";
+import sharp from "sharp";
 import fontkit from "@pdf-lib/fontkit";
 import {
   CHECKBOXES,
@@ -66,27 +67,76 @@ function formatDate(d: Date): string {
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
+/** Written into every generated PDF so older, differently laid-out ones can be recognised and rebuilt. */
+export const PDF_LAYOUT_VERSION = "layout-v3";
+
+const ID_PAGE_MARGIN = 40; // top offset of the ID on its page
+
+// A standard ID-1 card (PVC, NIN slip, driver's licence) is 85.6 x 54 mm,
+// about 243 x 153 pt. Photos of one are shown at a comfortable ~1.3x of that,
+// which is large enough to read but nowhere near filling the A4 page.
+const ID_CARD_MAX_LONG_SIDE = 320;
+const ID_CARD_MAX_SHORT_SIDE = 220;
+
 /**
- * Appends the nominee's uploaded means-of-ID document as a new final page.
- * Images are embedded and drawn full-page (same technique as the existing
- * photo/signature boxes). A PDF upload has only its first page copied in —
- * multi-page ID scans (e.g. front+back) are capped at page 1 by design.
+ * Appends the nominee's uploaded means-of-ID document as a new final page,
+ * on a page the same size as the form itself. Nothing is ever cropped or
+ * stretched. An image is sized to look like the card it is (see
+ * ID_CARD_MAX_*), in whichever orientation it was photographed, whether the
+ * photo is huge or tiny. A PDF upload gets the same treatment on its first
+ * page, so a card scanned onto a full A4 sheet comes out smaller than the card
+ * itself (the sheet's blank margins are scaled down with it). Only
+ * page 1 is copied — multi-page ID scans (e.g. front+back) are capped there by
+ * design.
  */
 async function appendIdPage(
   doc: PDFDocument,
   bytes: Uint8Array,
   contentType: "image/jpeg" | "image/png" | "application/pdf",
 ): Promise<void> {
+  const { width: pageWidth, height: pageHeight } = doc.getPages()[0].getSize();
+
+  let source: { width: number; height: number };
+  let draw: (page: PDFPage, box: { x: number; y: number; width: number; height: number }) => void;
+
   if (contentType === "application/pdf") {
     const idDoc = await PDFDocument.load(bytes);
-    const [copiedPage] = await doc.copyPages(idDoc, [0]);
-    doc.addPage(copiedPage);
-    return;
+    const embeddedPage = await doc.embedPage(idDoc.getPage(0));
+    source = embeddedPage;
+    draw = (page, box) => page.drawPage(embeddedPage, box);
+  } else {
+    // Phones store photos in the sensor's orientation plus a "rotate me" flag
+    // that pdf-lib ignores, so a card photographed upright would land sideways.
+    // Apply the flag, flatten any transparency onto white, and cap the pixel
+    // size (1600px is ~360 dpi at the size it is printed) to keep PDFs small.
+    const upright = await sharp(bytes)
+      .rotate()
+      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: 88 })
+      .toBuffer();
+    const embedded = await doc.embedJpg(upright);
+    source = embedded;
+    draw = (page, box) => page.drawImage(embedded, box);
   }
 
-  const embedded = contentType === "image/png" ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
-  const page = doc.addPage([embedded.width, embedded.height]);
-  page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+  // Fit inside the card-sized limit for its orientation, preserving aspect
+  // ratio, growing or shrinking as needed.
+  const limit =
+    source.width >= source.height
+      ? { width: ID_CARD_MAX_LONG_SIDE, height: ID_CARD_MAX_SHORT_SIDE }
+      : { width: ID_CARD_MAX_SHORT_SIDE, height: ID_CARD_MAX_LONG_SIDE };
+  const scale = Math.min(limit.width / source.width, limit.height / source.height);
+  const width = source.width * scale;
+  const height = source.height * scale;
+
+  const page = doc.addPage([pageWidth, pageHeight]);
+  draw(page, {
+    x: (pageWidth - width) / 2,
+    y: pageHeight - ID_PAGE_MARGIN - height, // top-aligned, like a scanned attachment
+    width,
+    height,
+  });
 }
 
 /** Generates the pixel-mapped Party Agent Nomination Form PDF for one submission. */
@@ -179,6 +229,7 @@ export async function generateNominationPdf(input: GeneratePdfInput): Promise<Ui
   await image(input.authorizedNominatorSignatureBytes, SIGNATURE_BOXES.authorisedNominator);
 
   await appendIdPage(doc, input.idFileBytes, input.idFileContentType);
+  doc.setKeywords([PDF_LAYOUT_VERSION]);
 
   return doc.save();
 }

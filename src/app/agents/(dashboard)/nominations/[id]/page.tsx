@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireCandidateSession } from "@/lib/agents/session";
 import { getCandidateNomination, getNominationFiles } from "@/lib/agents/nominations";
+import { ensureCurrentNominationPdf } from "@/lib/agents/pdf-regenerate";
 import { agentsPath } from "@/lib/agents/routes";
 import { formatPollingUnitCode } from "@/lib/agents/format";
 
@@ -38,6 +39,8 @@ export default async function NominationDetailPage({
     );
   }
 
+  // Ownership was verified by getCandidateNomination above (scoped to this session).
+  await ensureCurrentNominationPdf(nomination.id);
   const files = await getNominationFiles(session.id, nomination.id);
   const fullName = [nomination.first_name, nomination.other_names, nomination.surname]
     .filter(Boolean)

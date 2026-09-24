@@ -2,6 +2,7 @@ import "server-only";
 import JSZip from "jszip";
 import { requireCandidateSession } from "@/lib/agents/session";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { getCurrentNominationPdf } from "@/lib/agents/pdf-regenerate";
 
 export async function GET() {
   const session = await requireCandidateSession();
@@ -14,20 +15,29 @@ export async function GET() {
     .order("created_at", { ascending: true });
 
   const zip = new JSZip();
-  for (const n of nominations ?? []) {
-    const { data: fileRow } = await admin
-      .from("agent_nomination_files")
-      .select("storage_path")
-      .eq("nomination_id", n.id)
-      .eq("file_type", "generated_pdf")
-      .maybeSingle();
-    if (!fileRow) continue; // defensive: shouldn't happen post-fix, but never fail the whole export over one nominee
+  const list = nominations ?? [];
 
-    const { data: blob } = await admin.storage.from("agent-nominations").download(fileRow.storage_path);
-    if (!blob) continue;
+  // A few at a time: each one may need repairing (see pdf-regenerate.ts), and
+  // doing 200+ strictly one-by-one would be slow while all at once would spike memory.
+  const CONCURRENCY = 5;
+  for (let i = 0; i < list.length; i += CONCURRENCY) {
+    await Promise.all(
+      list.slice(i, i + CONCURRENCY).map(async (n) => {
+        const { data: fileRow } = await admin
+          .from("agent_nomination_files")
+          .select("storage_path")
+          .eq("nomination_id", n.id)
+          .eq("file_type", "generated_pdf")
+          .maybeSingle();
+        if (!fileRow) return; // never fail the whole export over one nominee
 
-    const safeName = `${n.reference_id}-${n.surname}-${n.first_name}`.replace(/[^a-zA-Z0-9-]/g, "_");
-    zip.file(`${safeName}.pdf`, await blob.arrayBuffer());
+        const pdf = await getCurrentNominationPdf(admin, n.id, fileRow.storage_path);
+        if (!pdf) return;
+
+        const safeName = `${n.reference_id}-${n.surname}-${n.first_name}`.replace(/[^a-zA-Z0-9-]/g, "_");
+        zip.file(`${safeName}.pdf`, pdf);
+      }),
+    );
   }
 
   const zipBytes = await zip.generateAsync({ type: "uint8array" });
