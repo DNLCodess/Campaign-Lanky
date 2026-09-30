@@ -3,6 +3,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { getAllConstituencyGeo } from "@/lib/portal/geo";
 import { ELECTION_TYPE_LABELS, type ElectionType } from "@/lib/agents/constants";
 import { NominationWizard } from "@/app/agents/submit/[slug]/nomination-wizard";
+import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +31,20 @@ export async function generateMetadata({
   const title = `Nominate a Polling Unit Agent for ${candidate.full_name}`;
   const description = `${candidate.full_name} is nominating Polling Unit Agents for ${candidate.office}. Use this link if you've been asked to serve as one.`;
 
+  // openGraph/twitter are shallow-merged per Next.js metadata rules: whichever
+  // segment defines them last wins wholesale, so this object must carry every
+  // field this page wants shown, not just the ones that changed from the
+  // agents layout's defaults.
   return {
     title,
     description,
-    openGraph: { title, description },
-    twitter: { title, description },
+    openGraph: {
+      title,
+      description,
+      siteName: `${site.shortName} Party Agent Nominations`,
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

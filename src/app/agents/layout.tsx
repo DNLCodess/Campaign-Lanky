@@ -2,9 +2,15 @@ import type { Metadata } from "next";
 import { BrandWatermark } from "@/components/brand-watermark";
 import { site } from "@/lib/site";
 
+// This tool is served from agents.votelanky.com, not votelanky.com — without
+// its own metadataBase, absolute URLs (the OG/Twitter images below) resolve
+// against the root layout's metadataBase (votelanky.com) instead, sending
+// link-preview crawlers to the wrong domain.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://agents.votelanky.com"),
   title: "Party Agent Nominations",
   robots: { index: false, follow: false },
+  openGraph: { siteName: `${site.shortName} Party Agent Nominations`, type: "website" },
 };
 
 // Absolute, because this tool is served from agents.votelanky.com, not the main site.
