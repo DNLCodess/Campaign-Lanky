@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { getAllConstituencyGeo } from "@/lib/portal/geo";
 import { ELECTION_TYPE_LABELS, type ElectionType } from "@/lib/agents/constants";
@@ -5,18 +6,45 @@ import { NominationWizard } from "@/app/agents/submit/[slug]/nomination-wizard";
 
 export const dynamic = "force-dynamic";
 
+async function getCandidate(slug: string) {
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("nomination_candidates")
+    .select("id, full_name, office, election_type, slug, is_active")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const candidate = await getCandidate(slug);
+  if (!candidate || !candidate.is_active) {
+    return { title: "Party Agent Nominations" };
+  }
+
+  const title = `Nominate a Polling Unit Agent for ${candidate.full_name}`;
+  const description = `${candidate.full_name} is nominating Polling Unit Agents for ${candidate.office}. Use this link if you've been asked to serve as one.`;
+
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
+  };
+}
+
 export default async function SubmitNominationPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const admin = createAdminSupabase();
-  const { data: candidate } = await admin
-    .from("nomination_candidates")
-    .select("id, full_name, office, election_type, slug, is_active")
-    .eq("slug", slug)
-    .maybeSingle();
+  const candidate = await getCandidate(slug);
 
   if (!candidate || !candidate.is_active) {
     return (
