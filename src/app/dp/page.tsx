@@ -5,6 +5,7 @@ import { DpGenerator } from "@/components/forms/dp-generator";
 
 export const metadata: Metadata = {
   title: "Get Your Campaign DP",
+  alternates: { canonical: "/dp" },
   description:
     "Show your support — add your photo and name to the official “I Stand With Lanky” campaign frame and download your personalised display picture.",
 };

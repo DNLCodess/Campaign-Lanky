@@ -25,7 +25,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Lanky — The Bridge-Builder | Ibadan SW/NW Federal Constituency",
+    default:
+      "Olanrewaju Okesooto (Lanky) — Labour Party Candidate, Ibadan SW/NW | Official Website",
     template: "%s | Lanky for Ibadan",
   },
   description:
@@ -35,8 +36,11 @@ export const metadata: Metadata = {
   creator: site.candidate,
   publisher: `${site.shortName} Campaign`,
   keywords: [
-    "Lanky",
     "Olanrewaju Okesooto",
+    ...site.nameVariants,
+    "Lanky",
+    "Lanky Ibadan",
+    "votelanky",
     "Ibadan Southwest Northwest",
     "Federal House of Representatives",
     "Labour Party",
@@ -49,7 +53,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Lanky — The Bridge-Builder",
+    title: "Olanrewaju Okesooto (Lanky) — The Bridge-Builder",
     description: site.slogan,
     siteName: `${site.shortName} for Ibadan`,
     url: site.url,
@@ -58,7 +62,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lanky — The Bridge-Builder",
+    title: "Olanrewaju Okesooto (Lanky) — The Bridge-Builder",
     description: site.slogan,
   },
   robots: {
@@ -81,7 +85,9 @@ export const metadata: Metadata = {
     apple: "/favicon_io/apple-touch-icon.png",
   },
   category: "politics",
-  // verification: { google: "<token>", other: { "facebook-domain-verification": "<token>" } },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = {

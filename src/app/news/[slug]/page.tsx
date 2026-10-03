@@ -59,8 +59,25 @@ export default async function PostPage({
   const mins = readingTime(post.body);
   const postUrl = `${site.url}/news/${post.slug}`;
 
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.meta_title || post.title,
+    description: post.meta_desc || post.excerpt || undefined,
+    image: post.cover_image ? [post.cover_image] : undefined,
+    datePublished: post.published_at ?? undefined,
+    dateModified: post.updated_at ?? post.published_at ?? undefined,
+    mainEntityOfPage: postUrl,
+    author: { "@id": `${site.url}/#candidate` },
+    publisher: { "@id": `${site.url}/#campaign` },
+  };
+
   return (
     <article className="mx-auto max-w-4xl px-5 py-16 sm:px-8 sm:py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+      />
       {/* Back link */}
       <Link
         href="/news"

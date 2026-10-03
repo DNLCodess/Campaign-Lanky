@@ -8,6 +8,14 @@ export const site = {
   url: "https://votelanky.com",
   candidate: "Olanrewaju Okesooto",
   shortName: "Lanky",
+  // Other ways people search for him (reversed order, common misspelling).
+  nameVariants: [
+    "Okesooto Olanrewaju",
+    "Lanky Okesooto",
+    "Olanrewanju Okesooto",
+    "Okesooto Olanrewanju",
+    "Olanrewaju Okesooto Lanky",
+  ],
   tagline: "The Bridge-Builder",
   office: "Federal House of Representatives",
   constituency: "Ibadan Southwest / Northwest Federal Constituency",

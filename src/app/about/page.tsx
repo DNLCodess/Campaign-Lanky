@@ -8,7 +8,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Meet Olanrewaju Okesooto",
   description:
-    "Meet Olanrewaju Okesooto — community leader, technology consultant, and Labour Party candidate for Ibadan Southwest / Northwest, Oyo State.",
+    "Meet Olanrewaju Okesooto (Lanky, also searched as Okesooto Olanrewaju) — community leader, technology consultant, and Labour Party candidate for Ibadan Southwest / Northwest, Oyo State.",
   alternates: { canonical: "/about" },
 };
 
@@ -27,9 +27,21 @@ const values = [
   },
 ];
 
+const profileLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  url: `${site.url}/about`,
+  name: `${site.candidate} (${site.shortName}) — Biography`,
+  mainEntity: { "@id": `${site.url}/#candidate` },
+};
+
 export default function AboutPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileLd) }}
+      />
       <PageHeader
         image="/consituency/6.jpeg"
         eyebrow="Meet the Candidate"

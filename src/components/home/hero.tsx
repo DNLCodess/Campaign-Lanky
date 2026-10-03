@@ -183,6 +183,7 @@ export function Hero() {
           </p>
 
           <h1 className="mt-4 font-heading text-5xl leading-[1.02] tracking-tight text-text sm:text-6xl lg:text-7xl">
+            <span className="sr-only">{site.candidate} ({site.shortName}) — </span>
             <span className="block overflow-hidden">
               <span className="hero-word inline-block text-accent">Innovation</span>{" "}
               <span className="hero-word inline-block">for Ibadan.</span>
