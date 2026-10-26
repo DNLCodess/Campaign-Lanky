@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { getPublicResults } from "@/lib/public-results";
@@ -155,6 +156,25 @@ export default async function ResultsPage() {
               </Reveal>
             </div>
           )}
+
+          <Reveal className="mt-12">
+            <Link
+              href="/results/2023"
+              className="group flex flex-wrap items-center justify-between gap-4 rounded-brand border border-border bg-surface/40 p-6 transition-colors hover:border-accent"
+            >
+              <span>
+                <span className="block text-xs font-medium uppercase tracking-widest text-accent">
+                  2023 election record
+                </span>
+                <span className="mt-1 block font-heading text-xl text-text">
+                  How the constituency voted in 2023, polling unit by polling unit
+                </span>
+              </span>
+              <span className="text-sm font-medium text-accent group-hover:text-accent-hover">
+                View 2023 results →
+              </span>
+            </Link>
+          </Reveal>
         </div>
       </section>
     </>
