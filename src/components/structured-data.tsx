@@ -1,4 +1,5 @@
 import { site } from "@/lib/site";
+import { jsonLd } from "@/lib/json-ld";
 
 /**
  * Site-wide JSON-LD structured data.
@@ -69,8 +70,7 @@ export function StructuredData() {
   return (
     <script
       type="application/ld+json"
-      // JSON.stringify output is safe to inline; no user input is interpolated.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+      dangerouslySetInnerHTML={{ __html: jsonLd(graph) }}
     />
   );
 }

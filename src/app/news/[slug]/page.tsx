@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getPostBySlug, getAdjacentPosts, formatDate, readingTime } from "@/lib/blog";
 import { PostBody } from "@/components/blog/post-body";
 import { site } from "@/lib/site";
+import { jsonLd } from "@/lib/json-ld";
 
 export const revalidate = 60;
 
@@ -76,7 +77,7 @@ export default async function PostPage({
     <article className="mx-auto max-w-4xl px-5 py-16 sm:px-8 sm:py-24">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(articleLd) }}
       />
       {/* Back link */}
       <Link

@@ -13,7 +13,12 @@ function escHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function escAttr(s: string) {
-  return s.replace(/"/g, "&quot;");
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+// Only allow web, mail, phone, relative and in-page links — never javascript: or data:
+function safeUrl(raw: unknown, fallback: string) {
+  const url = String(raw ?? "").trim();
+  return /^(https?:|mailto:|tel:|\/|#)/i.test(url) ? url : fallback;
 }
 
 function applyMark(
@@ -27,8 +32,8 @@ function applyMark(
     case "strike":    return `<s>${html}</s>`;
     case "underline": return `<u>${html}</u>`;
     case "link": {
-      const href   = escAttr(String(mark.attrs?.href   ?? "#"));
-      const target = escAttr(String(mark.attrs?.target ?? "_blank"));
+      const href   = escAttr(safeUrl(mark.attrs?.href, "#"));
+      const target = mark.attrs?.target === "_self" ? "_self" : "_blank";
       return `<a href="${href}" target="${target}" rel="noopener noreferrer">${html}</a>`;
     }
     default: return html;
@@ -48,7 +53,7 @@ function serializeNode(node: TNode): string {
       return `<p>${serializeChildren(node)}</p>`;
 
     case "heading": {
-      const l = Number(node.attrs?.level ?? 1);
+      const l = Math.min(6, Math.max(1, Math.trunc(Number(node.attrs?.level) || 1)));
       return `<h${l}>${serializeChildren(node)}</h${l}>`;
     }
 
@@ -74,7 +79,7 @@ function serializeNode(node: TNode): string {
       return "<br />";
 
     case "image": {
-      const src   = escAttr(String(node.attrs?.src   ?? ""));
+      const src   = escAttr(safeUrl(node.attrs?.src, ""));
       const alt   = escAttr(String(node.attrs?.alt   ?? ""));
       const title = node.attrs?.title ? ` title="${escAttr(String(node.attrs.title))}"` : "";
       return `<img src="${src}" alt="${alt}"${title} />`;

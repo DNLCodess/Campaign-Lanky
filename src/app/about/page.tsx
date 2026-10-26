@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { CtaButton } from "@/components/ui/cta-button";
 import { site } from "@/lib/site";
+import { jsonLd } from "@/lib/json-ld";
 
 export const metadata: Metadata = {
   title: "Meet Olanrewaju Okesooto",
@@ -40,7 +41,7 @@ export default function AboutPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(profileLd) }}
       />
       <PageHeader
         image="/consituency/6.jpeg"
