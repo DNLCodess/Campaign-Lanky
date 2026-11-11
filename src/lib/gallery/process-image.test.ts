@@ -47,9 +47,21 @@ test("blur is a small webp data URI", async () => {
   assert.equal((await sharp(buf).metadata()).width, 16);
 });
 
-test("output has no EXIF", async () => {
-  const r = await processImage(await jpeg(800, 600, 6));
-  assert.equal((await sharp(r.variants[0].data).metadata()).exif, undefined);
+test("output has no EXIF (GPS) in variants or blur", async () => {
+  const src = await sharp({ create: { width: 800, height: 600, channels: 3, background: "#888" } })
+    .jpeg()
+    .withExif({ IFD3: { GPSLatitudeRef: "N", GPSLatitude: "7/1 23/1 0/1" } })
+    .toBuffer();
+  assert.ok((await sharp(src).metadata()).exif, "fixture must carry EXIF");
+  const r = await processImage(src);
+  for (const v of r.variants) assert.equal((await sharp(v.data).metadata()).exif, undefined);
+  const blur = Buffer.from(r.blur.split(",")[1], "base64");
+  assert.equal((await sharp(blur).metadata()).exif, undefined);
+});
+
+test("exactly 640px source gets one variant", async () => {
+  const r = await processImage(await jpeg(640, 480));
+  assert.deepEqual(r.variants.map((v) => v.width), [640]);
 });
 
 test("garbage throws UnsupportedImageError", async () => {
