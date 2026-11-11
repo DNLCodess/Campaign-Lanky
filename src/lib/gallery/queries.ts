@@ -116,21 +116,30 @@ export async function getAdminEntries(): Promise<AdminEntry[]> {
       for (const r of (rows ?? []) as ItemRow[]) coverById.set(r.id, r);
     }
     const coverFor = new Map<string, ItemRow>();
-    await Promise.all(
-      entries.map(async (e) => {
-        const chosen = e.cover_item_id ? coverById.get(e.cover_item_id) : undefined;
-        if (chosen) return void coverFor.set(e.id, chosen);
-        const { data: first } = await supabase
+    // Task 5 sets cover_item_id when the first item becomes ready, so this fallback should rarely run.
+    const needFallback: EntryRow[] = [];
+    for (const e of entries) {
+      const chosen = e.cover_item_id ? coverById.get(e.cover_item_id) : undefined;
+      if (chosen) coverFor.set(e.id, chosen);
+      else needFallback.push(e);
+    }
+    let next = 0;
+    const worker = async () => {
+      while (next < needFallback.length) {
+        const e = needFallback[next++];
+        const { data: first, error: firstErr } = await supabase
           .from("gallery_items")
           .select("*")
           .eq("entry_id", e.id)
           .eq("processing", "ready")
           .order("position", { ascending: true })
           .limit(1);
+        if (firstErr) throw firstErr;
         const row = (first ?? [])[0] as ItemRow | undefined;
         if (row) coverFor.set(e.id, row);
-      }),
-    );
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(5, needFallback.length) }, worker));
 
     return entries.map(({ item_count, failed, ...e }) => {
       const coverRow = coverFor.get(e.id);
