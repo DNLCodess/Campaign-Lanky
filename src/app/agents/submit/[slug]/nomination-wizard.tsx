@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { submitNomination, type SubmitNominationState } from "@/app/agents/actions/submit";
 import { loadDraft, saveDraft, clearDraft, type NominationDraftFields } from "@/lib/agents/draft-storage";
 import { isValidEmail, isValidPhone } from "@/lib/agents/validation";
-import type { GeoRow } from "@/lib/portal/geo";
+import type { NominationGeoRow } from "@/lib/agents/geo";
 import { BioStep } from "@/app/agents/submit/[slug]/steps/bio-step";
 import { ContactStep } from "@/app/agents/submit/[slug]/steps/contact-step";
 import { IdentificationStep } from "@/app/agents/submit/[slug]/steps/identification-step";
@@ -43,7 +43,7 @@ export function NominationWizard({
   slug: string;
   candidateOffice: string;
   electionTypeLabel: string;
-  geo: GeoRow[];
+  geo: NominationGeoRow[];
 }) {
   const [draft, setDraft] = useState<NominationDraftFields>(EMPTY_DRAFT);
   const [stepIndex, setStepIndex] = useState(0);
@@ -58,11 +58,21 @@ export function NominationWizard({
     // Deliberately deferred to an effect rather than a lazy useState
     // initializer: this component server-renders too (no window during SSR),
     // so reading localStorage before mount would mismatch the hydrated HTML.
-    const saved = loadDraft(slug);
+    let next = loadDraft(slug) ?? EMPTY_DRAFT;
+    // A draft saved before this link's area changed (or before areas were
+    // scoped at all) can hold a location that's no longer offered: drop it so
+    // the agent re-picks from the current list.
+    const stillOffered = next.pollingUnitCode
+      ? geo.some((g) => g.pu_code === next.pollingUnitCode)
+      : !next.lga || geo.some((g) => g.lga === next.lga);
+    if (!stillOffered) next = { ...next, lga: "", ward: "", pollingUnitCode: "", pollingUnitName: "" };
+    // Most constituencies sit inside one LGA; don't make the agent pick it.
+    const lgas = new Set(geo.map((g) => g.lga));
+    if (!next.lga && lgas.size === 1) next = { ...next, lga: [...lgas][0] };
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (saved) setDraft(saved);
+    setDraft(next);
     setHydrated(true);
-  }, [slug]);
+  }, [slug, geo]);
 
   useEffect(() => {
     if (hydrated) saveDraft(slug, draft);
@@ -165,7 +175,7 @@ export function NominationWizard({
   return (
     <div className="mx-auto max-w-lg px-5 py-10">
       <p className="text-xs font-medium uppercase tracking-wide text-accent">
-        {electionTypeLabel} for {candidateOffice}
+        {candidateOffice}
       </p>
       <h1 className="mt-2 font-heading text-2xl text-text">Party Agent Nomination</h1>
       <p className="mt-1 text-sm text-text-muted">

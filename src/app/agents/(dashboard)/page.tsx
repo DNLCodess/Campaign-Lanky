@@ -160,6 +160,11 @@ export default async function AgentsDashboardPage({
                           Possible duplicate
                         </span>
                       )}
+                      {r.is_outside_area && (
+                        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-normal text-primary">
+                          Outside area
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-text-muted">Ref {r.reference_id}</p>
                   </td>

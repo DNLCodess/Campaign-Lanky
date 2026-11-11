@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import { createCandidate, type CandidateActionState } from "@/app/admin/(dashboard)/agent-nominations/candidates/actions";
 import { CopyButton } from "@/app/admin/(dashboard)/agent-nominations/candidates/candidate-modal";
 import { agentLink } from "@/app/admin/(dashboard)/agent-nominations/candidates/agent-link";
-import { ELECTION_TYPES, ELECTION_TYPE_LABELS } from "@/lib/agents/constants";
+import { ELECTION_TYPES, ELECTION_TYPE_LABELS, type ElectionType } from "@/lib/agents/constants";
+import type { ConstituencyOption } from "@/lib/agents/geo";
 import {
   TextField,
   SelectField,
@@ -19,20 +20,39 @@ const ELECTION_TYPE_OPTIONS = ELECTION_TYPES.map((value) => ({
   label: ELECTION_TYPE_LABELS[value],
 }));
 
-export function CandidateForm({ onDone }: { onDone: () => void }) {
+export type ConstituenciesByType = Record<ElectionType, ConstituencyOption[]>;
+
+export function CandidateForm({
+  onDone,
+  constituencies,
+}: {
+  onDone: () => void;
+  constituencies: ConstituenciesByType;
+}) {
   const [instance, setInstance] = useState(0);
   return (
     <Form
       key={instance}
+      constituencies={constituencies}
       onAnother={() => setInstance((n) => n + 1)}
       onDone={onDone}
     />
   );
 }
 
-function Form({ onAnother, onDone }: { onAnother: () => void; onDone: () => void }) {
+function Form({
+  onAnother,
+  onDone,
+  constituencies,
+}: {
+  onAnother: () => void;
+  onDone: () => void;
+  constituencies: ConstituenciesByType;
+}) {
   const [state, formAction, isPending] = useActionState(createCandidate, initial);
   const [electionType, setElectionType] = useState("");
+  const [constituencyId, setConstituencyId] = useState("");
+  const constituencyOptions = electionType ? constituencies[electionType as ElectionType] : [];
 
   if (state.success && state.plainPassword && state.createdName && state.createdEmail) {
     const first = state.createdName.split(" ")[0];
@@ -97,10 +117,27 @@ function Form({ onAnother, onDone }: { onAnother: () => void; onDone: () => void
         name="election_type"
         label="Election type"
         value={electionType}
-        onChange={setElectionType}
+        onChange={(v) => {
+          setElectionType(v);
+          setConstituencyId("");
+        }}
         options={ELECTION_TYPE_OPTIONS}
         placeholder="Select an election type"
       />
+      {constituencyOptions.length > 0 && (
+        <SelectField
+          name="constituency_id"
+          label="Constituency"
+          value={constituencyId}
+          onChange={setConstituencyId}
+          options={constituencyOptions.map((o) => ({ value: String(o.id), label: o.label }))}
+          placeholder="Select a constituency"
+          helper="Their agents will only be able to pick polling units in this constituency."
+        />
+      )}
+      {(electionType === "governorship" || electionType === "presidential") && (
+        <p className="text-sm text-text-muted">Agents can pick any polling unit in Oyo State.</p>
+      )}
       <div className="flex items-center justify-end gap-2 pt-1">
         <button
           type="button"

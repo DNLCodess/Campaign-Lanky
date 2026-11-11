@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CandidateForm } from "@/app/admin/(dashboard)/agent-nominations/candidates/candidate-form";
+import { CandidateForm, type ConstituenciesByType } from "@/app/admin/(dashboard)/agent-nominations/candidates/candidate-form";
+import { AreaForm } from "@/app/admin/(dashboard)/agent-nominations/candidates/area-form";
 import { CopyButton, Modal } from "@/app/admin/(dashboard)/agent-nominations/candidates/candidate-modal";
 import { agentLink } from "@/app/admin/(dashboard)/agent-nominations/candidates/agent-link";
 import { ELECTION_TYPE_LABELS, type ElectionType } from "@/lib/agents/constants";
@@ -16,13 +17,30 @@ export type CandidateRow = {
   email: string;
   office: string;
   election_type: string;
+  constituency_id: number | null;
   slug: string;
   is_active: boolean | null;
 };
 
-export function CandidatesView({ candidates }: { candidates: CandidateRow[] }) {
+export function CandidatesView({
+  candidates,
+  constituencies,
+}: {
+  candidates: CandidateRow[];
+  constituencies: ConstituenciesByType;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<CandidateRow | null>(null);
+
+  function areaOf(c: CandidateRow): { label: string; missing: boolean; editable: boolean } {
+    const options = constituencies[c.election_type as ElectionType] ?? [];
+    if (options.length === 0) return { label: "All of Oyo State", missing: false, editable: false };
+    const match = options.find((o) => o.id === c.constituency_id);
+    return match
+      ? { label: match.label, missing: false, editable: true }
+      : { label: "Constituency not set: agents' link won't work", missing: true, editable: true };
+  }
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
   const [sort, setSort] = useState<"name" | "newest">("name");
@@ -156,6 +174,23 @@ export function CandidatesView({ candidates }: { candidates: CandidateRow[] }) {
                     <p className="text-xs text-text-muted/80">
                       {ELECTION_TYPE_LABELS[c.election_type as ElectionType]}
                     </p>
+                    {(() => {
+                      const area = areaOf(c);
+                      return (
+                        <p className={`mt-0.5 text-xs ${area.missing ? "text-primary" : "text-text-muted/80"}`}>
+                          Area: {area.label}
+                          {area.editable && (
+                            <button
+                              type="button"
+                              onClick={() => setEditing(c)}
+                              className="ml-2 text-accent underline underline-offset-2 hover:text-text"
+                            >
+                              {area.missing ? "Set area" : "Change"}
+                            </button>
+                          )}
+                        </p>
+                      );
+                    })()}
                   </td>
                   <td className="col-start-2 row-span-2 row-start-1 md:table-cell md:px-4 md:py-2.5 md:text-right">
                     <CopyButton
@@ -172,7 +207,30 @@ export function CandidatesView({ candidates }: { candidates: CandidateRow[] }) {
       )}
 
       <Modal open={open} onClose={close} title="Add a candidate">
-        <CandidateForm onDone={close} />
+        <CandidateForm onDone={close} constituencies={constituencies} />
+      </Modal>
+
+      <Modal
+        open={editing !== null}
+        onClose={() => {
+          setEditing(null);
+          router.refresh();
+        }}
+        title="Candidate's constituency"
+      >
+        {editing && (
+          <AreaForm
+            key={editing.id}
+            candidateId={editing.id}
+            candidateName={editing.full_name}
+            currentId={editing.constituency_id}
+            options={constituencies[editing.election_type as ElectionType] ?? []}
+            onDone={() => {
+              setEditing(null);
+              router.refresh();
+            }}
+          />
+        )}
       </Modal>
     </>
   );

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { listCandidates } from "@/app/admin/(dashboard)/agent-nominations/candidates/actions";
 import { CandidatesView } from "@/app/admin/(dashboard)/agent-nominations/candidates/candidates-view";
+import { listAllConstituencies } from "@/lib/agents/geo";
 
 export const dynamic = "force-dynamic";
 
 export default async function AgentNominationCandidatesPage() {
   await requireAdmin();
-  const candidates = await listCandidates();
+  const [candidates, constituencies] = await Promise.all([listCandidates(), listAllConstituencies()]);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
@@ -28,7 +29,7 @@ export default async function AgentNominationCandidatesPage() {
           .
         </p>
       </header>
-      <CandidatesView candidates={candidates} />
+      <CandidatesView candidates={candidates} constituencies={constituencies} />
     </div>
   );
 }

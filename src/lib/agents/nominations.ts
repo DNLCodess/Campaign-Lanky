@@ -14,6 +14,7 @@ export type NominationListItem = {
   polling_unit_code: string;
   polling_unit_name: string;
   is_possible_duplicate: boolean;
+  is_outside_area: boolean;
   created_at: string;
 };
 
@@ -37,6 +38,7 @@ export type NominationDetail = {
   polling_unit_name: string;
   status: string;
   is_possible_duplicate: boolean;
+  is_outside_area: boolean;
   created_at: string;
 };
 
@@ -63,7 +65,7 @@ export async function listCandidateNominations(
   let query = admin
     .from("agent_nominations")
     .select(
-      "id, form_no, reference_id, first_name, other_names, surname, phone, ward, polling_unit_code, polling_unit_name, is_possible_duplicate, created_at",
+      "id, form_no, reference_id, first_name, other_names, surname, phone, ward, polling_unit_code, polling_unit_name, is_possible_duplicate, is_outside_area, created_at",
       { count: "exact" },
     )
     .eq("candidate_id", candidateId)
@@ -106,7 +108,7 @@ export async function getCandidateNomination(
   const { data } = await admin
     .from("agent_nominations")
     .select(
-      "id, candidate_id, form_no, reference_id, first_name, other_names, surname, gender, phone, email, means_of_id, lga, ward, polling_unit_code, polling_unit_name, status, is_possible_duplicate, created_at",
+      "id, candidate_id, form_no, reference_id, first_name, other_names, surname, gender, phone, email, means_of_id, lga, ward, polling_unit_code, polling_unit_name, status, is_possible_duplicate, is_outside_area, created_at",
     )
     .eq("id", nominationId)
     .eq("candidate_id", candidateId)

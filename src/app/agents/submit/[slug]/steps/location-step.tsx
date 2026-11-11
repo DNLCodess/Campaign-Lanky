@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { SelectField } from "@/components/form";
 import type { NominationDraftFields } from "@/lib/agents/draft-storage";
-import type { GeoRow } from "@/lib/portal/geo";
+import type { NominationGeoRow } from "@/lib/agents/geo";
 import { formatPollingUnitCode } from "@/lib/agents/format";
 
 export function LocationStep({
@@ -13,13 +13,14 @@ export function LocationStep({
 }: {
   draft: NominationDraftFields;
   onChange: (patch: Partial<NominationDraftFields>) => void;
-  geo: GeoRow[];
+  geo: NominationGeoRow[];
 }) {
   const lgas = useMemo(() => Array.from(new Set(geo.map((g) => g.lga))), [geo]);
-  const wards = useMemo(
-    () => Array.from(new Set(geo.filter((g) => g.lga === draft.lga).map((g) => g.ward))).sort((a, b) => a - b),
-    [geo, draft.lga],
-  );
+  const wards = useMemo(() => {
+    const names = new Map<number, string>();
+    for (const g of geo) if (g.lga === draft.lga) names.set(g.ward, g.ward_name);
+    return Array.from(names, ([ward, name]) => ({ ward, name })).sort((a, b) => a.ward - b.ward);
+  }, [geo, draft.lga]);
   const pollingUnits = useMemo(
     () => geo.filter((g) => g.lga === draft.lga && g.ward === Number(draft.ward)),
     [geo, draft.lga, draft.ward],
@@ -40,7 +41,7 @@ export function LocationStep({
         label="Ward (Registration Area)"
         value={draft.ward}
         onChange={(v) => onChange({ ward: v, pollingUnitCode: "", pollingUnitName: "" })}
-        options={wards.map((w) => ({ value: String(w), label: `Ward ${w}` }))}
+        options={wards.map((w) => ({ value: String(w.ward), label: `Ward ${w.ward} (${w.name})` }))}
         placeholder="Select ward"
         disabledReason={draft.lga ? undefined : "Select an LGA first"}
       />

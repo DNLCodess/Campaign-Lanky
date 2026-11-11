@@ -59,8 +59,13 @@ export default async function NominationDetailPage({
           {when(nomination.created_at)}
         </p>
         {nomination.is_possible_duplicate && (
-          <span className="mt-2 inline-block rounded-full bg-yellow-500/15 px-2.5 py-1 text-xs text-yellow-300">
+          <span className="mr-2 mt-2 inline-block rounded-full bg-yellow-500/15 px-2.5 py-1 text-xs text-yellow-300">
             Possible duplicate: matches an existing phone or email under this candidacy
+          </span>
+        )}
+        {nomination.is_outside_area && (
+          <span className="mt-2 inline-block rounded-full bg-primary/15 px-2.5 py-1 text-xs text-primary">
+            Outside area: this polling unit isn&apos;t in your constituency
           </span>
         )}
       </header>

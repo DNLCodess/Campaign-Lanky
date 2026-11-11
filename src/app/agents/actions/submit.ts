@@ -14,6 +14,7 @@ import {
   MAX_NAME_LENGTH,
 } from "@/lib/agents/validation";
 import { CONSTITUENCY_STATE, MEANS_OF_ID_OPTIONS, type ElectionType } from "@/lib/agents/constants";
+import { getOyoPollingUnit, isInCandidateArea, needsConstituency } from "@/lib/agents/geo";
 
 const MEANS_OF_ID_VALUES = MEANS_OF_ID_OPTIONS.map((o) => o.value);
 
@@ -42,7 +43,7 @@ export async function submitNomination(
   const admin = createAdminSupabase();
   const { data: candidate, error: candidateError } = await admin
     .from("nomination_candidates")
-    .select("id, full_name, election_type, is_active")
+    .select("id, full_name, election_type, constituency_id, is_active")
     .eq("slug", slug)
     .maybeSingle();
   if (candidateError) {
@@ -114,13 +115,17 @@ export async function submitNomination(
     return { error: "A signature is required." };
   }
 
-  const { data: pu } = await admin
-    .from("constituency_geo")
-    .select("lga, ward, pu_code, pu_name")
-    .eq("pu_code", pollingUnitCode)
-    .maybeSingle();
+  const electionType = candidate.election_type as ElectionType;
+  const constituencyId = candidate.constituency_id as number | null;
+  if (needsConstituency(electionType, constituencyId)) {
+    return { error: "This link isn't ready yet. Contact the person who shared it with you." };
+  }
+  const pu = await getOyoPollingUnit(pollingUnitCode);
   if (!pu || pu.lga !== lga || pu.ward !== ward || pu.pu_name !== pollingUnitName) {
     return { error: "Selected polling unit does not match the chosen LGA/ward." };
+  }
+  if (!isInCandidateArea(pu, electionType, constituencyId)) {
+    return { error: "That polling unit isn't in this candidate's constituency. Go back and choose yours." };
   }
 
   const { data: existingMatches } = await admin
