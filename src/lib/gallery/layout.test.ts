@@ -25,3 +25,9 @@ test("itemRatio uses clamped dimensions and youtube orientation", () => {
   assert.equal(itemRatio(it({ type: "youtube", width: 1600, height: 900 })), 16 / 9);
   assert.equal(itemRatio(it({ type: "youtube", width: 900, height: 1600 })), 9 / 16);
 });
+
+test("clampRatio falls back to 1 for non-finite or non-positive input", () => {
+  assert.deepEqual(clampRatio(0, 0), { ratio: 1, clamped: true });
+  assert.deepEqual(clampRatio(100, 0), { ratio: 1, clamped: true });
+  assert.deepEqual(clampRatio(-5, 10), { ratio: 1, clamped: true });
+});

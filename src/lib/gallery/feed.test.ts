@@ -89,8 +89,19 @@ test("appendFeed joins a singles run across pages", () => {
 
 const c = { takenOn: "2026-11-03", publishedAt: "2026-11-03T10:00:00+00:00", id: "b" };
 
+const UUID = "123e4567-e89b-12d3-a456-426614174000";
+const good = { takenOn: "2026-11-03", publishedAt: "2026-11-03T10:00:00.123+00:00", id: UUID };
+const enc = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
+
+test("decodeCursor rejects injection attempts and accepts valid cursors", () => {
+  assert.deepEqual(decodeCursor(enc(good)), good);
+  assert.equal(decodeCursor(enc({ ...good, id: "x),status.eq.draft" })), null);
+  assert.equal(decodeCursor(enc({ ...good, takenOn: "2026-11-03,foo" })), null);
+  assert.equal(decodeCursor(enc({ ...good, publishedAt: '2026-11-03T10:00:00+00:00"' })), null);
+});
+
 test("cursor round-trips and rejects garbage", () => {
-  assert.deepEqual(decodeCursor(encodeCursor(c)), c);
+  assert.deepEqual(decodeCursor(encodeCursor(good)), good);
   assert.equal(decodeCursor("%%%"), null);
   assert.equal(decodeCursor(Buffer.from('{"takenOn":1}').toString("base64url")), null);
   assert.equal(decodeCursor(Buffer.from("[]").toString("base64url")), null);

@@ -86,6 +86,10 @@ export function encodeCursor(c: FeedCursor): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function decodeCursor(s: string): FeedCursor | null {
   try {
     if (!/^[A-Za-z0-9_-]+$/.test(s)) return null;
@@ -96,6 +100,7 @@ export function decodeCursor(s: string): FeedCursor | null {
     if (!v || typeof v !== "object" || Array.isArray(v)) return null;
     const { takenOn, publishedAt, id } = v as Record<string, unknown>;
     if (typeof takenOn !== "string" || typeof publishedAt !== "string" || typeof id !== "string") return null;
+    if (!DATE_RE.test(takenOn) || !TS_RE.test(publishedAt) || !UUID_RE.test(id)) return null;
     return { takenOn, publishedAt, id };
   } catch {
     return null;
