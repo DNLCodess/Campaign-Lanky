@@ -56,3 +56,26 @@ export function uploadWithProgress(
     xhr.send(body);
   });
 }
+
+/**
+ * Process an uploaded item via the finalize route handler (not a server action,
+ * so it doesn't block the serialised action queue). Throws on network errors and
+ * non-2xx responses (treated as transient → Retry calls it again); resolves with
+ * `{ error }` for processing failures the server recorded on the item.
+ */
+export async function requestFinalize(itemId: string): Promise<{ error?: string }> {
+  const res = await fetch("/admin/gallery-api/finalize", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ itemId }),
+  });
+  let data: { error?: string } = {};
+  try {
+    data = (await res.json()) as { error?: string };
+  } catch {
+    // empty / non-JSON body
+  }
+  if (!res.ok) throw new Error(data.error ?? `Finalize failed (${res.status})`);
+  return data.error ? { error: data.error } : {};
+}

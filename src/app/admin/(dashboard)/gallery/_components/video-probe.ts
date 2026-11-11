@@ -21,9 +21,14 @@ export function probeVideo(
     };
     const timer = setTimeout(() => finish(new Error("Couldn't read that video. Try a different file.")), PROBE_TIMEOUT_MS);
 
-    video.preload = "metadata";
+    // iOS Safari won't decode a frame for drawImage unless the video is loaded and
+    // has been played (muted + inline is allowed without a user gesture).
+    video.preload = "auto";
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
     video.onerror = () => finish(new Error("Couldn't read that video. Try a different file."));
     video.onloadedmetadata = () => {
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
@@ -31,7 +36,17 @@ export function probeVideo(
         finish(new Error("Couldn't read that video's size. Try a different file."));
         return;
       }
-      video.currentTime = Math.min(1, duration / 2);
+      const seek = () => {
+        video.currentTime = Math.min(1, duration / 2);
+      };
+      // Muted play()→pause() primes decoding on iOS; if play() is refused, seek anyway.
+      let primed: Promise<void>;
+      try {
+        primed = Promise.resolve(video.play()).then(() => video.pause());
+      } catch {
+        primed = Promise.resolve();
+      }
+      primed.then(seek, seek);
     };
     video.onseeked = () => {
       const width = video.videoWidth;

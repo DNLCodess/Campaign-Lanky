@@ -4,17 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   addYouTube,
   createUpload,
-  finalizeItem,
   removeItem,
 } from "@/app/admin/(dashboard)/gallery/actions";
 import { parseYouTubeUrl } from "@/lib/gallery/youtube";
-import { uploadWithProgress } from "./upload-xhr";
+import { requestFinalize, uploadWithProgress } from "./upload-xhr";
 import { probeVideo } from "./video-probe";
 import {
   BAD_YOUTUBE,
   classifyFile,
   createLimiter,
   createSerial,
+  MAX_CONCURRENT_FINALIZES,
   MAX_CONCURRENT_UPLOADS,
   retryMode,
   VIDEO_LOCATION_NOTE,
@@ -57,7 +57,45 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
   const itemIds = useRef(new Map<string, string>());
   const [serial] = useState(() => createSerial());
   const [limit] = useState(() => createLimiter(MAX_CONCURRENT_UPLOADS));
+  const [finalizeLimit] = useState(() => createLimiter(MAX_CONCURRENT_FINALIZES));
   const counter = useRef(0);
+  const inFlight = useRef(new Set<string>()); // keys whose pipeline is running (guards double Retry)
+  const urls = useRef(new Set<string>()); // every preview object URL, revoked on drop/unmount
+  const tasksRef = useRef<UploadTask[]>([]);
+  const seenOnServer = useRef(new Set<string>()); // item ids that have appeared in server data
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  useEffect(() => {
+    const all = urls.current;
+    return () => {
+      for (const u of all) URL.revokeObjectURL(u);
+      all.clear();
+    };
+  }, []);
+
+  const makeUrl = useCallback((blob: Blob) => {
+    const u = URL.createObjectURL(blob);
+    urls.current.add(u);
+    return u;
+  }, []);
+
+  /** Forget tasks: revoke their previews and drop their refs, then remove them from state. */
+  const drop = useCallback((keys: Set<string>) => {
+    if (keys.size === 0) return;
+    for (const t of tasksRef.current) {
+      if (!keys.has(t.key)) continue;
+      if (t.previewUrl) {
+        URL.revokeObjectURL(t.previewUrl);
+        urls.current.delete(t.previewUrl);
+      }
+      sources.current.delete(t.key);
+      itemIds.current.delete(t.key);
+    }
+    setTasks((prev) => prev.filter((t) => !keys.has(t.key)));
+  }, []);
 
   const patch = useCallback((key: string, changes: Partial<UploadTask>) => {
     setTasks((prev) => prev.map((t) => (t.key === key ? { ...t, ...changes } : t)));
@@ -68,7 +106,7 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
     [patch],
   );
 
-  const run = useCallback(
+  const pipeline = useCallback(
     async (key: string, from: "start" | "finalize") => {
       const src = sources.current.get(key);
       if (!src) return;
@@ -78,7 +116,7 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
         if (src.kind === "video" && !src.probe) {
           try {
             src.probe = await probeVideo(src.file);
-            patch(key, { previewUrl: URL.createObjectURL(src.probe.poster) });
+            patch(key, { previewUrl: makeUrl(src.probe.poster) });
           } catch (err) {
             fail(key, err instanceof Error ? err.message : "Couldn't read that video.", "none");
             return;
@@ -142,7 +180,7 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
       }
       let result: { error?: string };
       try {
-        result = await finalizeItem(itemId);
+        result = await finalizeLimit(() => requestFinalize(itemId));
       } catch {
         fail(key, FINALIZE_FAILED, retryMode("finalize", undefined, true));
         return;
@@ -155,7 +193,20 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
       patch(key, { status: "ready" });
       onChanged();
     },
-    [entryId, fail, limit, onChanged, patch, serial],
+    [entryId, fail, finalizeLimit, limit, makeUrl, onChanged, patch, serial],
+  );
+
+  const run = useCallback(
+    async (key: string, from: "start" | "finalize") => {
+      if (inFlight.current.has(key)) return;
+      inFlight.current.add(key);
+      try {
+        await pipeline(key, from);
+      } finally {
+        inFlight.current.delete(key);
+      }
+    },
+    [pipeline],
   );
 
   const addFiles = useCallback(
@@ -171,7 +222,7 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
           continue;
         }
         sources.current.set(key, { file, kind: cls.kind, contentType: cls.contentType });
-        const previewUrl = cls.kind === "image" ? URL.createObjectURL(file) : null;
+        const previewUrl = cls.kind === "image" ? makeUrl(file) : null;
         added.push({ ...base, isMov: cls.isMov, previewUrl, status: "queued", error: null });
         toRun.push(key);
       }
@@ -179,20 +230,21 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
       if (added.some((t) => t.isMov)) setMovSeen(true);
       for (const key of toRun) void run(key, "start");
     },
-    [run],
+    [makeUrl, run],
   );
 
   const retry = useCallback(
     (key: string) => {
-      const task = tasks.find((t) => t.key === key);
-      if (!task || task.retry === "none") return;
+      const task = tasksRef.current.find((t) => t.key === key);
+      if (!task || task.status !== "failed" || task.retry === "none" || inFlight.current.has(key)) return;
       void run(key, task.retry === "reupload" ? "start" : "finalize");
     },
-    [run, tasks],
+    [run],
   );
 
   const dismiss = useCallback(
     async (key: string) => {
+      if (inFlight.current.has(key)) return;
       const itemId = itemIds.current.get(key);
       if (itemId) {
         try {
@@ -203,32 +255,36 @@ export function useUploadManager(entryId: string, onChanged: () => void) {
         }
         onChanged();
       }
-      setTasks((prev) => {
-        const t = prev.find((x) => x.key === key);
-        if (t?.previewUrl) URL.revokeObjectURL(t.previewUrl);
-        return prev.filter((x) => x.key !== key);
-      });
-      sources.current.delete(key);
-      itemIds.current.delete(key);
+      drop(new Set([key]));
     },
-    [onChanged, patch],
+    [drop, onChanged, patch],
   );
 
-  /** Drop finished tasks once the server data shows their item as ready. */
-  const settle = useCallback((readyIds: Set<string>) => {
-    setTasks((prev) => {
-      const keep = prev.filter((t) => !(t.status === "ready" && t.itemId && readyIds.has(t.itemId)));
-      if (keep.length === prev.length) return prev;
-      for (const t of prev) {
-        if (!keep.includes(t)) {
-          if (t.previewUrl) URL.revokeObjectURL(t.previewUrl);
-          sources.current.delete(t.key);
-          itemIds.current.delete(t.key);
+  /**
+   * Reconcile with fresh server data: drop finished tasks once their item shows as
+   * ready, and settled (ready/failed) tasks whose item no longer exists on the server
+   * (removed elsewhere) so orphan cards can't block reordering.
+   */
+  const settle = useCallback(
+    (serverIds: Set<string>, readyIds: Set<string>) => {
+      for (const id of serverIds) seenOnServer.current.add(id);
+      const keys = new Set<string>();
+      for (const t of tasksRef.current) {
+        if (!t.itemId || inFlight.current.has(t.key)) continue;
+        if (t.status === "ready" && readyIds.has(t.itemId)) keys.add(t.key);
+        // Only once the server has shown the item and it's now gone — not merely "not refreshed yet".
+        else if (
+          (t.status === "ready" || t.status === "failed") &&
+          seenOnServer.current.has(t.itemId) &&
+          !serverIds.has(t.itemId)
+        ) {
+          keys.add(t.key);
         }
       }
-      return keep;
-    });
-  }, []);
+      drop(keys);
+    },
+    [drop],
+  );
 
   const busy = tasks.some(isActive);
   useEffect(() => {
@@ -362,7 +418,7 @@ export function MediaUploader({
           {ytBusy ? "Adding…" : "Add link"}
         </button>
       </form>
-      {ytError && <p className="mt-2 text-sm text-red-300">{ytError}</p>}
+      {ytError && <p role="alert" className="mt-2 text-sm text-red-300">{ytError}</p>}
     </section>
   );
 }

@@ -11,7 +11,6 @@ import {
   createEntryOp,
   createUploadOp,
   deleteEntryOp,
-  finalizeItemOp,
   removeItemOp,
   reorderItemsOp,
   setCoverOp,
@@ -64,12 +63,8 @@ export async function createUpload(entryId: string, file: UploadFile): Promise<C
   return createUploadOp(createAdminSupabase(), entryId, file);
 }
 
-export async function finalizeItem(itemId: string): Promise<{ error?: string }> {
-  await requireAdmin();
-  const result = await finalizeItemOp(createAdminSupabase(), itemId);
-  revalidatePublic();
-  return result;
-}
+// Finalisation lives in the route handler src/app/admin/gallery-api/finalize/route.ts
+// so slow image processing doesn't block the client's serialised action queue.
 
 export async function addYouTube(entryId: string, url: string): Promise<{ error?: string }> {
   await requireAdmin();

@@ -10,12 +10,14 @@ export const dynamic = "force-dynamic";
 // POST (form) rather than a GET page so link prefetching can never create drafts.
 async function newOuting() {
   "use server";
+  await requireAdmin();
   const id = await createEntry("outing");
   redirect(`/admin/gallery/${id}`);
 }
 
 async function newSingle() {
   "use server";
+  await requireAdmin();
   const id = await createEntry("single");
   redirect(`/admin/gallery/${id}`);
 }

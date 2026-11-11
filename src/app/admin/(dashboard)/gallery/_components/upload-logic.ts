@@ -4,6 +4,7 @@
 export const MAX_UPLOAD_BYTES = 52428800; // 50 MB — matches ops.ts and the bucket limit
 export const CAPTION_MAX = 1000;
 export const MAX_CONCURRENT_UPLOADS = 3;
+export const MAX_CONCURRENT_FINALIZES = 2;
 
 export const VIDEO_SIZE_COPY =
   "Clips up to about 30–40 seconds (50 MB). For longer videos, upload to YouTube and paste the link.";

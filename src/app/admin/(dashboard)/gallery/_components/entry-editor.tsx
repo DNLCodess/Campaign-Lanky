@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { deleteEntry, setEntryStatus, updateEntry } from "@/app/admin/(dashboard)/gallery/actions";
 import type { AdminEntryView, AdminItemView } from "./admin-view";
 import { ItemGrid } from "./item-grid";
@@ -52,19 +52,34 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
     fields.place !== saved.place ||
     fields.takenOn !== saved.takenOn;
 
-  const set = (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFields((f) => ({ ...f, [k]: e.target.value }));
+  // Refs so a save chained behind another (blur, then a button click) sees current values.
+  const fieldsRef = useRef<Fields>(initial);
+  const savedRef = useRef<Fields>(initial);
+  const pendingSave = useRef<Promise<boolean> | null>(null);
+
+  const update = (k: keyof Fields, value: string) => {
+    const next = { ...fieldsRef.current, [k]: value };
+    fieldsRef.current = next;
+    setFields(next);
     setSavedNote(null);
   };
 
-  const save = async (): Promise<boolean> => {
-    setError(null);
-    if (!dirty) return true;
-    if (!isIsoDate(fields.takenOn)) {
+  const doSave = async (): Promise<boolean> => {
+    const snapshot = fieldsRef.current;
+    const prev = savedRef.current;
+    if (
+      snapshot.title === prev.title &&
+      snapshot.body === prev.body &&
+      snapshot.place === prev.place &&
+      snapshot.takenOn === prev.takenOn
+    ) {
+      return true;
+    }
+    if (!isIsoDate(snapshot.takenOn)) {
       setError("Pick a valid date.");
       return false;
     }
-    const snapshot = fields;
+    setError(null);
     setSaving(true);
     try {
       await updateEntry(entry.id, {
@@ -73,6 +88,7 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
         place: isOuting ? snapshot.place : null,
         takenOn: snapshot.takenOn,
       });
+      savedRef.current = snapshot;
       setSaved(snapshot);
       setSavedNote("Saved");
       refresh();
@@ -85,9 +101,24 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
     }
   };
 
+  /** Saves are chained so they never overlap; callers can await the latest one. */
+  const save = (): Promise<boolean> => {
+    const before = pendingSave.current ?? Promise.resolve(true);
+    const p = before.then(doSave, doSave);
+    pendingSave.current = p;
+    void p.finally(() => {
+      if (pendingSave.current === p) pendingSave.current = null;
+    });
+    return p;
+  };
+
   const changeStatus = async (status: "draft" | "published") => {
-    if (!(await save())) return;
     setStatusBusy(true);
+    // Waits for any in-flight blur save, then saves anything still unsaved.
+    if (!(await save())) {
+      setStatusBusy(false);
+      return;
+    }
     try {
       const res = await setEntryStatus(entry.id, status);
       if (res.error) setError(res.error);
@@ -102,6 +133,8 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
   const remove = async () => {
     setDeleting(true);
     setError(null);
+    // Let an in-flight save land first, so it can't hit a deleted row.
+    await pendingSave.current?.catch(() => false);
     try {
       await deleteEntry(entry.id);
     } catch {
@@ -114,7 +147,10 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
 
   // Drop finished uploads once the refreshed server data shows them ready.
   useEffect(() => {
-    settle(new Set(items.filter((i) => i.processing === "ready").map((i) => i.id)));
+    settle(
+      new Set(items.map((i) => i.id)),
+      new Set(items.filter((i) => i.processing === "ready").map((i) => i.id)),
+    );
   }, [items, settle]);
 
   // Poll while an item is pending that this tab isn't driving (e.g. uploaded from a phone).
@@ -134,7 +170,9 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
   const visibleCount = items.filter((i) => i.processing === "ready" && !i.hidden).length;
   const singleFull =
     !isOuting && (items.length > 0 || tasks.some((t) => t.status !== "failed" || t.itemId));
-  const busy = saving || statusBusy || deleting;
+  // Blur saves must not disable these buttons (the click would be swallowed);
+  // status/delete await the pending save instead.
+  const busy = statusBusy || deleting;
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
@@ -177,28 +215,28 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <Field label={isOuting ? "Title" : "Caption"} full={!isOuting}>
           {isOuting ? (
-            <input value={fields.title} onChange={set("title")} onBlur={() => void save()} className={input} placeholder="e.g. Bodija Market visit" />
+            <input value={fields.title} onChange={(e) => update("title", e.target.value)} onBlur={() => void save()} className={input} placeholder="e.g. Bodija Market visit" />
           ) : (
-            <textarea value={fields.title} onChange={set("title")} onBlur={() => void save()} rows={2} className={input} placeholder="Optional caption" />
+            <textarea value={fields.title} onChange={(e) => update("title", e.target.value)} onBlur={() => void save()} rows={2} className={input} placeholder="Optional caption" />
           )}
         </Field>
         <Field label="Date">
-          <input type="date" value={fields.takenOn} onChange={set("takenOn")} onBlur={() => void save()} className={input} />
+          <input type="date" value={fields.takenOn} onChange={(e) => update("takenOn", e.target.value)} onBlur={() => void save()} className={input} />
         </Field>
         {isOuting && (
           <>
             <Field label="Place">
-              <input value={fields.place} onChange={set("place")} onBlur={() => void save()} className={input} placeholder="e.g. Bodija Market, Ibadan North" />
+              <input value={fields.place} onChange={(e) => update("place", e.target.value)} onBlur={() => void save()} className={input} placeholder="e.g. Bodija Market, Ibadan North" />
             </Field>
             <Field label="Short text" full>
-              <textarea value={fields.body} onChange={set("body")} onBlur={() => void save()} rows={3} className={input} placeholder="A sentence or two about the outing (optional)" />
+              <textarea value={fields.body} onChange={(e) => update("body", e.target.value)} onBlur={() => void save()} rows={3} className={input} placeholder="A sentence or two about the outing (optional)" />
             </Field>
           </>
         )}
       </section>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button type="button" disabled={busy} onClick={() => void save()} className={ghostBtn}>
+        <button type="button" disabled={busy || saving} onClick={() => void save()} className={ghostBtn}>
           {saving ? "Saving…" : published ? "Save" : "Save draft"}
         </button>
         {published ? (
@@ -238,7 +276,7 @@ export function EntryEditor({ entry, items }: { entry: AdminEntryView; items: Ad
         </div>
       )}
 
-      {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-300">{error}</p>}
 
       <h2 className="mt-8 mb-3 font-heading text-lg text-text">Media</h2>
       {!singleFull && (

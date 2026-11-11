@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import {
-  finalizeItem,
   removeItem,
   reorderItems,
   setCover,
@@ -11,6 +10,7 @@ import {
 } from "@/app/admin/(dashboard)/gallery/actions";
 import type { AdminItemView } from "./admin-view";
 import type { UploadTask } from "./media-uploader";
+import { requestFinalize } from "./upload-xhr";
 import { CAPTION_MAX, formatDuration, moveId, sameIdSet, serverRetryMode } from "./upload-logic";
 
 const NETWORK = "Something went wrong. Check your connection and try again.";
@@ -73,7 +73,7 @@ export function ItemGrid({ entryId, isOuting, coverId, items, tasks, onRetryTask
 
   return (
     <div>
-      {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
+      {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
       {canReorder && <p className="mb-3 text-xs text-text-muted">Drag to reorder, or use the arrows.</p>}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {ordered.map((item, index) => (
@@ -180,12 +180,13 @@ function TaskStatus({
   onDismiss: (key: string) => void;
 }) {
   const pct = Math.round(task.progress * 100);
+  const shown = task.status === "processing" || task.status === "ready" ? 100 : pct;
   return (
-    <div className="space-y-1.5 text-xs">
+    <div className="space-y-1.5 text-xs" aria-live="polite">
       <p className="truncate text-text-muted" title={task.name}>{task.name}</p>
       {task.status === "failed" ? (
         <>
-          <p className="text-red-300">Failed: {task.error}</p>
+          <p role="alert" className="text-red-300">Failed: {task.error}</p>
           <div className="flex gap-2">
             {task.retry !== "none" && (
               <button type="button" onClick={() => onRetry(task.key)} className={btn}>Retry</button>
@@ -204,11 +205,15 @@ function TaskStatus({
                   ? "Ready"
                   : "Preparing…"}
           </p>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full bg-accent transition-[width]"
-              style={{ width: `${task.status === "processing" || task.status === "ready" ? 100 : pct}%` }}
-            />
+          <div
+            role="progressbar"
+            aria-label={`Upload progress for ${task.name}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={shown}
+            className="h-1.5 overflow-hidden rounded-full bg-white/10"
+          >
+            <div className="h-full bg-accent transition-[width]" style={{ width: `${shown}%` }} />
           </div>
         </>
       )}
@@ -301,7 +306,10 @@ function ItemCard({
               disabled={retrying}
               onClick={async () => {
                 setRetrying(true);
-                await act(() => finalizeItem(item.id));
+                await act(async () => {
+                  const res = await requestFinalize(item.id);
+                  if (res.error) throw new Error(res.error);
+                });
                 setRetrying(false);
               }}
               className={btn}
@@ -324,7 +332,7 @@ function ItemCard({
             placeholder="Caption (optional)"
             className="w-full rounded border border-border bg-bg px-2 py-1 text-xs text-text placeholder:text-text-muted/50 focus:border-accent focus:outline-none"
           />
-          {captionError && <p className="mt-1 text-xs text-red-300">{captionError}</p>}
+          {captionError && <p role="alert" className="mt-1 text-xs text-red-300">{captionError}</p>}
         </div>
       )}
 
