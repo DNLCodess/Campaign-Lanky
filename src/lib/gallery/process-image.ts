@@ -7,6 +7,17 @@ export class UnsupportedImageError extends Error {
   }
 }
 
+export class ImageTooLargeError extends Error {
+  constructor(
+    message = "This photo is too large. Export it at a smaller size and try again.",
+  ) {
+    super(message);
+    this.name = "ImageTooLargeError";
+  }
+}
+
+export const MAX_INPUT_PIXELS = 100_000_000;
+
 export type VariantWidth = 640 | 1280 | 2048;
 
 export type ProcessedImage = {
@@ -18,12 +29,22 @@ export type ProcessedImage = {
 
 const WIDTHS: VariantWidth[] = [640, 1280, 2048];
 
-export async function processImage(input: Buffer): Promise<ProcessedImage> {
+export async function processImage(
+  input: Buffer,
+  opts?: { maxPixels?: number },
+): Promise<ProcessedImage> {
+  const maxPixels = opts?.maxPixels ?? MAX_INPUT_PIXELS;
   // Decode once to raw pixels (orientation baked in): lossless and format-agnostic.
   let decoded: { data: Buffer; info: sharp.OutputInfo };
   try {
-    decoded = await sharp(input).rotate().raw().toBuffer({ resolveWithObject: true });
+    const meta = await sharp(input).metadata();
+    if ((meta.width ?? 0) * (meta.height ?? 0) > maxPixels) {
+      throw new ImageTooLargeError();
+    }
+    decoded = await sharp(input, { limitInputPixels: maxPixels })
+      .rotate().raw().toBuffer({ resolveWithObject: true });
   } catch (err) {
+    if (err instanceof ImageTooLargeError) throw err;
     throw new UnsupportedImageError(
       err instanceof Error ? err.message : undefined,
       { cause: err },

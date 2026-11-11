@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import sharp from "sharp";
-import { processImage, UnsupportedImageError } from "./process-image";
+import { processImage, UnsupportedImageError, ImageTooLargeError, MAX_INPUT_PIXELS } from "./process-image";
 
 const jpeg = (w: number, h: number, orientation?: number) => {
   let s = sharp({ create: { width: w, height: h, channels: 3, background: "#888" } }).jpeg();
@@ -66,4 +66,24 @@ test("exactly 640px source gets one variant", async () => {
 
 test("garbage throws UnsupportedImageError", async () => {
   await assert.rejects(processImage(Buffer.from("nope")), UnsupportedImageError);
+});
+
+test("image over the pixel cap is rejected with ImageTooLargeError", async () => {
+  const r = await processImage(await jpeg(100, 100)); // normal passes
+  assert.equal(r.width, 100);
+  await assert.rejects(
+    processImage(await jpeg(101, 100), { maxPixels: 10_000 }),
+    ImageTooLargeError,
+  );
+});
+
+test("real over-cap image (10001x10000 png) is rejected quickly", async () => {
+  const big = await sharp({
+    create: { width: 10001, height: 10000, channels: 3, background: "#000" },
+    limitInputPixels: false,
+  })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+  assert.ok(10001 * 10000 > MAX_INPUT_PIXELS);
+  await assert.rejects(processImage(big), ImageTooLargeError);
 });
