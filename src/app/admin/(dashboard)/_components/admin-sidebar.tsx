@@ -7,6 +7,7 @@ const NAV: SidebarNavItem[] = [
   { href: "/admin/unit-leaders", label: "Unit Leaders", icon: "people" },
   { href: "/admin/team-leaders", label: "Team Leaders", icon: "network" },
   { href: "/admin/blog", label: "Blog", icon: "blog" },
+  { href: "/admin/gallery", label: "Gallery", icon: "gallery" },
   { href: "/admin/team", label: "Team", icon: "people" },
   { href: "/admin/agent-nominations/candidates", label: "Party Agents", icon: "election" },
 ];
