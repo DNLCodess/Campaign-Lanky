@@ -85,43 +85,62 @@ export type AdminEntry = EntryRow & {
   cover: PublicItem | null;
 };
 
+const FK = "gallery_items!gallery_items_entry_id_fkey";
+
+type CountRow = { count: number }[] | null;
+type AdminEntryRow = EntryRow & { item_count: CountRow; failed: CountRow };
+
 export async function getAdminEntries(): Promise<AdminEntry[]> {
   try {
     const supabase = createAdminSupabase();
     const { data, error } = await supabase
       .from("gallery_entries")
-      .select("*")
+      .select(`*, item_count:${FK}(count), failed:${FK}(count)`)
+      .eq("failed.processing", "failed")
       .order("taken_on", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw error;
-    const entries = (data ?? []) as EntryRow[];
+    const entries = (data ?? []) as unknown as AdminEntryRow[];
     if (entries.length === 0) return [];
-    const { data: itemData, error: itemErr } = await supabase
-      .from("gallery_items")
-      .select("*")
-      .in("entry_id", entries.map((e) => e.id))
-      .order("position", { ascending: true });
-    if (itemErr) throw itemErr;
-    const items = (itemData ?? []) as ItemRow[];
-    const byEntry = new Map<string, ItemRow[]>();
-    for (const it of items) {
-      const l = byEntry.get(it.entry_id);
-      if (l) l.push(it);
-      else byEntry.set(it.entry_id, [it]);
+
+    // Cover items: the chosen cover when ready, otherwise the first ready item.
+    const coverIds = entries.map((e) => e.cover_item_id).filter((x): x is string => !!x);
+    const coverById = new Map<string, ItemRow>();
+    for (let i = 0; i < coverIds.length; i += 100) {
+      const { data: rows, error: coverErr } = await supabase
+        .from("gallery_items")
+        .select("*")
+        .in("id", coverIds.slice(i, i + 100))
+        .eq("processing", "ready");
+      if (coverErr) throw coverErr;
+      for (const r of (rows ?? []) as ItemRow[]) coverById.set(r.id, r);
     }
-    return entries.map((e) => {
-      const mine = byEntry.get(e.id) ?? [];
-      const coverRow =
-        mine.find((i) => i.id === e.cover_item_id && i.processing === "ready") ??
-        mine.find((i) => i.processing === "ready") ??
-        null;
+    const coverFor = new Map<string, ItemRow>();
+    await Promise.all(
+      entries.map(async (e) => {
+        const chosen = e.cover_item_id ? coverById.get(e.cover_item_id) : undefined;
+        if (chosen) return void coverFor.set(e.id, chosen);
+        const { data: first } = await supabase
+          .from("gallery_items")
+          .select("*")
+          .eq("entry_id", e.id)
+          .eq("processing", "ready")
+          .order("position", { ascending: true })
+          .limit(1);
+        const row = (first ?? [])[0] as ItemRow | undefined;
+        if (row) coverFor.set(e.id, row);
+      }),
+    );
+
+    return entries.map(({ item_count, failed, ...e }) => {
+      const coverRow = coverFor.get(e.id);
       const cover = coverRow
         ? (toPublicEntries([e], [{ ...coverRow, hidden: false }], galleryPublicUrl)[0]?.items[0] ?? null)
         : null;
       return {
         ...e,
-        item_count: mine.length,
-        failed_count: mine.filter((i) => i.processing === "failed").length,
+        item_count: item_count?.[0]?.count ?? 0,
+        failed_count: failed?.[0]?.count ?? 0,
         cover,
       };
     });
