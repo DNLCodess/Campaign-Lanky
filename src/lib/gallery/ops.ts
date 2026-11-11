@@ -5,7 +5,7 @@
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateSlug } from "../slug";
-import { processImage, UnsupportedImageError } from "./process-image";
+import { ImageTooLargeError, processImage, UnsupportedImageError } from "./process-image";
 import { parseYouTubeUrl } from "./youtube";
 import type { EntryKind, EntryRow, ItemRow, Variants } from "./types";
 
@@ -241,15 +241,15 @@ export async function setEntryStatusOp(
   if (!count) return { error: MSG.noItems };
   if (entry.kind === "outing" && !entry.title.trim()) return { error: MSG.noTitle };
 
-  const { error } = await db.from("gallery_entries").update({ status: "published" }).eq("id", id);
-  if (error) throw new Error(error.message);
-  // Feed cursor pagination needs published_at on every published row.
-  const { error: pubErr } = await db
+  // One update: feed cursor pagination needs published_at on every published row.
+  const { error } = await db
     .from("gallery_entries")
-    .update({ published_at: new Date().toISOString() })
-    .eq("id", id)
-    .is("published_at", null);
-  if (pubErr) throw new Error(pubErr.message);
+    .update({
+      status: "published",
+      ...(entry.published_at ? {} : { published_at: new Date().toISOString() }),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
   return {};
 }
 
@@ -343,7 +343,9 @@ export async function finalizeItemOp(db: SupabaseClient, itemId: string): Promis
     if (error || !blob) return fail(MSG.uploadMissing);
     processed = await processImage(Buffer.from(await blob.arrayBuffer()));
   } catch (err) {
-    return fail(err instanceof UnsupportedImageError ? MSG.unsupportedPhoto : MSG.processFailed);
+    if (err instanceof ImageTooLargeError) return fail(err.message);
+    if (err instanceof UnsupportedImageError) return fail(MSG.unsupportedPhoto);
+    return fail(MSG.processFailed);
   }
 
   const variants: Variants = {};
