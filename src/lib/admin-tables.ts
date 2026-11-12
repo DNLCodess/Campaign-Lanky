@@ -98,11 +98,16 @@ export function searchExpression(table: AdminTableKey, q: string): string | null
   return ADMIN_TABLES[table].search.map((c) => `${c}.ilike.%${safe}%`).join(",");
 }
 
-/** Serialise a value into a CSV-safe cell. */
+/**
+ * Serialise a value into a CSV-safe cell. Values starting with = + - @ tab or
+ * CR get a leading ' so spreadsheet apps treat publicly submitted text as
+ * text, not a formula (CSV/formula injection).
+ */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return "";
-  const str = Array.isArray(value) ? value.join("; ") : String(value);
-  if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+  let str = Array.isArray(value) ? value.join("; ") : String(value);
+  if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
+  if (/[",\r\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
   return str;
 }
 
