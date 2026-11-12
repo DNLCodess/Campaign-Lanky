@@ -32,7 +32,9 @@ test("rejects", () => {
 });
 
 test("thumb and embed urls", () => {
-  assert.equal(youTubeThumb("dQw4w9WgXcQ"), "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
+  assert.equal(youTubeThumb("dQw4w9WgXcQ"), "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg");
+  assert.equal(youTubeThumb("dQw4w9WgXcQ", false), "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg");
+  assert.equal(youTubeThumb("dQw4w9WgXcQ", true), "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
   assert.equal(
     youTubeEmbed("dQw4w9WgXcQ"),
     "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0",

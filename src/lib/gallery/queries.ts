@@ -24,7 +24,11 @@ async function readyItems(ids: string[]): Promise<ItemRow[]> {
   return (data ?? []) as ItemRow[];
 }
 
-export async function getFeedPage(cursor: string | null, limit = 12): Promise<FeedPage> {
+export async function getFeedPage(
+  cursor: string | null,
+  limit = 12,
+  opts?: { throwOnError?: boolean },
+): Promise<FeedPage> {
   const empty: FeedPage = { entries: [], nextCursor: null };
   try {
     let decoded = null;
@@ -51,7 +55,9 @@ export async function getFeedPage(cursor: string | null, limit = 12): Promise<Fe
         ? encodeCursor({ takenOn: last.taken_on, publishedAt: last.published_at, id: last.id })
         : null;
     return { entries: toPublicEntries(page, items, galleryPublicUrl), nextCursor };
-  } catch {
+  } catch (err) {
+    // Server-rendered first page degrades to empty; client "load more" rethrows so it can retry.
+    if (opts?.throwOnError) throw err;
     return empty;
   }
 }

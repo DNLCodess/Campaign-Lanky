@@ -29,8 +29,9 @@ export function parseYouTubeUrl(input: string): { id: string; short: boolean } |
   return id && ID_RE.test(id) ? { id, short } : null;
 }
 
-export function youTubeThumb(id: string): string {
-  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+/** mqdefault is a true 16:9 frame; hqdefault (4:3, letterboxed) suits 9:16 Shorts better. */
+export function youTubeThumb(id: string, short = false): string {
+  return `https://i.ytimg.com/vi/${id}/${short ? "hqdefault" : "mqdefault"}.jpg`;
 }
 
 export function youTubeEmbed(id: string): string {

@@ -61,7 +61,7 @@ export function MediaTile({
     if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, []);
 
-  const src = isYouTube && item.youtubeId ? youTubeThumb(item.youtubeId) : item.src;
+  const src = isYouTube && item.youtubeId ? youTubeThumb(item.youtubeId, item.width < item.height) : item.src;
   const duration = item.type === "video" ? formatDuration(item.durationS) : null;
   const blur = !loaded && item.blur ? `url("${item.blur}")` : undefined;
 

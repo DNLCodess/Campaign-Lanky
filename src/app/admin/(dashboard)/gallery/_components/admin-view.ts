@@ -26,7 +26,7 @@ export function toAdminItemView(row: ItemRow, publicUrl: (path: string) => strin
   let thumb: string | null = null;
   let thumbSrcSet: string | null = null;
   if (row.media_type === "youtube" && row.youtube_id) {
-    thumb = youTubeThumb(row.youtube_id);
+    thumb = youTubeThumb(row.youtube_id, row.youtube_short);
   } else if (row.variants) {
     const parts = (["640", "1280"] as const).filter((w) => row.variants?.[w]);
     if (parts.length) {

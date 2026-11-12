@@ -11,5 +11,5 @@ export async function loadGalleryPage(cursor: string | null): Promise<FeedPage> 
   if (typeof cursor !== "string" || cursor.length === 0 || cursor.length > MAX_CURSOR_LENGTH) {
     return { entries: [], nextCursor: null };
   }
-  return getFeedPage(cursor, PAGE_SIZE);
+  return getFeedPage(cursor, PAGE_SIZE, { throwOnError: true });
 }

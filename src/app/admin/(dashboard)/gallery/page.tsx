@@ -74,7 +74,7 @@ export default async function AdminGalleryPage() {
 
 function EntryRow({ entry }: { entry: AdminEntry }) {
   const cover = entry.cover;
-  const thumb = cover ? (cover.type === "youtube" && cover.youtubeId ? youTubeThumb(cover.youtubeId) : cover.src) : null;
+  const thumb = cover ? (cover.type === "youtube" && cover.youtubeId ? youTubeThumb(cover.youtubeId, cover.width < cover.height) : cover.src) : null;
   const published = entry.status === "published";
   const title = entry.title.trim() || "Untitled";
 
