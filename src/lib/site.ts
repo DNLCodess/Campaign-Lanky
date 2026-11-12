@@ -63,6 +63,7 @@ export const site = {
     { label: "Wards & LG", href: "/wards" },
     { label: "Results", href: "/results" },
     { label: "News & Media", href: "/news" },
+    { label: "Gallery", href: "/gallery" },
     { label: "Get Your DP", href: "/dp" },
     { label: "Get Involved", href: "/get-involved" },
     { label: "Contact", href: "/contact" },

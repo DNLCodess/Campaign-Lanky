@@ -43,12 +43,14 @@ export function MediaTile({
   className = "",
 }: {
   item: PublicItem;
-  onOpen: () => void;
+  /** Omit to render a non-interactive tile (e.g. inside a Link). */
+  onOpen?: () => void;
   sizes: string;
   /** Fallback text for the accessible label when the item has no caption. */
   label?: string;
   className?: string;
 }) {
+  const Root = onOpen ? "button" : "div";
   const isYouTube = item.type === "youtube";
   // YouTube boxes are fixed 16:9 / 9:16 (stored dims) and the 4:3 thumbnail is
   // letterboxed inside, so they always get the backdrop.
@@ -66,12 +68,12 @@ export function MediaTile({
   const blur = !loaded && item.blur ? `url("${item.blur}")` : undefined;
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <Root
+      {...(onOpen
+        ? { type: "button" as const, onClick: onOpen, "aria-label": itemLabel(item, label) }
+        : {})}
       data-gallery-item={item.id}
-      aria-label={itemLabel(item, label)}
-      className={`group relative block w-full cursor-zoom-in overflow-hidden rounded-[0.5rem] outline-none ring-accent/0 transition-shadow duration-200 hover:ring-2 hover:ring-accent/60 focus-visible:ring-2 focus-visible:ring-accent ${className}`}
+      className={`group relative block w-full ${onOpen ? "cursor-zoom-in" : ""} overflow-hidden rounded-[0.5rem] outline-none ring-accent/0 transition-shadow duration-200 hover:ring-2 hover:ring-accent/60 focus-visible:ring-2 focus-visible:ring-accent ${className}`}
       style={{
         aspectRatio: ratio,
         backgroundColor: GALLERY_BACKDROP,
@@ -108,6 +110,6 @@ export function MediaTile({
           {isYouTube ? "YouTube" : duration}
         </span>
       )}
-    </button>
+    </Root>
   );
 }

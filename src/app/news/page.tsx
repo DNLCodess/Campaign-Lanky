@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { Reveal } from "@/components/motion/reveal";
 import { PostCard } from "@/components/blog/post-card";
+import { GalleryTeaser } from "@/components/gallery/gallery-teaser";
 import { getPublishedPosts } from "@/lib/blog";
 
 export const revalidate = 60;
@@ -14,12 +14,6 @@ export const metadata: Metadata = {
     "Press releases, campaign updates, and media from Lanky's ward-to-ward consultations and community engagements.",
   alternates: { canonical: "/news" },
 };
-
-const gallery = [
-  { src: "/brand/candidate-4.png", label: "On the campaign" },
-  { src: "/brand/candidate-6.png", label: "With the community" },
-  { src: "/brand/candidate-5.png", label: "In conversation" },
-];
 
 export default async function NewsPage() {
   const posts = await getPublishedPosts(9);
@@ -112,55 +106,7 @@ export default async function NewsPage() {
         </div>
       </section>
 
-      {/* Gallery */}
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
-        <Reveal>
-          <h2 className="font-heading text-3xl text-text sm:text-4xl">
-            Gallery &amp; videos
-          </h2>
-          <p className="mt-4 max-w-xl text-text-muted">
-            Moments with market women, community elders, and youth groups.
-          </p>
-        </Reveal>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {gallery.map((g, i) => (
-            <Reveal
-              key={g.label}
-              delay={i * 0.05}
-              className="group relative aspect-4/5 overflow-hidden rounded-brand border border-border"
-            >
-              {/* Branded backdrop behind the transparent cut-out */}
-              <div
-                aria-hidden
-                className="absolute inset-0"
-                style={{
-                  backgroundColor: "#0b2a3d",
-                  backgroundImage:
-                    "radial-gradient(110% 75% at 50% 12%, rgba(103,156,188,0.28), transparent 62%)",
-                }}
-              />
-              <Image
-                src={g.src}
-                alt={g.label}
-                fill
-                sizes="(max-width: 1024px) 90vw, 30vw"
-                className="object-contain object-bottom transition-transform duration-500 group-hover:scale-105"
-              />
-              <div
-                aria-hidden
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(to top, rgba(7,26,38,0.9), rgba(7,26,38,0) 55%)",
-                }}
-              />
-              <span className="absolute bottom-4 left-4 font-heading text-lg text-white">
-                {g.label}
-              </span>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      <GalleryTeaser />
     </>
   );
 }
