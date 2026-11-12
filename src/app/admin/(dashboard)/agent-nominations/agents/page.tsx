@@ -81,10 +81,22 @@ export default async function AdminAgentsPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <a
-            href={`/admin/agent-files/signatures${zipQs ? `?${zipQs}` : ""}`}
+            href={`/admin/agent-files/signature${zipQs ? `?${zipQs}` : ""}`}
             className="rounded-brand bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
           >
-            Download {filters.ward !== undefined ? `Ward ${filters.ward} ` : "all "}signatures (PNG, ZIP)
+            {filters.ward !== undefined ? `Ward ${filters.ward} ` : "All "}signatures (PNG, ZIP)
+          </a>
+          <a
+            href={`/admin/agent-files/id${zipQs ? `?${zipQs}` : ""}`}
+            className="rounded-brand border border-border px-4 py-2.5 text-sm text-text transition-colors hover:border-accent"
+          >
+            {filters.ward !== undefined ? `Ward ${filters.ward} ` : "All "}ID documents (ZIP)
+          </a>
+          <a
+            href={`/admin/agent-files/photo${zipQs ? `?${zipQs}` : ""}`}
+            className="rounded-brand border border-border px-4 py-2.5 text-sm text-text transition-colors hover:border-accent"
+          >
+            {filters.ward !== undefined ? `Ward ${filters.ward} ` : "All "}passport photos (ZIP)
           </a>
           <a
             href={`/admin/agent-files/csv${candidateQs ? `?${candidateQs}` : ""}`}

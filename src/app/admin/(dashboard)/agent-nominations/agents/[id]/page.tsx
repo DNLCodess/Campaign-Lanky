@@ -144,8 +144,16 @@ export default async function AdminAgentDetailPage({ params }: { params: Promise
           <div>
             <h2 className="font-heading text-lg text-text">Documents</h2>
             <ul className="mt-3 space-y-2 text-sm">
-              <FileLink label="ID document" url={files.pvc_copy} />
-              <FileLink label="Passport photo" url={files.passport_photo} />
+              <FileLink
+                label={`ID document (${nomination.means_of_id})`}
+                url={files.pvc_copy}
+                downloadHref={`/admin/agent-files/id/${nomination.id}`}
+              />
+              <FileLink
+                label="Passport photo"
+                url={files.passport_photo}
+                downloadHref={`/admin/agent-files/photo/${nomination.id}`}
+              />
               <FileLink label="Nomination form (PDF)" url={files.generated_pdf} />
             </ul>
           </div>
@@ -183,14 +191,24 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FileLink({ label, url }: { label: string; url?: string }) {
+function FileLink({ label, url, downloadHref }: { label: string; url?: string; downloadHref?: string }) {
   return (
-    <li className="flex items-center justify-between rounded-brand border border-border bg-surface/40 px-4 py-2.5">
+    <li className="flex items-center justify-between gap-3 rounded-brand border border-border bg-surface/40 px-4 py-2.5">
       <span className="text-text">{label}</span>
       {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
-          Open
-        </a>
+        <span className="flex shrink-0 items-center gap-3">
+          <a href={url} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
+            Open
+          </a>
+          {downloadHref && (
+            <a
+              href={downloadHref}
+              className="rounded-brand border border-border px-2.5 py-1 text-xs text-text transition-colors hover:border-accent"
+            >
+              Download
+            </a>
+          )}
+        </span>
       ) : (
         <span className="text-text-muted">Unavailable</span>
       )}
