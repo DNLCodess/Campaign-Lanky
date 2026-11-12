@@ -15,7 +15,7 @@ const PDP_COLOR = seriesColor(PARTY_INFO.PDP.colorIndex);
 const APC_COLOR = seriesColor(PARTY_INFO.APC.colorIndex);
 
 type Show = "all" | "pdp" | "apc" | "other" | "check";
-type Sort = "code" | "pdp" | "margin-pdp" | "margin-apc" | "turnout";
+type Sort = "code" | "pdp" | "margin-pdp" | "margin-apc" | "turnout" | "registered";
 
 const fmt = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString());
 const signed = (n: number) => (n > 0 ? `+${n.toLocaleString()}` : n.toLocaleString());
@@ -76,6 +76,7 @@ export function ResultsExplorer({
       "margin-pdp": (a, b) => margin(b) - margin(a),
       "margin-apc": (a, b) => margin(a) - margin(b),
       turnout: (a, b) => turnout(b) - turnout(a),
+      registered: (a, b) => (b.registeredNow ?? -1) - (a.registeredNow ?? -1),
     };
     return list.sort(by[sort]);
   }, [units, query, lga, ward, show, sort]);
@@ -83,7 +84,8 @@ export function ResultsExplorer({
   const shownTotals = useMemo(() => {
     const pdp = filtered.reduce((s, u) => s + (u.votes.PDP ?? 0), 0);
     const apc = filtered.reduce((s, u) => s + (u.votes.APC ?? 0), 0);
-    return { pdp, apc };
+    const registered = filtered.reduce((s, u) => s + (u.registeredNow ?? 0), 0);
+    return { pdp, apc, registered };
   }, [filtered]);
 
   const resetPaging = () => {
@@ -159,7 +161,7 @@ export function ResultsExplorer({
                               {w.ward}
                             </span>
                             <span className="block text-xs text-text-muted">
-                              {w.readPus}/{w.totalPus} sheets read
+                              {w.readPus}/{w.totalPus} sheets read · {w.registeredNow.toLocaleString()} registered
                             </span>
                           </span>
                           <span
@@ -273,6 +275,7 @@ export function ResultsExplorer({
               ["margin-pdp", "Biggest PDP lead"],
               ["margin-apc", "Biggest APC lead"],
               ["turnout", "Highest turnout"],
+              ["registered", "Most registered voters"],
             ]}
           />
         </div>
@@ -290,6 +293,8 @@ export function ResultsExplorer({
             <span style={{ color: APC_COLOR }} className="font-medium">
               APC {fmt(shownTotals.apc)}
             </span>
+            <span className="mx-2 text-border">·</span>
+            <span className="font-medium text-text">{fmt(shownTotals.registered)}</span> registered today
           </p>
           {filtersActive && (
             <button
@@ -303,8 +308,9 @@ export function ResultsExplorer({
         </div>
 
         {/* Column headings (wide screens only; each row labels itself on phones) */}
-        <div className="mt-4 hidden grid-cols-[minmax(0,1fr)_5rem_5rem_6rem_7rem_1.5rem] gap-3 px-4 text-xs font-medium uppercase tracking-wider text-text-muted md:grid">
+        <div className="mt-4 hidden grid-cols-[minmax(0,1fr)_5.5rem_5rem_5rem_6rem_7rem_1.5rem] gap-3 px-4 text-xs font-medium uppercase tracking-wider text-text-muted md:grid">
           <span>Polling unit</span>
+          <span className="text-right">Registered</span>
           <span className="text-right">PDP</span>
           <span className="text-right">APC</span>
           <span className="text-right">PDP lead</span>
@@ -453,7 +459,7 @@ function PuRow({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={detailId}
-        className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-surface-2/50 focus-visible:outline-2 focus-visible:outline-accent md:grid-cols-[minmax(0,1fr)_5rem_5rem_6rem_7rem_1.5rem] md:items-center"
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 px-4 py-3 text-left transition-colors hover:bg-surface-2/50 focus-visible:outline-2 focus-visible:outline-accent md:grid-cols-[minmax(0,1fr)_5.5rem_5rem_5rem_6rem_7rem_1.5rem] md:items-center"
       >
         <span className="min-w-0">
           <span className="block text-sm font-medium text-text">{u.name}</span>
@@ -486,10 +492,16 @@ function PuRow({
               </span>
             </>
           ) : null}
+          <span className="tabular-nums text-text-muted">
+            Reg. <span className="font-medium text-text">{fmt(u.registeredNow)}</span>
+          </span>
           <StatusChip unit={u} />
         </span>
 
         {/* Wide screens: aligned columns */}
+        <span className="hidden text-right text-sm tabular-nums text-text md:block">
+          {fmt(u.registeredNow)}
+        </span>
         <span className="hidden text-right text-sm font-medium tabular-nums md:block" style={{ color: PDP_COLOR }}>
           {hasVotes ? fmt(u.votes.PDP) : "—"}
         </span>
@@ -549,10 +561,11 @@ function PuRow({
               {hasVotes && (
                 <p className="mt-2 text-xs text-text-muted">Others: APGA, APP, NNPP, PRP and SDP combined.</p>
               )}
-              <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-border/50 pt-3 text-xs">
+              <dl className="mt-4 grid grid-cols-2 gap-x-2 gap-y-3 border-t border-border/50 pt-3 text-xs">
                 {(
                   [
-                    ["Registered", u.registered],
+                    ["Registered today", u.registeredNow],
+                    ["Registered 2023", u.registered],
                     ["Accredited", u.accredited],
                     ["Valid votes", u.totalValid],
                   ] as const

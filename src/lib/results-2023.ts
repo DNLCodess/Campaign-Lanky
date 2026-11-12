@@ -1,4 +1,5 @@
 import rows from "@/data/reps-2023-pu-results.json";
+import registeredNow from "@/data/pu-registered-voters-current.json";
 
 /**
  * 2023 House of Representatives election, Ibadan South West / Ibadan North
@@ -31,7 +32,10 @@ export type PollingUnitResult = {
   wardCode: string;
   ward: string;
   name: string;
+  /** Registered voters on the 2023 sheet (Form EC8A). */
   registered: number | null;
+  /** Registered voters today, from the current INEC register (see REGISTER_AS_OF). */
+  registeredNow: number | null;
   accredited: number | null;
   totalValid: number | null;
   votes: Record<Party, number | null>;
@@ -47,6 +51,9 @@ export const DECLARED = {
   runnerUp: { party: "APC" as Party, candidate: "Saheed Akinade-Fijabi", votes: 23019 },
 };
 
+/** Date of the current per-polling-unit register figures. */
+export const REGISTER_AS_OF = "7 November 2026";
+
 export const IREV_URL =
   "https://inecelectionresults.ng/elections/63f8c9871120b93b86d32c10/context/lga";
 
@@ -56,12 +63,18 @@ export type AreaTotals = {
   noResultPus: number;
   votes: Record<Party, number>;
   total: number;
+  /** Registered voters today across these units. */
+  registeredNow: number;
 };
 
 export type WardTotals = AreaTotals & { lga: string; wardCode: string; ward: string };
 
 export function getPuResults(): PollingUnitResult[] {
-  return rows as PollingUnitResult[];
+  const current = registeredNow as Record<string, number>;
+  return (rows as Omit<PollingUnitResult, "registeredNow">[]).map((u) => ({
+    ...u,
+    registeredNow: current[u.code] ?? null,
+  }));
 }
 
 function totals(units: PollingUnitResult[]): AreaTotals {
@@ -74,6 +87,7 @@ function totals(units: PollingUnitResult[]): AreaTotals {
     noResultPus,
     votes,
     total: PARTIES.reduce((s, p) => s + votes[p], 0),
+    registeredNow: units.reduce((s, u) => s + (u.registeredNow ?? 0), 0),
   };
 }
 

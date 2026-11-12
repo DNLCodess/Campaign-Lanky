@@ -9,6 +9,7 @@ import {
   IREV_URL,
   PARTIES,
   PARTY_INFO,
+  REGISTER_AS_OF,
   getPuResults,
   getResultsSummary,
   type AreaTotals,
@@ -91,7 +92,14 @@ export default function Results2023Page() {
               <div className="mt-6">
                 <LeaderboardBars items={partyItems(constituency)} />
               </div>
-              <div className="mt-6 border-t border-border/50 pt-5">
+              <p className="mt-6 border-t border-border/50 pt-5 text-sm text-text-muted">
+                <span className="font-heading text-2xl text-text">
+                  {constituency.registeredNow.toLocaleString()}
+                </span>{" "}
+                registered voters across all {constituency.totalPus} polling units today (INEC
+                register, {REGISTER_AS_OF}).
+              </p>
+              <div className="mt-5">
                 <Meter
                   value={constituency.readPus}
                   max={constituency.totalPus}
@@ -122,6 +130,9 @@ export default function Results2023Page() {
                     <p className="mt-1 text-sm text-text-muted">
                       {margin >= 0 ? "PDP" : "APC"} ahead by{" "}
                       <span className="font-medium text-text">{Math.abs(margin).toLocaleString()}</span>
+                      <span className="mx-2 text-border">·</span>
+                      <span className="font-medium text-text">{l.registeredNow.toLocaleString()}</span>{" "}
+                      registered today
                     </p>
                     <div className="mt-4">
                       <LeaderboardBars items={partyItems(l)} scaleMax={lgaScaleMax} />
@@ -154,6 +165,11 @@ export default function Results2023Page() {
                 or a cancelled result. Units marked &ldquo;Check sheet&rdquo; were hard to read or
                 have figures that don&apos;t add up. Every unit links to its original sheet so anyone
                 can check our reading.
+              </p>
+              <p>
+                &ldquo;Registered today&rdquo; is the number of registered voters in each polling
+                unit on the current INEC register ({REGISTER_AS_OF}). &ldquo;Registered 2023&rdquo;
+                is the figure written on the 2023 result sheet.
               </p>
               <p>
                 Several sheets list Accord&apos;s votes on a handwritten extra row. Accord is party
