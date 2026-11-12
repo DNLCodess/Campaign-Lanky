@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  toPublicEntries, groupFeed, appendFeed, encodeCursor, decodeCursor, cursorFilter,
+  toPublicEntries, groupFeed, appendFeed, encodeCursor, decodeCursor, cursorFilter, srcSetUrl,
 } from "./feed";
 import type { EntryRow, ItemRow, PublicEntry, EntryKind } from "./types";
 
@@ -112,4 +112,13 @@ test("cursorFilter breaks same-day ties by published_at then id", () => {
     cursorFilter(c),
     'taken_on.lt.2026-11-03,and(taken_on.eq.2026-11-03,published_at.lt."2026-11-03T10:00:00+00:00"),and(taken_on.eq.2026-11-03,published_at.eq."2026-11-03T10:00:00+00:00",id.lt.b)',
   );
+});
+
+test("srcSetUrl picks the url for the requested width", () => {
+  const set = "https://x/a-640.webp 640w, https://x/a-1280.webp 1280w, https://x/a-2048.webp 2048w";
+  assert.equal(srcSetUrl(set, 1280), "https://x/a-1280.webp");
+  assert.equal(srcSetUrl(set, 640), "https://x/a-640.webp");
+  assert.equal(srcSetUrl("https://x/a-640.webp 640w", 1280), null);
+  assert.equal(srcSetUrl(null, 1280), null);
+  assert.equal(srcSetUrl("", 1280), null);
 });

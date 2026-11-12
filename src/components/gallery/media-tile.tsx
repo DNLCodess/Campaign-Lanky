@@ -63,7 +63,10 @@ export function MediaTile({
     if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, []);
 
-  const src = isYouTube && item.youtubeId ? youTubeThumb(item.youtubeId, item.width < item.height) : item.src;
+  // Shorts: hqdefault is 4:3 with the vertical frame pillarboxed, so the thumb is
+  // object-cover in its 9:16 box (trims only YouTube's baked-in bars). All else is contained.
+  const isShort = isYouTube && item.width < item.height;
+  const src = isYouTube && item.youtubeId ? youTubeThumb(item.youtubeId, isShort) : item.src;
   const duration = item.type === "video" ? formatDuration(item.durationS) : null;
   const blur = !loaded && item.blur ? `url("${item.blur}")` : undefined;
 
@@ -97,7 +100,7 @@ export function MediaTile({
           decoding="async"
           draggable={false}
           onLoad={() => setLoaded(true)}
-          className="absolute inset-0 h-full w-full object-contain transition-[filter] duration-300 group-hover:brightness-110"
+          className={`absolute inset-0 h-full w-full ${isShort ? "object-cover" : "object-contain"} transition-[filter] duration-300 group-hover:brightness-110`}
         />
       )}
 

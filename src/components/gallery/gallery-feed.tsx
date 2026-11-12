@@ -9,6 +9,9 @@ import { Lightbox } from "./lightbox";
 import { OutingStrip } from "./outing-strip";
 import { SinglesRows } from "./singles-rows";
 
+/** Extra pages fetched at most when looking for a /gallery#slug deep link. */
+const HASH_MAX_PAGES = 5;
+
 /** What the full-screen viewer opens at. */
 export type ViewerTarget = { entryId: string; itemIndex: number };
 
@@ -50,6 +53,37 @@ export function GalleryFeed({ initial }: { initial: FeedPage }) {
       setLoading(false);
     }
   }, [cursor]);
+
+  // Deep links (/gallery#slug) to entries beyond the server-rendered first page:
+  // page in until the anchor exists, the feed ends, a load fails, or the cap is hit.
+  const hashTarget = useRef<{ id: string; pages: number } | null | undefined>(undefined);
+  useEffect(() => {
+    if (hashTarget.current === undefined) {
+      let id = "";
+      try {
+        id = decodeURIComponent(window.location.hash.slice(1));
+      } catch {
+        id = "";
+      }
+      // Already rendered (or no hash): the browser's own anchor scroll handles it.
+      hashTarget.current = id && !document.getElementById(id) ? { id, pages: 0 } : null;
+    }
+    const target = hashTarget.current;
+    if (!target) return;
+    const el = document.getElementById(target.id);
+    if (el) {
+      hashTarget.current = null;
+      el.scrollIntoView({ block: "start" }); // honours the anchors' scroll-margin-top
+      return;
+    }
+    if (!cursor || failed || target.pages >= HASH_MAX_PAGES) {
+      hashTarget.current = null;
+      return;
+    }
+    if (loading || inFlight.current) return; // re-runs when the current load settles
+    target.pages += 1;
+    void loadMore();
+  }, [blocks, cursor, failed, loading, loadMore]);
 
   useEffect(() => {
     const el = sentinel.current;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { srcSetUrl } from "@/lib/gallery/feed";
 import { youTubeEmbed } from "@/lib/gallery/youtube";
 import type { PublicItem } from "@/lib/gallery/types";
 
@@ -91,6 +92,8 @@ function VideoSlide({ item, label, autoPlay }: MediaSlideProps) {
   const ref = useRef<HTMLVideoElement>(null);
   // Read once at mount: a later prop change must never start playback.
   const [startPlaying] = useState(autoPlay);
+  // 1280 is plenty for a poster frame; fall back to the largest variant.
+  const poster = srcSetUrl(item.srcSet, 1280) ?? item.src ?? undefined;
 
   // Tapping this very video to open the viewer was the user's gesture, so it may
   // start with sound. Slides reached by arrows/swipes stay paused with controls.
@@ -105,7 +108,7 @@ function VideoSlide({ item, label, autoPlay }: MediaSlideProps) {
     <video
       ref={ref}
       src={item.videoUrl ?? undefined}
-      poster={item.src ?? undefined}
+      poster={poster}
       controls
       playsInline
       preload="metadata"

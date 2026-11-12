@@ -7,6 +7,9 @@ import { getAdminUser } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { finalizeItemOp } from "@/lib/gallery/ops";
 
+// Large photos/videos can take a while in sharp; allow up to a minute.
+export const maxDuration = 60;
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {

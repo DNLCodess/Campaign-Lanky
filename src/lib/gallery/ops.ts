@@ -180,7 +180,11 @@ export async function updateEntryOp(
   const title = (fields.title ?? "").trim();
 
   let slug = entry.slug;
-  if (title) {
+  // Once published, the slug is frozen so shared /gallery#slug links keep working.
+  const frozen = !!entry.published_at;
+  if (frozen) {
+    // Keep entry.slug as-is.
+  } else if (title) {
     const base = generateSlug(title);
     const { data: clash, error } = await db
       .from("gallery_entries")

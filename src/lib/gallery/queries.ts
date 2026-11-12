@@ -56,6 +56,7 @@ export async function getFeedPage(
         : null;
     return { entries: toPublicEntries(page, items, galleryPublicUrl), nextCursor };
   } catch (err) {
+    console.error("[gallery] getFeedPage failed", err);
     // Server-rendered first page degrades to empty; client "load more" rethrows so it can retry.
     if (opts?.throwOnError) throw err;
     return empty;
@@ -80,7 +81,8 @@ export async function getTeaserEntries(limit = 6): Promise<PublicEntry[]> {
       const cover = e.items.find((i) => i.id === e.coverItemId) ?? e.items[0];
       return { ...e, items: cover ? [cover] : [] };
     });
-  } catch {
+  } catch (err) {
+    console.error("[gallery] getTeaserEntries failed", err);
     return [];
   }
 }
@@ -138,6 +140,7 @@ export async function getAdminEntries(): Promise<AdminEntry[]> {
           .select("*")
           .eq("entry_id", e.id)
           .eq("processing", "ready")
+          .eq("hidden", false)
           .order("position", { ascending: true })
           .limit(1);
         if (firstErr) throw firstErr;
@@ -159,7 +162,8 @@ export async function getAdminEntries(): Promise<AdminEntry[]> {
         cover,
       };
     });
-  } catch {
+  } catch (err) {
+    console.error("[gallery] getAdminEntries failed", err);
     return [];
   }
 }
@@ -182,7 +186,8 @@ export async function getAdminEntry(
       .order("position", { ascending: true });
     if (itemErr) return null;
     return { entry: entry as EntryRow, items: (items ?? []) as ItemRow[] };
-  } catch {
+  } catch (err) {
+    console.error("[gallery] getAdminEntry failed", err);
     return null;
   }
 }

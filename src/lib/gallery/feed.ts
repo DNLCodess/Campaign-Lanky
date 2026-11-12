@@ -11,6 +11,19 @@ function variantProps(variants: Variants | null, publicUrl: (p: string) => strin
   return { src: publicUrl(variants[present[present.length - 1]]!), srcSet };
 }
 
+/**
+ * The URL for a given width descriptor in a "url 640w, url 1280w" srcset, or
+ * null when that width isn't listed.
+ */
+export function srcSetUrl(srcSet: string | null, width: number): string | null {
+  if (!srcSet) return null;
+  for (const candidate of srcSet.split(",")) {
+    const [url, descriptor] = candidate.trim().split(/\s+/);
+    if (url && descriptor === `${width}w`) return url;
+  }
+  return null;
+}
+
 function toPublicItem(row: ItemRow, publicUrl: (p: string) => string): PublicItem {
   const isYoutube = row.media_type === "youtube";
   const { src, srcSet } = isYoutube ? { src: null, srcSet: null } : variantProps(row.variants, publicUrl);

@@ -11,20 +11,6 @@ export const metadata: Metadata = {
   description:
     "Photos and videos from Lanky's campaign trail — market visits, town halls, and community engagements across Ibadan Southwest and Northwest.",
   alternates: { canonical: "/gallery" },
-  openGraph: {
-    title: "Gallery",
-    description:
-      "Photos and videos from Lanky's campaign trail — market visits, town halls, and community engagements across Ibadan Southwest and Northwest.",
-    url: "/gallery",
-    type: "website",
-    locale: "en_NG",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Gallery",
-    description:
-      "Photos and videos from Lanky's campaign trail — market visits, town halls, and community engagements across Ibadan Southwest and Northwest.",
-  },
 };
 
 export default async function GalleryPage() {
