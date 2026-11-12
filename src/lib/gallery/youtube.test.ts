@@ -39,4 +39,14 @@ test("thumb and embed urls", () => {
     youTubeEmbed("dQw4w9WgXcQ"),
     "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0",
   );
+  assert.equal(
+    youTubeEmbed("dQw4w9WgXcQ", false),
+    "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0",
+  );
+});
+
+test("embed rejects malformed ids", () => {
+  for (const id of ["", "short", "dQw4w9WgXcQx", "dQw4w9WgXc?", "../../evil", "dQw4w9WgX\"\"", "dQw4w9 WgXc"]) {
+    assert.equal(youTubeEmbed(id), null, id);
+  }
 });

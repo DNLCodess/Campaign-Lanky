@@ -48,6 +48,8 @@ export function Lightbox({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(() => Math.min(Math.max(startIndex, 0), items.length - 1));
   const [drag, setDrag] = useState(0);
+  // Only the tapped item may auto-play, and only until the user first navigates.
+  const [navigated, setNavigated] = useState(false);
   // The tile that opened the viewer, for focus restoration.
   const openerId = useRef(items[startIndex]?.id);
   const onCloseRef = useRef(onClose);
@@ -62,7 +64,10 @@ export function Lightbox({
   const hasNext = current < count - 1;
 
   const go = useCallback(
-    (delta: number) => setIndex((i) => Math.min(Math.max(i + delta, 0), count - 1)),
+    (delta: number) => {
+      setNavigated(true);
+      setIndex((i) => Math.min(Math.max(i + delta, 0), count - 1));
+    },
     [count],
   );
 
@@ -117,7 +122,7 @@ export function Lightbox({
     setDrag(0);
   };
 
-  const onPointerDown = (e: React.PointerEvent) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
     pointers.current.add(e.pointerId);
     // Second finger = pinch: abandon the swipe and let the browser zoom.
     if (pointers.current.size > 1) return endGesture();
@@ -130,9 +135,19 @@ export function Lightbox({
       if (e.clientY > r.bottom - VIDEO_CONTROLS_PX) return;
     }
     gesture.current = { id: e.pointerId, x: e.clientX, y: e.clientY, horizontal: null };
+    // Keep receiving move/up when a mouse drag leaves the stage.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    // No buttons down means any tracked pointers are stale (an up we never saw).
+    if (e.buttons === 0 && pointers.current.size > 0) {
+      pointers.current.clear();
+      if (gesture.current) endGesture();
+      return;
+    }
     const g = gesture.current;
     if (!g || g.id !== e.pointerId) return;
     const dx = e.clientX - g.x;
@@ -211,7 +226,7 @@ export function Lightbox({
             className={`absolute inset-0 ${drag === 0 ? "transition-transform duration-200 ease-out" : ""}`}
             style={{ transform: drag ? `translate3d(${drag}px,0,0)` : undefined }}
           >
-            <LightboxSlide key={item.id} item={item} label={label} />
+            <LightboxSlide key={item.id} item={item} label={label} autoPlay={!navigated} />
           </div>
 
           {hasPrev && (

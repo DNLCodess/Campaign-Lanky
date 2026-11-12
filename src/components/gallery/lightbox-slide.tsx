@@ -9,10 +9,27 @@ import type { PublicItem } from "@/lib/gallery/types";
  * a video or YouTube player unmounts — and stops — as soon as the viewer moves on.
  * The parent stage is a size container; media fits it whole (`contain`).
  */
-export function LightboxSlide({ item, label }: { item: PublicItem; label: string }) {
-  if (item.type === "youtube" && item.youtubeId) return <YouTubeSlide item={item} label={label} />;
-  if (item.type === "video" && item.videoUrl) return <VideoSlide item={item} label={label} />;
+export function LightboxSlide({
+  item,
+  label,
+  autoPlay = false,
+}: {
+  item: PublicItem;
+  label: string;
+  /** True only for the item the user tapped to open the viewer, on that first showing. */
+  autoPlay?: boolean;
+}) {
+  if (item.type === "youtube") return <YouTubeSlide item={item} label={label} autoPlay={autoPlay} />;
+  if (item.type === "video" && item.videoUrl) return <VideoSlide item={item} label={label} autoPlay={autoPlay} />;
   return <ImageSlide item={item} label={label} />;
+}
+
+function Unplayable() {
+  return (
+    <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/70">
+      This video can&apos;t be played.
+    </p>
+  );
 }
 
 function ImageSlide({ item, label }: { item: PublicItem; label: string }) {
@@ -68,17 +85,21 @@ function ImageSlide({ item, label }: { item: PublicItem; label: string }) {
   );
 }
 
-function VideoSlide({ item, label }: { item: PublicItem; label: string }) {
-  const ref = useRef<HTMLVideoElement>(null);
+type MediaSlideProps = { item: PublicItem; label: string; autoPlay: boolean };
 
-  // Opening / navigating here was a user gesture, so playback with sound is
-  // allowed. If the browser still refuses, the controls are there to start it.
+function VideoSlide({ item, label, autoPlay }: MediaSlideProps) {
+  const ref = useRef<HTMLVideoElement>(null);
+  // Read once at mount: a later prop change must never start playback.
+  const [startPlaying] = useState(autoPlay);
+
+  // Tapping this very video to open the viewer was the user's gesture, so it may
+  // start with sound. Slides reached by arrows/swipes stay paused with controls.
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
-    v.play().catch(() => {});
+    if (startPlaying) v.play().catch(() => {});
     return () => v.pause();
-  }, []);
+  }, [startPlaying]);
 
   return (
     <video
@@ -95,7 +116,10 @@ function VideoSlide({ item, label }: { item: PublicItem; label: string }) {
   );
 }
 
-function YouTubeSlide({ item, label }: { item: PublicItem; label: string }) {
+function YouTubeSlide({ item, label, autoPlay }: MediaSlideProps) {
+  const [startPlaying] = useState(autoPlay);
+  const src = item.youtubeId ? youTubeEmbed(item.youtubeId, startPlaying) : null;
+  if (!src) return <Unplayable />;
   const short = item.width < item.height;
   // Fit a fixed 16:9 (or 9:16 Short) box inside the stage using container units.
   const style = short
@@ -105,7 +129,7 @@ function YouTubeSlide({ item, label }: { item: PublicItem; label: string }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <iframe
-        src={youTubeEmbed(item.youtubeId!)}
+        src={src}
         title={label}
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen

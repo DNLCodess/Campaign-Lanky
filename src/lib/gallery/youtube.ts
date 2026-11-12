@@ -34,6 +34,8 @@ export function youTubeThumb(id: string, short = false): string {
   return `https://i.ytimg.com/vi/${id}/${short ? "hqdefault" : "mqdefault"}.jpg`;
 }
 
-export function youTubeEmbed(id: string): string {
-  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+/** Privacy-enhanced player URL, or null for anything that isn't a well-formed video id. */
+export function youTubeEmbed(id: string, autoplay = true): string | null {
+  if (!ID_RE.test(id)) return null;
+  return `https://www.youtube-nocookie.com/embed/${id}?${autoplay ? "autoplay=1&" : ""}rel=0`;
 }
