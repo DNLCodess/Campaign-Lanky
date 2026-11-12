@@ -69,6 +69,7 @@ export function MediaTile({
     <button
       type="button"
       onClick={onOpen}
+      data-gallery-item={item.id}
       aria-label={itemLabel(item, label)}
       className={`group relative block w-full cursor-zoom-in overflow-hidden rounded-[0.5rem] outline-none ring-accent/0 transition-shadow duration-200 hover:ring-2 hover:ring-accent/60 focus-visible:ring-2 focus-visible:ring-accent ${className}`}
       style={{

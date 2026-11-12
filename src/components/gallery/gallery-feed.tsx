@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadGalleryPage } from "@/app/gallery/actions";
 import { appendFeed, groupFeed } from "@/lib/gallery/feed";
+import { buildViewerSequence } from "@/lib/gallery/viewer-sequence";
 import type { FeedBlock, FeedPage } from "@/lib/gallery/types";
+import { Lightbox } from "./lightbox";
 import { OutingStrip } from "./outing-strip";
 import { SinglesRows } from "./singles-rows";
 
-/** What the full-screen viewer (Task 8) opens at. */
+/** What the full-screen viewer opens at. */
 export type ViewerTarget = { entryId: string; itemIndex: number };
 
 export function GalleryFeed({ initial }: { initial: FeedPage }) {
@@ -19,11 +21,16 @@ export function GalleryFeed({ initial }: { initial: FeedPage }) {
   const seen = useRef(new Set(initial.entries.map((e) => e.id)));
   const sentinel = useRef<HTMLDivElement>(null);
 
-  // Hook point for the viewer: Task 8 renders it from this state.
-  const [, setViewer] = useState<ViewerTarget | null>(null);
+  const [viewer, setViewer] = useState<ViewerTarget | null>(null);
   const openViewer = useCallback((entryId: string, itemIndex: number) => {
     setViewer({ entryId, itemIndex });
   }, []);
+  const closeViewer = useCallback(() => setViewer(null), []);
+  // Rebuilt from `blocks`, so a singles block that grows while open grows the sequence too.
+  const sequence = useMemo(
+    () => (viewer ? buildViewerSequence(blocks, viewer.entryId, viewer.itemIndex) : null),
+    [blocks, viewer],
+  );
 
   const loadMore = useCallback(async () => {
     if (!cursor || inFlight.current) return;
@@ -76,6 +83,16 @@ export function GalleryFeed({ initial }: { initial: FeedPage }) {
           ),
         )}
       </div>
+
+      {viewer && sequence && (
+        <Lightbox
+          key={`${viewer.entryId}:${viewer.itemIndex}`}
+          items={sequence.items}
+          startIndex={sequence.startIndex}
+          titles={sequence.titles}
+          onClose={closeViewer}
+        />
+      )}
 
       {cursor && (
         <div ref={sentinel} className="mt-16 flex flex-col items-center gap-3">
