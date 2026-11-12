@@ -9,6 +9,7 @@ const NAV: SidebarNavItem[] = [
   { href: "/admin/blog", label: "Blog", icon: "blog" },
   { href: "/admin/gallery", label: "Gallery", icon: "gallery" },
   { href: "/admin/team", label: "Team", icon: "people" },
+  { href: "/admin/agent-nominations/agents", label: "PU Agents", icon: "people" },
   { href: "/admin/agent-nominations/candidates", label: "Party Agents", icon: "election" },
 ];
 
