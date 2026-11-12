@@ -17,7 +17,8 @@ export type NavIconName =
   | "results"
   | "submit"
   | "submissions"
-  | "blog";
+  | "blog"
+  | "gallery";
 
 export type SidebarNavItem = { href: string; label: string; icon?: NavIconName };
 
@@ -295,6 +296,13 @@ const ICON_PATHS: Record<NavIconName, React.ReactNode> = {
       <path d="M16 13H8" />
       <path d="M16 17H8" />
       <path d="M10 9H8" />
+    </>
+  ),
+  gallery: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" />
     </>
   ),
 };
