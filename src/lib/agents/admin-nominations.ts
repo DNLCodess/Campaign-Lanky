@@ -72,7 +72,7 @@ export function pickCandidate(candidates: AdminCandidate[], slug?: string): Admi
   );
 }
 
-/** Paginated list for one candidate, ordered ward → polling unit → surname. */
+/** Paginated list for one candidate, most recently submitted first. */
 export async function listAdminNominations(
   candidateId: string,
   options: { q?: string; ward?: number; page: number; pageSize: number },
@@ -82,9 +82,8 @@ export async function listAdminNominations(
     .from("agent_nominations")
     .select(ROW_COLUMNS, { count: "exact" })
     .eq("candidate_id", candidateId)
-    .order("ward", { ascending: true })
-    .order("polling_unit_code", { ascending: true })
-    .order("surname", { ascending: true })
+    .order("created_at", { ascending: false })
+    .order("form_no", { ascending: false })
     .range((options.page - 1) * options.pageSize, options.page * options.pageSize - 1);
 
   if (options.ward !== undefined) query = query.eq("ward", options.ward);
@@ -102,9 +101,8 @@ export async function listAllAdminNominations(candidateId: string): Promise<Admi
     .from("agent_nominations")
     .select(ROW_COLUMNS)
     .eq("candidate_id", candidateId)
-    .order("ward", { ascending: true })
-    .order("polling_unit_code", { ascending: true })
-    .order("surname", { ascending: true })
+    .order("created_at", { ascending: false })
+    .order("form_no", { ascending: false })
     .range(0, 9999);
   return (data ?? []) as unknown as AdminNominationRow[];
 }

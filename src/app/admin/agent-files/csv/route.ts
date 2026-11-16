@@ -5,6 +5,7 @@ import { rowsToCsv } from "@/lib/admin-tables";
 export const dynamic = "force-dynamic";
 
 const COLUMNS = [
+  "created_at",
   "form_no",
   "reference_id",
   "surname",
@@ -23,7 +24,6 @@ const COLUMNS = [
   "is_outside_area",
   "countersign_decision",
   "countersigned_at",
-  "created_at",
 ];
 
 /** Every field submitted by one candidate's agents, as CSV. */

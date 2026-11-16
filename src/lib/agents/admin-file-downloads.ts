@@ -115,6 +115,7 @@ export async function zipResponse(kind: FileKind, searchParams: URLSearchParams)
         if (bytes) zip.file(file, bytes);
         index.push({
           file: bytes ? file : "(missing)",
+          submitted_at: r.created_at,
           form_no: r.form_no,
           reference_id: r.reference_id,
           name: fullNameOf(r),
@@ -128,11 +129,12 @@ export async function zipResponse(kind: FileKind, searchParams: URLSearchParams)
     );
   }
 
-  index.sort((a, b) => Number(a.ward) - Number(b.ward) || String(a.file).localeCompare(String(b.file)));
+  // Downloads finish out of order; put the index back in submission order (newest first).
+  index.sort((a, b) => String(b.submitted_at).localeCompare(String(a.submitted_at)));
   zip.file(
     "index.csv",
     rowsToCsv(
-      ["file", "form_no", "reference_id", "name", "means_of_id", "phone", "ward", "polling_unit_code", "polling_unit_name"],
+      ["file", "submitted_at", "form_no", "reference_id", "name", "means_of_id", "phone", "ward", "polling_unit_code", "polling_unit_name"],
       index,
     ),
   );

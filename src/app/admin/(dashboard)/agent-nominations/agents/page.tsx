@@ -178,7 +178,7 @@ export default async function AdminAgentsPage({
 
       <p className="mt-5 text-sm text-text-muted" aria-live="polite">
         {isFiltered ? `${total} of ${stats.total} agents` : `${stats.total} ${stats.total === 1 ? "agent" : "agents"}`} ·
-        sorted by ward, then polling unit
+        newest submissions first
       </p>
 
       {rows.length === 0 && (
