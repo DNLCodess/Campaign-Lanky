@@ -70,7 +70,12 @@ async function flwFetch(
       return res;
     } catch (err) {
       clearTimeout(timer);
-      lastErr = err; // network error / abort (timeout)
+      // Network error / abort (timeout) — name it so a recorded reason is useful.
+      lastErr = controller.signal.aborted
+        ? new Error(`Flutterwave timed out after ${timeoutMs / 1000}s (${attempt + 1} attempt(s))`)
+        : new Error(
+            `Network error reaching Flutterwave: ${err instanceof Error ? err.message : String(err)}`,
+          );
       if (attempt < retries) {
         await sleep(Math.min(2000, 300 * 2 ** attempt));
         continue;
@@ -113,7 +118,9 @@ export async function initiatePayment(params: {
 
   const json = await res.json().catch(() => null);
   if (!res.ok || json?.status !== "success" || !json?.data?.link) {
-    throw new Error(json?.message || `Could not initialise payment (${res.status})`);
+    throw new Error(
+      `Flutterwave rejected payment init (HTTP ${res.status}): ${json?.message ?? "no message"}`,
+    );
   }
   return { link: json.data.link as string };
 }

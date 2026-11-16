@@ -11,17 +11,27 @@ export function DonateForm() {
   const [state, formAction, isPending] = useActionState(initiateDonation, initial);
   const [amount, setAmount] = useState<number | "">(5000);
   const [custom, setCustom] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  // A checkout link the donor came "back" from (bfcache restore). Each attempt
+  // gets a fresh link, so comparing against it re-enables the form for a retry.
+  const [returnedFrom, setReturnedFrom] = useState<string | null>(null);
 
   // On success the action returns a hosted-checkout link → go to it.
   useEffect(() => {
-    if (state.link) {
-      setRedirecting(true);
-      window.location.assign(state.link);
-    }
+    if (state.link) window.location.assign(state.link);
   }, [state.link]);
 
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted && state.link) setReturnedFrom(state.link);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [state.link]);
+
+  const redirecting = !!state.link && state.link !== returnedFrom;
   const busy = isPending || redirecting;
+  // Hide a previous attempt's error while a retry is in flight.
+  const showError = !busy && state.status === "error" && state.message;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -124,15 +134,19 @@ export function DonateForm() {
         disabled={busy}
         className="w-full rounded-brand bg-primary px-6 py-4 text-lg font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
       >
-        {busy
+        {redirecting
           ? "Redirecting to secure checkout…"
-          : amount && amount >= 100
-            ? `Donate ${naira(Number(amount))}`
-            : "Donate"}
+          : isPending
+            ? "Connecting to secure checkout…"
+            : amount && amount >= 100
+              ? `Donate ${naira(Number(amount))}`
+              : "Donate"}
       </button>
 
-      {state.status === "error" && state.message && (
-        <p className="text-center text-sm text-primary">{state.message}</p>
+      {showError && (
+        <p role="alert" className="text-center text-sm text-primary">
+          {state.message}
+        </p>
       )}
 
       <div className="flex items-center justify-center gap-2 text-xs text-text-muted">

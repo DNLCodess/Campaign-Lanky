@@ -114,6 +114,28 @@ export async function markAbandonedIfPending(txRef: string) {
   }
 }
 
+/**
+ * A checkout could not be started (Flutterwave unreachable or rejected the
+ * request). Mark the pending row abandoned and keep the reason on it, since
+ * server logs expire within a day. Best-effort.
+ */
+export async function recordInitFailure(txRef: string, err: unknown) {
+  const message = (err instanceof Error ? err.message : String(err)).slice(0, 500);
+  try {
+    const supabase = createAdminSupabase();
+    await supabase
+      .from("donations")
+      .update({
+        status: "abandoned",
+        meta: { init_error: { message, at: new Date().toISOString() } },
+      })
+      .eq("tx_ref", txRef)
+      .eq("status", "pending");
+  } catch {
+    // best-effort
+  }
+}
+
 export async function getDonationTotals(): Promise<{ total: number; count: number }> {
   try {
     const supabase = createAdminSupabase();

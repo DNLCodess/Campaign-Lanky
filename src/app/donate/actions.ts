@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { initiatePayment, flwConfig } from "@/lib/flutterwave";
-import { markAbandonedIfPending } from "@/lib/donations";
+import { recordInitFailure } from "@/lib/donations";
 
 export type DonateState = {
   status: "idle" | "error";
@@ -86,8 +86,8 @@ export async function initiateDonation(
 
     return { status: "idle", link };
   } catch (err) {
-    console.error("[initiateDonation]", err);
-    await markAbandonedIfPending(txRef);
+    console.error("[initiateDonation]", txRef, err);
+    await recordInitFailure(txRef, err);
     return {
       status: "error",
       message:
