@@ -132,7 +132,7 @@ export async function submitNomination(
     .from("agent_nominations")
     .select("id")
     .eq("candidate_id", candidate.id)
-    .or(`phone.eq.${phone}${email ? `,email.eq.${email}` : ""}`);
+    .or(`phone.eq.${phone},email.eq.${email}`);
   const isPossibleDuplicate = (existingMatches?.length ?? 0) > 0;
 
   const nominationId = randomUUID();
@@ -171,7 +171,7 @@ export async function submitNomination(
         surname,
         gender,
         phone,
-        email: email || null,
+        email,
         means_of_id: meansOfId,
         lga,
         ward,

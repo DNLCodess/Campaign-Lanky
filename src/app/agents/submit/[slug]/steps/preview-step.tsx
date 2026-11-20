@@ -48,7 +48,7 @@ export function PreviewStep({
           <dt>Phone</dt>
           <dd className="text-text">{draft.phone}</dd>
           <dt>Email</dt>
-          <dd className="text-text">{draft.email || "Not provided"}</dd>
+          <dd className="text-text">{draft.email}</dd>
           <dt>Means of ID</dt>
           <dd className="text-text">{draft.meansOfId}</dd>
           <dt>State</dt>

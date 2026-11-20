@@ -26,11 +26,9 @@ export function isValidPhone(phone: string): boolean {
   return PHONE_REGEX.test(phone.trim());
 }
 
-/** Email is optional on the official form — an empty value is valid. */
+/** Email is required for agent nominations. */
 export function isValidEmail(email: string): boolean {
-  const trimmed = email.trim();
-  if (!trimmed) return true;
-  return EMAIL_REGEX.test(trimmed);
+  return EMAIL_REGEX.test(email.trim());
 }
 
 export function isValidFile(file: File, allowedTypes: string[]): boolean {
