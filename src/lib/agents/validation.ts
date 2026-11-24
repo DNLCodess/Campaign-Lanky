@@ -1,5 +1,6 @@
 export const PHONE_REGEX = /^(?:\+234|0)\d{10}$/;
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Excludes , ( ) " \ so an email can never carry PostgREST filter syntax.
+export const EMAIL_REGEX = /^[^\s@,()"\\]+@[^\s@,()"\\]+\.[^\s@,()"\\]+$/;
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 export const ALLOWED_PVC_TYPES = ["image/jpeg", "image/png", "application/pdf"];

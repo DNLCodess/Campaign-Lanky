@@ -128,12 +128,19 @@ export async function submitNomination(
     return { error: "That polling unit isn't in this candidate's constituency. Go back and choose yours." };
   }
 
-  const { data: existingMatches } = await admin
-    .from("agent_nominations")
-    .select("id")
-    .eq("candidate_id", candidate.id)
-    .or(`phone.eq.${phone}${email ? `,email.eq.${email}` : ""}`);
-  const isPossibleDuplicate = (existingMatches?.length ?? 0) > 0;
+  // Separate parameterised lookups (no user input in an .or() filter string).
+  // Fail closed: if a lookup errors, flag the submission for admin review.
+  const duplicateLookup = (column: "phone" | "email", value: string) =>
+    admin
+      .from("agent_nominations")
+      .select("id", { head: true, count: "exact" })
+      .eq("candidate_id", candidate.id)
+      .eq(column, value);
+  const lookups = await Promise.all([
+    duplicateLookup("phone", phone),
+    ...(email ? [duplicateLookup("email", email)] : []),
+  ]);
+  const isPossibleDuplicate = lookups.some((r) => r.error || (r.count ?? 0) > 0);
 
   const nominationId = randomUUID();
   const [pvcBytes, photoBytes, signatureBytes] = await Promise.all([
