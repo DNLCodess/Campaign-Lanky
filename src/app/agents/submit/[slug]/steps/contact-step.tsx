@@ -27,6 +27,7 @@ export function ContactStep({
         name="email"
         label="Email Address"
         type="email"
+        optional
         value={draft.email}
         onChange={(v) => onChange({ email: v })}
         maxLength={MAX_EMAIL_LENGTH}
